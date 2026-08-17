@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Justicia Orienta</title>
+<link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+<a class="skip-link" href="#buscar">Saltar a la búsqueda</a>
+<div class="top-banner demo" role="note">
+  PILOTO — la información mostrada proviene del catálogo cargado por cada área; verifica siempre con el módulo de orientación presencial
+</div>
+
+<header class="site">
+  <h1>Justicia Orienta</h1>
+  <p>Escribe qué necesitas. No hace falta que conozcas juzgados, salas ni oficinas.</p>
+</header>
+
+<div class="toolbar" role="toolbar" aria-label="Preferencias de accesibilidad">
+  <button id="btn-contraste" aria-pressed="false" type="button">◐ Alto contraste</button>
+  <button id="btn-mas" type="button">A+ Aumentar texto</button>
+  <button id="btn-menos" type="button">A− Reducir texto</button>
+  <button id="btn-tema" aria-pressed="false" type="button">🌙 Tema oscuro</button>
+</div>
+
+<main>
+  <div class="search-wrap">
+    <form id="form-buscar">
+      <label for="buscar">¿Qué necesitas?</label>
+      <div class="search-row">
+        <input id="buscar" type="text" autocomplete="off"
+               placeholder="Ej: once civil, recursos humanos, mi computadora no funciona..." />
+        <button class="go" type="submit">Buscar</button>
+      </div>
+    </form>
+    <div class="chips" aria-label="Ejemplos de búsqueda" id="chips"></div>
+  </div>
+
+  <div id="resultados" aria-live="polite"></div>
+  <p class="hint">Datos administrados por cada área de la Corte a través del panel de gestión. Si algo está desactualizado, repórtalo en el módulo de orientación.</p>
+</main>
+
+<footer class="site">
+  Justicia Orienta · Piloto · Backend FastAPI + base de datos abierta, sin licencias de pago.
+  <br /><a href="/admin">Panel de administración</a> · <a href="/api/docs">Documentación de la API</a>
+</footer>
+
+<script src="/js/public.js"></script>
+</body>
+</html>

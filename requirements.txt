@@ -1,0 +1,12 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+pydantic
+passlib[bcrypt]
+python-jose[cryptography]
+python-multipart
+openpyxl
+qrcode
+
+# Para producción con PostgreSQL (opcional, cero costo, código abierto):
+# psycopg2-binary

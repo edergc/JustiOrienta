@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Justicia Orienta — Prototipo V1</title>
+<style>
+  :root {
+    --paper: #eef0ea; --ink: #1a2130; --ink-soft: #4e5a67; --line: #d3d6cc;
+    --surface: #ffffff; --surface-soft: #e6e8e0;
+    --accent: #a3670a; --accent-strong: #7d4e07; --accent-tint: #f3e2c2;
+    --accent2: #1f6e5c; --accent2-strong: #144b3f; --accent2-tint: #d9ece6;
+    --danger: #9c3b3b; --danger-tint: #f4dede;
+    --font-display: 'Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif;
+    --font-body: 'Segoe UI',system-ui,-apple-system,Roboto,Arial,sans-serif;
+    --font-mono: Consolas,'SFMono-Regular',Menlo,monospace;
+    --fs: 16px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:#11151b; --ink:#ece9e1; --ink-soft:#a4adb6; --line:#2a323b;
+      --surface:#181e26; --surface-soft:#1f2731;
+      --accent:#e3a93c; --accent-strong:#f2c165; --accent-tint:#3a2f14;
+      --accent2:#55b9a4; --accent2-strong:#86d3c2; --accent2-tint:#123029;
+      --danger:#e08787; --danger-tint:#3a1f1f;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:#11151b; --ink:#ece9e1; --ink-soft:#a4adb6; --line:#2a323b;
+    --surface:#181e26; --surface-soft:#1f2731;
+    --accent:#e3a93c; --accent-strong:#f2c165; --accent-tint:#3a2f14;
+    --accent2:#55b9a4; --accent2-strong:#86d3c2; --accent2-tint:#123029;
+    --danger:#e08787; --danger-tint:#3a1f1f;
+  }
+  html[data-contrast="alto"] {
+    --paper:#000000; --ink:#ffffff; --ink-soft:#ffffff; --line:#ffffff;
+    --surface:#000000; --surface-soft:#111111;
+    --accent:#ffd166; --accent-strong:#ffd166; --accent-tint:#332900;
+    --accent2:#7fffd4; --accent2-strong:#7fffd4; --accent2-tint:#00332a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: var(--font-body); font-size: var(--fs); line-height: 1.6;
+  }
+  a { color: var(--accent-strong); }
+  a:focus-visible, button:focus-visible, input:focus-visible {
+    outline: 3px solid var(--accent2); outline-offset: 2px; border-radius: 4px;
+  }
+  .skip-link {
+    position: absolute; left: -999px; top: 0; background: var(--accent2); color: #fff;
+    padding: 0.6rem 1rem; z-index: 100;
+  }
+  .skip-link:focus { left: 1rem; top: 1rem; }
+
+  .demo-banner {
+    background: var(--danger-tint); color: var(--danger); border-bottom: 1px solid var(--danger);
+    text-align: center; padding: 0.55rem 1rem; font-size: 0.85rem; font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  header {
+    padding: 2.4rem 1.5rem 1.6rem; text-align: center;
+    border-bottom: 1px solid var(--line);
+  }
+  header h1 { font-family: var(--font-display); font-size: clamp(1.8rem,4vw,2.5rem); margin: 0.2rem 0; }
+  header p { color: var(--ink-soft); max-width: 34rem; margin: 0 auto; }
+
+  .toolbar {
+    display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center;
+    padding: 0.9rem 1rem; border-bottom: 1px solid var(--line); background: var(--surface-soft);
+  }
+  .toolbar button {
+    font: inherit; font-size: 0.82rem; font-weight: 600; cursor: pointer;
+    background: var(--surface); color: var(--ink); border: 1px solid var(--line);
+    border-radius: 100px; padding: 0.45rem 0.9rem;
+  }
+  .toolbar button[aria-pressed="true"] { background: var(--accent2); color: #fff; border-color: var(--accent2); }
+
+  main { max-width: 44rem; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+
+  .search-wrap { margin-bottom: 1.6rem; }
+  .search-wrap label { display: block; font-weight: 700; margin-bottom: 0.5rem; font-size: 1.1rem; }
+  .search-row { display: flex; gap: 0.6rem; }
+  .search-row input {
+    flex: 1; font: inherit; font-size: 1.05rem; padding: 0.75rem 1rem;
+    border: 2px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink);
+  }
+  .search-row button.go {
+    font: inherit; font-weight: 700; background: var(--accent2); color: #fff; border: none;
+    border-radius: 10px; padding: 0 1.3rem; cursor: pointer; font-size: 1rem;
+  }
+  .chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.7rem; }
+  .chips button {
+    font: inherit; font-size: 0.82rem; background: var(--surface); border: 1px solid var(--line);
+    border-radius: 100px; padding: 0.35rem 0.8rem; cursor: pointer; color: var(--ink-soft);
+  }
+
+  #resultados { display: grid; gap: 0.9rem; }
+  .card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+    padding: 1.1rem 1.25rem;
+  }
+  .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.6rem; }
+  .card h2 { font-size: 1.15rem; margin: 0 0 0.15rem; font-family: var(--font-display); }
+  .badge {
+    font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700;
+    padding: 0.2rem 0.55rem; border-radius: 100px; white-space: nowrap; flex: none;
+  }
+  .badge.jurisdiccional { background: var(--accent-tint); color: var(--accent-strong); }
+  .badge.administrativa { background: var(--accent2-tint); color: var(--accent2-strong); }
+  .badge.servicio { background: var(--surface-soft); color: var(--ink-soft); border: 1px solid var(--line); }
+
+  .meta { font-size: 0.92rem; color: var(--ink-soft); margin: 0.5rem 0 0; }
+  .meta strong { color: var(--ink); font-weight: 600; }
+  .a11y-row { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.6rem; }
+  .a11y-row span {
+    font-size: 0.74rem; background: var(--accent2-tint); color: var(--accent2-strong);
+    padding: 0.18rem 0.5rem; border-radius: 6px;
+  }
+  .card-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.85rem; }
+  .card-actions button, .card-actions a {
+    font: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+    background: var(--surface-soft); color: var(--ink); border: 1px solid var(--line);
+    border-radius: 8px; padding: 0.45rem 0.8rem; text-decoration: none;
+  }
+  .card-actions .primary { background: var(--accent2); color: #fff; border-color: var(--accent2); }
+
+  .fallback {
+    border: 1px dashed var(--line); border-radius: 12px; padding: 1.4rem;
+    text-align: center; color: var(--ink-soft); font-size: 0.95rem;
+  }
+  .fallback strong { display: block; color: var(--ink); margin-bottom: 0.4rem; font-size: 1.05rem; }
+
+  .hint { color: var(--ink-soft); font-size: 0.9rem; margin-top: 0.9rem; }
+  .hint code {
+    font-family: var(--font-mono); background: var(--surface-soft); padding: 0.1rem 0.35rem; border-radius: 4px;
+  }
+
+  .qr-section {
+    margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--line);
+    display: flex; gap: 1.4rem; align-items: center; flex-wrap: wrap;
+  }
+  .qr-section img { width: 128px; height: 128px; border: 6px solid var(--surface); box-shadow: 0 0 0 1px var(--line); border-radius: 6px; }
+  .qr-section .txt h3 { margin: 0 0 0.4rem; font-family: var(--font-display); font-size: 1.15rem; }
+  .qr-section .txt p { margin: 0; color: var(--ink-soft); font-size: 0.9rem; max-width: 30rem; }
+
+  footer { text-align: center; padding: 2rem 1.5rem 3rem; color: var(--ink-soft); font-size: 0.82rem; }
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+</style>
+</head>
+<body>
+<a class="skip-link" href="#buscar">Saltar a la búsqueda</a>
+<div class="demo-banner" role="note">
+  PROTOTIPO DE DEMOSTRACIÓN — los datos mostrados son de ejemplo y no representan información oficial verificada
+</div>
+
+<header>
+  <h1>Justicia Orienta</h1>
+  <p>Escribe qué necesitas. No hace falta que conozcas juzgados, salas ni oficinas.</p>
+</header>
+
+<div class="toolbar" role="toolbar" aria-label="Preferencias de accesibilidad">
+  <button id="btn-contraste" aria-pressed="false" type="button">◐ Alto contraste</button>
+  <button id="btn-mas" type="button">A+ Aumentar texto</button>
+  <button id="btn-menos" type="button">A− Reducir texto</button>
+  <button id="btn-tema" aria-pressed="false" type="button">🌙 Tema oscuro</button>
+</div>
+
+<main>
+  <div class="search-wrap">
+    <form id="form-buscar">
+      <label for="buscar">¿Qué necesitas?</label>
+      <div class="search-row">
+        <input id="buscar" type="text" autocomplete="off"
+               placeholder="Ej: once civil, recursos humanos, mi computadora no funciona..." />
+        <button class="go" type="submit">Buscar</button>
+      </div>
+    </form>
+    <div class="chips" aria-label="Ejemplos de búsqueda">
+      <button type="button" data-ej="11 civil">11.º Juzgado Civil</button>
+      <button type="button" data-ej="recursos humanos">Recursos Humanos</button>
+      <button type="button" data-ej="mi computadora no funciona">Soporte técnico</button>
+      <button type="button" data-ej="presentar un documento">Mesa de Partes</button>
+    </div>
+  </div>
+
+  <div id="resultados" aria-live="polite"></div>
+
+  <p class="hint">Este prototipo busca sobre un catálogo de ejemplo embebido en la página (sin conexión a servidor). En producción, la Coordinación de Informática conecta este mismo buscador al catálogo validado por cada área — ver <code>JusticiaOrienta_04_Plantilla_Catalogo_Piloto.xlsx</code>.</p>
+
+  <div class="qr-section">
+    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAZgAAAGYAQAAAABXQMn4AAADXElEQVR4nO1c0U4kMQyzT/P/v+x7iJOGlRDigW4pAZadma1Fo6ip46RQ+PbXv+9DBjOYwQxmOwaS6goSAN8LElTP1yidbM9tmAewRwioXgIIEIRAANQadbQ9t2EeAOEbAGuRhCNEkeGtPupke67GEAQFESQAQpDdw3fPbTCAvHCKczu0kZ9jds3tj2IivoVDCFGyMwSQoilCG3W2PbdhOn/74rvGn2zPbRjq9daxTF5P8ejDqJPtuRETTJqx8xCABDDiHKHg2FwU4XR7bsKYnEXGE65oP/Xy4OHX78BQkegApmpi+MwrptaXNPnpZszKPRXhzW/IpEfo6Sm1cW6D8frJnSbf8gGAiHrefTTxbTcm9x9fiBAt6GSiyvrQTjzZnhsxwdFYHqHM5Sz0mMCJjDV2uj03YR7krmMKJ+ROVKq1r1PLPtqe2zA9rK1Ihq7BdcawdW6Dqfw03AMAICFIdIpK628tRz3dnpswUZ9zPQ5ohQQCUf1JVQGI8sPR9tyGeWD31IZTTFuZ8TjcVYQ72Z7bMBZwatUoU1XfUmDFPg2/3o0xfwvHKOpxzAXjpgP7JjsUjrbnRkyXC8glJKRqEDU75sDj7bkNUzVSSqvjQK6h5vaz6qin23MTpomfqAYrUZ9tSLP/7MWkslbiWvwORc6paaukbp3bYIIfeOfJgk80hSzi1tWEqS9sxgR/c+JZeWosnZ7zUKxGkpPtuRQj69dMrSfb3tQ+xvDrt2DoJQOE7gaXvM3fkF3yXmXH23MTpvM3udKzFJ2o1aXEk3nqyfbchnmArMvRCpwWSwjvZXEoq6wn23MnRq6YBgWQcjuy2rN6rWb/eQ8mKHXkOSQyrCloWzRWJdf+DfbchYlOAziSma1JoN0W3QcxcvfcBuNCqZsP8wUQEou/8QWza26DiaYQrPUR0Y3lpiyesmF2ze2vY6wftEadCGs+/7PWTp5I3Ti3wXT9DRIjPbUrTOJa7dvuOtme2zD9/DZbd1UJb+mxPGM3+elWTJ4ryU6D1mjVjz3W+Fk/78PQJ7YpH2ks9mbp2vnrb7HnBszTrrO5Su7AXr09zP+FMPrbZkw/v+2aXJ5fgMs/eaahnp5sz5UYktmhkyKoGmtQCdnDr3djXs5v/9jfGcxgBjOY3Zj/yATBQovg/TYAAAAASUVORK5CYII=" alt="Código QR de ejemplo con la información del 11.º Juzgado Civil" />
+    <div class="txt">
+      <h3>QR de ejemplo</h3>
+      <p>Así se vería un QR en la entrada de una sede o junto a un juzgado. Este código codifica texto ilustrativo, no un enlace real. En producción, cada QR abriría este micrositio ya contextualizado a esa sede o dependencia.</p>
+    </div>
+  </div>
+</main>
+
+<footer>
+  Justicia Orienta · Prototipo V1 · HTML + CSS + JavaScript nativos, sin dependencias externas ni licencias.<br />
+  Construido para demostrar viabilidad — no es la información oficial de la Corte Superior de Justicia de Lima.
+</footer>
+
+<script>
+  // ── Catálogo de ejemplo (embebido para evitar dependencias de red/servidor) ──
+  const CATALOGO = [
+    {
+      id: 1, tipo: "jurisdiccional", nombre: "11.º Juzgado Civil",
+      alias: ["11 civil", "once civil", "juzgado civil 11", "onceavo civil", "11 juzgado civil"],
+      sede: "Sede Alzamora Valdez", piso: "5", oficina: "503",
+      horario: "Lunes a viernes, 8:00 a 16:00",
+      servicios: "Audiencias, notificaciones, presentación de escritos",
+      accesible: true, rampa: true, ascensor: true, banio: true,
+      direccion: "Av. Abancay s/n, esquina Nicolás de Piérola, Cercado de Lima"
+    },
+    {
+      id: 2, tipo: "administrativa", nombre: "Recursos Humanos",
+      alias: ["rrhh", "personal", "recursos humanos"],
+      sede: "Sede Alzamora Valdez", piso: "3", oficina: "302",
+      horario: "Lunes a viernes, 8:30 a 16:30",
+      servicios: "Trámites de personal",
+      accesible: true, rampa: true, ascensor: true, banio: true,
+      direccion: "Av. Abancay s/n, esquina Nicolás de Piérola, Cercado de Lima"
+    },
+    {
+      id: 3, tipo: "administrativa", nombre: "Coordinación de Informática",
+      alias: ["informatica", "soporte tecnico", "soporte", "mi computadora no funciona", "internet no funciona", "no funciona mi pc"],
+      sede: "Sede Alzamora Valdez", piso: "2", oficina: "204",
+      horario: "Lunes a viernes, 8:30 a 16:30",
+      servicios: "Soporte técnico, mesa de ayuda",
+      accesible: true, rampa: true, ascensor: true, banio: true,
+      direccion: "Av. Abancay s/n, esquina Nicolás de Piérola, Cercado de Lima"
+    },
+    {
+      id: 4, tipo: "servicio", nombre: "Mesa de Partes",
+      alias: ["mesa de partes", "presentar documento", "presentar escrito", "presentar un documento"],
+      sede: "Sede Alzamora Valdez", piso: "1 (ingreso)", oficina: "—",
+      horario: "Lunes a viernes, 8:00 a 16:00",
+      servicios: "Recepción de escritos y expedientes",
+      accesible: true, rampa: true, ascensor: false, banio: true,
+      direccion: "Av. Abancay s/n, esquina Nicolás de Piérola, Cercado de Lima"
+    },
+    {
+      id: 5, tipo: "servicio", nombre: "Módulo de Orientación al Ciudadano",
+      alias: ["orientacion", "informacion", "no se donde ir", "necesito ayuda", "no se que oficina necesito"],
+      sede: "Sede Alzamora Valdez", piso: "1 (ingreso)", oficina: "—",
+      horario: "Lunes a viernes, 8:00 a 16:00",
+      servicios: "Orientación general y derivación",
+      accesible: true, rampa: true, ascensor: false, banio: true,
+      direccion: "Av. Abancay s/n, esquina Nicolás de Piérola, Cercado de Lima"
+    }
+  ];
+
+  function normalizar(t) {
+    return t
+      .toLowerCase()
+      .normalize("NFD").replace(/[̀-ͯ]/g, "")
+      .replace(/[^a-z0-9\s]/g, " ")
+      .replace(/\b(donde esta|donde queda|necesito|quiero ir a|como llego a|quiero|busco)\b/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function buscar(q) {
+    const nq = normalizar(q);
+    if (!nq) return [];
+    const tokens = nq.split(" ").filter(t => t.length > 1);
+    const resultados = [];
+    for (const dep of CATALOGO) {
+      let score = 0;
+      const nombreNorm = normalizar(dep.nombre);
+      if (nombreNorm === nq) score += 10;
+      if (dep.alias.some(a => normalizar(a) === nq)) score += 10;
+      if (dep.alias.some(a => normalizar(a).includes(nq) || nq.includes(normalizar(a)))) score += 6;
+      if (nombreNorm.includes(nq)) score += 5;
+      for (const tok of tokens) {
+        if (nombreNorm.includes(tok)) score += 1;
+        if (dep.alias.some(a => normalizar(a).includes(tok))) score += 1;
+        if (normalizar(dep.servicios).includes(tok)) score += 0.5;
+      }
+      if (score > 0) resultados.push({ dep, score });
+    }
+    resultados.sort((a, b) => b.score - a.score);
+    return resultados.map(r => r.dep);
+  }
+
+  function badgeLabel(tipo) {
+    return { jurisdiccional: "Jurisdiccional", administrativa: "Administrativa", servicio: "Servicio" }[tipo] || tipo;
+  }
+
+  function leerEnVozAlta(dep) {
+    if (!("speechSynthesis" in window)) {
+      alert("La lectura en voz alta no está disponible en este navegador.");
+      return;
+    }
+    const texto = `${dep.nombre}. Se encuentra en ${dep.sede}, piso ${dep.piso}${dep.oficina && dep.oficina !== "—" ? ", oficina " + dep.oficina : ""}. Horario: ${dep.horario}. ${dep.accesible ? "Cuenta con ruta accesible." : ""}`;
+    const u = new SpeechSynthesisUtterance(texto);
+    u.lang = "es-PE";
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+  }
+
+  function render(query) {
+    const cont = document.getElementById("resultados");
+    cont.innerHTML = "";
+    const items = buscar(query);
+
+    if (!query.trim()) return;
+
+    if (items.length === 0) {
+      cont.innerHTML = `
+        <div class="fallback" role="status">
+          <strong>No podemos identificar con seguridad lo que buscas.</strong>
+          Para evitar darte una orientación incorrecta, acércate al módulo de orientación en el ingreso
+          o escribe al canal institucional de atención.
+        </div>`;
+      return;
+    }
+
+    for (const dep of items) {
+      const card = document.createElement("article");
+      card.className = "card";
+      const osmQuery = encodeURIComponent(dep.direccion);
+      card.innerHTML = `
+        <div class="card-top">
+          <h2>${dep.nombre}</h2>
+          <span class="badge ${dep.tipo}">${badgeLabel(dep.tipo)}</span>
+        </div>
+        <p class="meta"><strong>${dep.sede}</strong> — Piso ${dep.piso}${dep.oficina && dep.oficina !== "—" ? ", oficina " + dep.oficina : ""}</p>
+        <p class="meta">Horario: ${dep.horario}</p>
+        <p class="meta">${dep.servicios}</p>
+        <div class="a11y-row">
+          ${dep.rampa ? "<span>Rampa</span>" : ""}
+          ${dep.ascensor ? "<span>Ascensor</span>" : ""}
+          ${dep.banio ? "<span>Baño accesible</span>" : ""}
+        </div>
+        <div class="card-actions">
+          <button class="primary" type="button" data-leer="${dep.id}">🔊 Escuchar</button>
+          <a href="https://www.openstreetmap.org/search?query=${osmQuery}" target="_blank" rel="noopener">Cómo llegar (OpenStreetMap)</a>
+        </div>
+      `;
+      card.querySelector("[data-leer]").addEventListener("click", () => leerEnVozAlta(dep));
+      cont.appendChild(card);
+    }
+  }
+
+  document.getElementById("form-buscar").addEventListener("submit", (e) => {
+    e.preventDefault();
+    render(document.getElementById("buscar").value);
+  });
+  document.getElementById("buscar").addEventListener("input", (e) => render(e.target.value));
+  document.querySelectorAll(".chips button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.getElementById("buscar").value = btn.dataset.ej;
+      render(btn.dataset.ej);
+      document.getElementById("buscar").focus();
+    });
+  });
+
+  // ── Accesibilidad ──
+  const root = document.documentElement;
+  let fontStep = 0;
+  document.getElementById("btn-mas").addEventListener("click", () => {
+    fontStep = Math.min(fontStep + 1, 3);
+    root.style.setProperty("--fs", (16 + fontStep * 2.5) + "px");
+  });
+  document.getElementById("btn-menos").addEventListener("click", () => {
+    fontStep = Math.max(fontStep - 1, -1);
+    root.style.setProperty("--fs", (16 + fontStep * 2.5) + "px");
+  });
+  document.getElementById("btn-contraste").addEventListener("click", (e) => {
+    const on = root.getAttribute("data-contrast") === "alto";
+    root.setAttribute("data-contrast", on ? "normal" : "alto");
+    e.target.setAttribute("aria-pressed", String(!on));
+  });
+  document.getElementById("btn-tema").addEventListener("click", (e) => {
+    const on = root.getAttribute("data-theme") === "dark";
+    root.setAttribute("data-theme", on ? "light" : "dark");
+    e.target.setAttribute("aria-pressed", String(!on));
+  });
+</script>
+</body>
+</html>

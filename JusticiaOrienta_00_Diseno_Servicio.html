@@ -1,0 +1,602 @@
+<title>Justicia Orienta</title>
+<style>
+  @media (prefers-reduced-motion: reduce) {
+    * { scroll-behavior: auto !important; }
+  }
+
+  :root {
+    --paper: #eef0ea;
+    --ink: #1a2130;
+    --ink-soft: #4e5a67;
+    --line: #d3d6cc;
+    --surface: #ffffff;
+    --surface-soft: #e6e8e0;
+    --accent: #a3670a;
+    --accent-strong: #7d4e07;
+    --accent-tint: #f3e2c2;
+    --accent2: #1f6e5c;
+    --accent2-strong: #144b3f;
+    --accent2-tint: #d9ece6;
+    --shadow: 0 1px 2px rgba(26,33,48,0.06), 0 8px 24px -12px rgba(26,33,48,0.18);
+
+    --font-display: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif;
+    --font-body: 'Segoe UI', system-ui, -apple-system, Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --font-mono: Consolas, 'SFMono-Regular', Menlo, 'Liberation Mono', monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #11151b;
+      --ink: #ece9e1;
+      --ink-soft: #a4adb6;
+      --line: #2a323b;
+      --surface: #181e26;
+      --surface-soft: #1f2731;
+      --accent: #e3a93c;
+      --accent-strong: #f2c165;
+      --accent-tint: #3a2f14;
+      --accent2: #55b9a4;
+      --accent2-strong: #86d3c2;
+      --accent2-tint: #123029;
+      --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 12px 28px -14px rgba(0,0,0,0.6);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper: #11151b;
+    --ink: #ece9e1;
+    --ink-soft: #a4adb6;
+    --line: #2a323b;
+    --surface: #181e26;
+    --surface-soft: #1f2731;
+    --accent: #e3a93c;
+    --accent-strong: #f2c165;
+    --accent-tint: #3a2f14;
+    --accent2: #55b9a4;
+    --accent2-strong: #86d3c2;
+    --accent2-tint: #123029;
+    --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 12px 28px -14px rgba(0,0,0,0.6);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 16.5px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: var(--accent-strong); }
+  a:focus-visible, button:focus-visible, summary:focus-visible {
+    outline: 2px solid var(--accent2);
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+
+  h1, h2, h3 { font-family: var(--font-display); font-weight: 600; text-wrap: balance; color: var(--ink); }
+  h2 { letter-spacing: 0.01em; }
+
+  .eyebrow {
+    font-family: var(--font-body);
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent-strong);
+    font-weight: 700;
+  }
+
+  /* ── Masthead ───────────────────────────────────────── */
+  header.masthead {
+    padding: 3.4rem 1.5rem 2.6rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.9rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .mark {
+    width: 46px; height: 46px;
+    border-radius: 50%;
+    border: 2px solid var(--accent);
+    display: grid; place-items: center;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.15rem;
+    color: var(--accent-strong);
+  }
+  header.masthead h1 {
+    font-size: clamp(2.1rem, 4.2vw, 3rem);
+    margin: 0.3rem 0 0;
+  }
+  .subtitle {
+    max-width: 46rem;
+    color: var(--ink-soft);
+    font-size: 1.05rem;
+    margin: 0;
+  }
+  .status-chip {
+    margin-top: 0.6rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--surface-soft);
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+    font-size: 0.82rem;
+    padding: 0.4rem 0.85rem;
+    border-radius: 100px;
+  }
+  .status-chip strong { color: var(--ink); font-weight: 600; }
+
+  /* ── Nav ────────────────────────────────────────────── */
+  nav.toc {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: color-mix(in srgb, var(--paper) 92%, transparent);
+    backdrop-filter: blur(6px);
+    border-bottom: 1px solid var(--line);
+    overflow-x: auto;
+  }
+  nav.toc ul {
+    list-style: none;
+    display: flex;
+    gap: 1.5rem;
+    margin: 0;
+    padding: 0.75rem 1.5rem;
+    max-width: 62rem;
+    margin-inline: auto;
+    white-space: nowrap;
+  }
+  nav.toc a {
+    text-decoration: none;
+    color: var(--ink-soft);
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+  nav.toc a:hover { color: var(--accent-strong); }
+
+  /* ── Layout ─────────────────────────────────────────── */
+  main { max-width: 62rem; margin: 0 auto; padding: 0 1.5rem; }
+  .prose { max-width: 42rem; }
+  section { padding: 3.2rem 0; border-bottom: 1px solid var(--line); }
+  section:last-of-type { border-bottom: none; }
+
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.9rem;
+    margin-bottom: 1.4rem;
+  }
+  .section-num {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--paper);
+    background: var(--accent);
+    width: 1.9rem; height: 1.9rem;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    flex: none;
+    font-variant-numeric: tabular-nums;
+  }
+  .section-head h2 { margin: 0; font-size: 1.55rem; }
+  .section-kicker { color: var(--ink-soft); font-size: 0.95rem; margin: -0.6rem 0 1.6rem 2.8rem; max-width: 40rem; }
+
+  .route {
+    border-left: 2px solid var(--line);
+    margin-left: 0.95rem;
+    padding-left: 1.85rem;
+  }
+
+  p { margin: 0 0 1rem; }
+  ul.plain { margin: 0 0 1rem; padding-left: 1.2rem; }
+  ul.plain li { margin-bottom: 0.5rem; }
+
+  /* ── Tables ─────────────────────────────────────────── */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+  table { border-collapse: collapse; width: 100%; min-width: 620px; background: var(--surface); }
+  caption { text-align: left; font-size: 0.85rem; color: var(--ink-soft); padding: 0.6rem 0.9rem 0; caption-side: top; }
+  th, td { padding: 0.65rem 0.85rem; border-bottom: 1px solid var(--line); text-align: left; font-size: 0.92rem; vertical-align: top; }
+  thead th {
+    font-family: var(--font-body);
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    background: var(--surface-soft);
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td.num, th.num { text-align: center; font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
+  tr.winner td { background: var(--accent2-tint); font-weight: 600; }
+  tr.winner td:first-child { border-left: 3px solid var(--accent2); }
+  .total-col { font-weight: 700; }
+
+  /* ── Cards ──────────────────────────────────────────── */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: 1rem;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 1.15rem 1.25rem;
+    box-shadow: var(--shadow);
+  }
+  .card h3 {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent-strong);
+    margin: 0 0 0.55rem;
+    font-family: var(--font-body);
+    font-weight: 700;
+  }
+  .card p { font-size: 0.94rem; margin: 0; color: var(--ink); }
+
+  /* ── Journey stepper ────────────────────────────────── */
+  .journey { display: flex; flex-direction: column; gap: 0; margin-top: 1rem; }
+  .step {
+    display: grid;
+    grid-template-columns: 2.2rem 1fr;
+    gap: 1rem;
+    position: relative;
+    padding-bottom: 1.6rem;
+  }
+  .step:last-child { padding-bottom: 0; }
+  .step-dot {
+    width: 2.2rem; height: 2.2rem;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 2px solid var(--accent2);
+    color: var(--accent2-strong);
+    display: grid; place-items: center;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    font-weight: 700;
+    z-index: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .step:not(:last-child)::before {
+    content: "";
+    position: absolute;
+    left: 1.09rem;
+    top: 2.2rem;
+    bottom: -0.2rem;
+    width: 2px;
+    background: var(--line);
+  }
+  .step-body { padding-top: 0.15rem; }
+  .step-body strong { display: block; margin-bottom: 0.2rem; }
+  .step-body span { color: var(--ink-soft); font-size: 0.92rem; }
+
+  /* ── Tree ───────────────────────────────────────────── */
+  .tree, .tree ul { list-style: none; margin: 0; padding-left: 1.3rem; }
+  .tree { padding-left: 0; }
+  .tree li { position: relative; padding: 0.15rem 0 0.15rem 1.1rem; border-left: 1px solid var(--line); }
+  .tree > li { border-left: none; }
+  .tree li::before { content: "\2014"; position: absolute; left: 0; color: var(--ink-soft); }
+  .tree code {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    background: var(--surface-soft);
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+  }
+
+  /* ── Roadmap ────────────────────────────────────────── */
+  .roadmap { display: grid; gap: 0.9rem; }
+  .rung {
+    display: grid;
+    grid-template-columns: 4.5rem 1fr;
+    gap: 1rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 0.9rem 1.1rem;
+  }
+  .rung .tag {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    color: var(--accent2-strong);
+    background: var(--accent2-tint);
+    border-radius: 6px;
+    display: grid; place-items: center;
+    font-size: 0.9rem;
+  }
+  .rung p { margin: 0; font-size: 0.93rem; }
+  .rung .cost { color: var(--ink-soft); font-size: 0.82rem; margin-top: 0.25rem; }
+
+  /* ── Compare ────────────────────────────────────────── */
+  .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .compare .col {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 1.1rem 1.25rem;
+    background: var(--surface);
+  }
+  .compare .col.bad { border-top: 3px solid var(--ink-soft); }
+  .compare .col.good { border-top: 3px solid var(--accent2); }
+  .compare h3 { margin: 0 0 0.7rem; font-size: 0.95rem; }
+  .compare ul { margin: 0; padding-left: 1.1rem; font-size: 0.9rem; }
+  .compare li { margin-bottom: 0.5rem; }
+  @media (max-width: 640px) { .compare { grid-template-columns: 1fr; } }
+
+  /* ── Checklist ──────────────────────────────────────── */
+  .checklist { display: grid; gap: 0.6rem; margin-top: 1rem; }
+  .checklist label {
+    display: flex;
+    gap: 0.7rem;
+    align-items: flex-start;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 0.7rem 0.9rem;
+    font-size: 0.93rem;
+  }
+  .checklist input { margin-top: 0.2rem; accent-color: var(--accent2); flex: none; }
+
+  .callout {
+    border: 1px solid var(--accent);
+    background: var(--accent-tint);
+    border-radius: 10px;
+    padding: 1rem 1.2rem;
+    font-size: 0.93rem;
+    margin: 1.2rem 0;
+    color: var(--ink);
+  }
+  .callout strong { color: var(--accent-strong); }
+
+  footer {
+    padding: 2.5rem 1.5rem 3.5rem;
+    text-align: center;
+    color: var(--ink-soft);
+    font-size: 0.85rem;
+  }
+  footer .files { max-width: 40rem; margin: 1rem auto 0; text-align: left; font-size: 0.82rem; }
+  footer .files div { display: flex; gap: 0.6rem; padding: 0.35rem 0; border-bottom: 1px dashed var(--line); }
+  footer .files code { font-family: var(--font-mono); color: var(--accent-strong); flex: none; }
+</style>
+
+<header class="masthead">
+  <div class="mark">JO</div>
+  <p class="eyebrow">ODANC Lima · Concurso &ldquo;Gestores de Atención al Ciudadano&rdquo; 2026</p>
+  <h1>Justicia Orienta</h1>
+  <p class="subtitle">Modelo de orientación ciudadana accesible, humana y digital, para facilitar el acceso de personas adultas mayores, con discapacidad y en situación de vulnerabilidad a los servicios de la Corte Superior de Justicia de Lima.</p>
+  <span class="status-chip">Documento interno de trabajo &middot; <strong>no</strong> es la propuesta anónima entregada al jurado</span>
+</header>
+
+<nav class="toc" aria-label="Contenido del documento">
+  <ul>
+    <li><a href="#resumen">Resumen</a></li>
+    <li><a href="#matriz">Matriz de ideas</a></li>
+    <li><a href="#ficha">Ficha de la práctica</a></li>
+    <li><a href="#servicio">Diseño del servicio</a></li>
+    <li><a href="#gobernanza">Gobernanza y riesgos</a></li>
+    <li><a href="#checklist">Antes de postular</a></li>
+  </ul>
+</nav>
+
+<main>
+
+  <section id="resumen">
+    <div class="prose">
+      <p class="eyebrow">Tesis</p>
+      <h2 style="font-size:1.8rem; margin-top:0.4rem;">No le pedimos al ciudadano que conozca la Corte. Hacemos que la Corte pueda orientarlo.</h2>
+      <p>Este documento aplica el proceso completo pedido para el concurso: puntuar varias ideas de buena práctica, elegir la más sólida, convertirla en una ficha institucional y diseñar el servicio que la sostiene. La diferencia frente al primer boceto técnico de <em>Justicia Orienta</em> es deliberada: se reemplaza un proyecto de plataforma informática por una <strong>práctica de atención</strong> que usa tecnología ya disponible, empieza sin presupuesto adicional y puede sobrevivir después de la premiación.</p>
+      <p>Los tres documentos Word que acompañan este brief (propuesta anónima, etiqueta de sobre y hoja de identificación) son el entregable oficial. Este brief es el respaldo de diseño: explica por qué se eligió esta práctica y cómo se construyó la experiencia para personas adultas mayores, con discapacidad visual o física, y otros públicos vulnerables.</p>
+    </div>
+  </section>
+
+  <section id="matriz">
+    <div class="section-head"><span class="section-num">1</span><h2>Fase 1&ndash;2 &middot; Matriz de ideas evaluadas</h2></div>
+    <p class="section-kicker">Seis ideas nacidas del mismo trabajo previo en sistemas, automatización, HelpDesk, monitoreo y portal institucional, puntuadas de 1 (regular) a 4 (excelente) &mdash;la misma escala que usará el jurado&mdash; en los criterios de las bases más dos propios de diseño de servicio.</p>
+
+    <div class="table-wrap">
+      <table>
+        <caption>Puntaje sobre 24. La fila resaltada es la práctica elegida para la Fase 3.</caption>
+        <thead>
+          <tr>
+            <th scope="col">Idea</th>
+            <th scope="col" class="num">Innovación</th>
+            <th scope="col" class="num">Impacto</th>
+            <th scope="col" class="num">Vulnerabilidad</th>
+            <th scope="col" class="num">Costo&nbsp;<sup title="mayor puntaje = menor costo">*</sup></th>
+            <th scope="col" class="num">Viabilidad</th>
+            <th scope="col" class="num">Replicab.</th>
+            <th scope="col" class="num total-col">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="winner">
+            <td>Justicia Orienta &mdash; orientador accesible (protocolo humano + QR + micrositio + canal de mensajería)</td>
+            <td class="num">4</td><td class="num">4</td><td class="num">4</td><td class="num">4</td><td class="num">3</td><td class="num">4</td>
+            <td class="num total-col">23</td>
+          </tr>
+          <tr>
+            <td>Ruta Accesible &mdash; señalética y mapeo físico de accesibilidad por sede</td>
+            <td class="num">3</td><td class="num">3</td><td class="num">4</td><td class="num">3</td><td class="num">4</td><td class="num">4</td>
+            <td class="num total-col">21</td>
+          </tr>
+          <tr>
+            <td>Cita Preferente Digital &mdash; turnero por mensajería para público prioritario</td>
+            <td class="num">3</td><td class="num">3</td><td class="num">4</td><td class="num">4</td><td class="num">3</td><td class="num">3</td>
+            <td class="num total-col">20</td>
+          </tr>
+          <tr>
+            <td>Mesa de Partes sin Barreras &mdash; prevalidación de documentos antes del viaje a la sede</td>
+            <td class="num">3</td><td class="num">3</td><td class="num">3</td><td class="num">4</td><td class="num">3</td><td class="num">3</td>
+            <td class="num total-col">19</td>
+          </tr>
+          <tr>
+            <td>Voz que Orienta &mdash; guías de audio y señalética táctil para discapacidad visual</td>
+            <td class="num">3</td><td class="num">2</td><td class="num">4</td><td class="num">3</td><td class="num">3</td><td class="num">3</td>
+            <td class="num total-col">18</td>
+          </tr>
+          <tr>
+            <td>Monitor de Atención &mdash; tablero interno de indicadores de servicio</td>
+            <td class="num">2</td><td class="num">2</td><td class="num">1</td><td class="num">3</td><td class="num">3</td><td class="num">3</td>
+            <td class="num total-col">14</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:0.85rem; color:var(--ink-soft); margin-top:0.6rem;">* En costo, puntaje alto = menor dificultad presupuestaria, alineado al criterio 6.6 de las bases.</p>
+
+    <div class="callout">
+      <strong>Por qué gana Justicia Orienta:</strong> es la única idea que cubre a la vez los cuatro criterios de las bases &mdash;estrategia inédita, viabilidad y replicabilidad, atención diferenciada, y ausencia de dificultad presupuestaria&mdash; y además puede incorporar como componentes suyos a &ldquo;Ruta Accesible&rdquo; y &ldquo;Voz que Orienta&rdquo; dentro de su capa de accesibilidad, en vez de competir con ellas.
+    </div>
+  </section>
+
+  <section id="ficha">
+    <div class="section-head"><span class="section-num">2</span><h2>Fase 3 &middot; Ficha de la buena práctica</h2></div>
+    <p class="section-kicker">Misma estructura exigida &mdash;problema, evidencia, solución, procedimiento, tecnología, beneficiarios, indicadores, costo, replicabilidad&mdash; en versión de consulta rápida. El texto completo, ya redactado para el cuerpo anónimo, está en <code style="font-family:var(--font-mono); font-size:0.85em;">JusticiaOrienta_01_Propuesta_Anonima.docx</code>.</p>
+
+    <div class="card-grid">
+      <div class="card"><h3>Problema</h3><p>Encontrar la dependencia correcta y llegar a ella es, para adultos mayores y personas con discapacidad, la primera barrera de acceso a la justicia &mdash;antes de cualquier trámite.</p></div>
+      <div class="card"><h3>Evidencia</h3><p>Marco normativo vigente (RA 0010-2018, RA 0066-2020, Directiva 002-2022-CE-PJ) que exige atención diferenciada; línea base a levantar con encuesta breve antes del piloto, sin afirmar cifras aún no medidas.</p></div>
+      <div class="card"><h3>Solución</h3><p>Protocolo de orientación humana + señalética accesible + QR + micrositio + canal de mensajería institucional, con la IA como capa opcional futura, nunca como requisito.</p></div>
+      <div class="card"><h3>Procedimiento</h3><p>Seis fases: levantamiento del catálogo, punto de orientación, señalética y QR, micrositio y canal, piloto de 8&ndash;12 semanas, ajuste y réplica.</p></div>
+      <div class="card"><h3>Tecnología</h3><p>QR gratuitos, micrositio accesible en infraestructura propia (desarrollado por Informática con stack 100% open source), canal de mensajería ya usado por la Corte, lectura en voz alta del navegador. Cero licencias, cero hardware especializado.</p></div>
+      <div class="card"><h3>Beneficiarios</h3><p>Directos: adultos mayores, personas con discapacidad, gestantes, público de primera vez. Indirectos: personal de orientación, mesa de partes y seguridad.</p></div>
+      <div class="card"><h3>Indicadores</h3><p>Consultas atendidas, % resueltas sin derivación, tiempo promedio de orientación, % de claridad percibida, accesos vía QR y en modo accesible.</p></div>
+      <div class="card"><h3>Costo</h3><p>Personal y canales ya existentes; sin contratación externa en la fase piloto &mdash;cumple explícitamente el criterio de ausencia de dificultad presupuestaria.</p></div>
+      <div class="card"><h3>Replicabilidad</h3><p>Procedimiento estandarizado, no desarrollo a medida: extensible a cualquier sede de la Corte y, en teoría, a otras Cortes Superiores.</p></div>
+    </div>
+  </section>
+
+  <section id="servicio">
+    <div class="section-head"><span class="section-num">3</span><h2>Fase 4 &middot; Diseño del servicio</h2></div>
+    <p class="section-kicker">El primer boceto técnico (<code style="font-family:var(--font-mono); font-size:0.85em;">diseño.md</code>) planteaba una plataforma completa desde el día uno. Este rediseño invierte el orden: primero el servicio, la tecnología solo donde reduce fricción real.</p>
+
+    <div class="prose"><h3 style="font-size:1.05rem; margin-bottom:0.9rem;">Qué cambia</h3></div>
+    <div class="compare">
+      <div class="col bad">
+        <h3>Enfoque plataforma (boceto original)</h3>
+        <ul>
+          <li>React + FastAPI + PostgreSQL + JWT + IA conversacional desde la primera entrega.</li>
+          <li>Todo el stack construido antes de tener algo que un ciudadano pueda usar &mdash;semanas de desarrollo sin retorno visible.</li>
+          <li>Alto riesgo de sobre-alcance para un piloto: se compromete más de lo que se puede sostener a corto plazo.</li>
+          <li>Sin distinción entre lo que es indispensable y lo que es evolución futura.</li>
+        </ul>
+      </div>
+      <div class="col good">
+        <h3>Enfoque servicio (esta propuesta)</h3>
+        <ul>
+          <li>Protocolo humano + señalética + QR + micrositio simple, operativo en semanas.</li>
+          <li>La Coordinación de Informática &mdash;ya confirmada como participante habilitada&mdash; construye y sostiene la plataforma con un stack 100% open source: React, FastAPI, PostgreSQL, sin licencias de pago.</li>
+          <li>Tecnología avanzada (IA, panel con roles, auditoría) queda como fase V3&ndash;V4, igualmente open source, opcional y posterior.</li>
+          <li>Sobrevive al concurso porque cada fase es completa en sí misma y no depende de presupuesto adicional.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="prose" style="margin-top:2.4rem;"><h3 style="font-size:1.05rem;">Recorrido de la persona usuaria</h3><p style="color:var(--ink-soft); font-size:0.92rem; margin-top:-0.4rem;">María, 74 años, primera visita a la sede Alzamora Valdez, busca el 11.&ordm; Juzgado Civil.</p></div>
+    <div class="journey">
+      <div class="step"><div class="step-dot">1</div><div class="step-body"><strong>Ingreso</strong><span>Ve la señalética accesible (alto contraste, texto ampliado) y el código QR junto al gestor de orientación.</span></div></div>
+      <div class="step"><div class="step-dot">2</div><div class="step-body"><strong>Atención humana primero</strong><span>El gestor la saluda y pregunta qué necesita; nadie está obligado a usar un teléfono para ser atendido.</span></div></div>
+      <div class="step"><div class="step-dot">3</div><div class="step-body"><strong>Canal digital, si lo prefiere</strong><span>Escanea el QR o escribe al canal institucional: &ldquo;¿Dónde está el 11.&ordm; Juzgado Civil?&rdquo;.</span></div></div>
+      <div class="step"><div class="step-dot">4</div><div class="step-body"><strong>Respuesta accionable</strong><span>Recibe piso, oficina, horario y ruta accesible, con botón para escuchar la indicación en voz alta.</span></div></div>
+      <div class="step"><div class="step-dot">5</div><div class="step-body"><strong>Salida segura ante la duda</strong><span>Si el sistema no tiene certeza, deriva de inmediato al gestor humano en vez de adivinar una respuesta.</span></div></div>
+    </div>
+
+    <div class="prose" style="margin-top:2.4rem;"><h3 style="font-size:1.05rem;">Principios de diseño accesible</h3></div>
+    <div class="route">
+      <p><strong>Dos rutas, siempre las dos.</strong> Asistida (persona) y autónoma (QR/micrositio) coexisten; ninguna reemplaza a la otra, porque nadie debe depender de saber usar un dispositivo para ser bien atendido.</p>
+      <p><strong>Contraste y tamaño ampliables por defecto.</strong> Mínimo AA (4.5:1) y zoom hasta 200% sin pérdida de contenido: gran parte de los adultos mayores tiene baja visión no diagnosticada.</p>
+      <p><strong>Lenguaje ciudadano.</strong> &ldquo;¿Qué necesitas?&rdquo; en vez de &ldquo;Seleccione dependencia&rdquo;: la persona no debe conocer el organigrama de la Corte para ser orientada.</p>
+      <p><strong>Lectura en voz alta de toda respuesta.</strong> Cubre discapacidad visual y baja alfabetización sin depender de aplicaciones externas.</p>
+      <p><strong>Nunca inventar información.</strong> Ante la duda, el sistema deriva a un canal oficial en vez de arriesgar una orientación incorrecta.</p>
+      <p><strong>Una decisión por pantalla.</strong> Botones grandes y mínimo de pasos, pensados para motricidad fina reducida y baja tolerancia a la frustración.</p>
+    </div>
+
+    <div class="prose" style="margin-top:2.4rem;"><h3 style="font-size:1.05rem;">Arquitectura de la información</h3><p style="color:var(--ink-soft); font-size:0.92rem; margin-top:-0.4rem;">El catálogo que sostiene cualquier respuesta &mdash;jurisdiccional o administrativa&mdash; bajo una sola jerarquía.</p></div>
+    <ul class="tree">
+      <li>Sede <code>ej. Alzamora Valdez</code>
+        <ul>
+          <li>Edificio / piso
+            <ul>
+              <li>Dependencia jurisdiccional <code>salas, juzgados, mesas de partes</code></li>
+              <li>Dependencia administrativa <code>RR.HH., Logística, Informática, Servicios Judiciales&hellip;</code>
+                <ul>
+                  <li>Servicio <code>requisitos, canal, horario</code></li>
+                  <li>Alias <code>&ldquo;once civil&rdquo;, &ldquo;RRHH&rdquo;, &ldquo;soporte técnico&rdquo;</code></li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+    </ul>
+
+    <div class="prose" style="margin-top:2.4rem;"><h3 style="font-size:1.05rem;">Escalera tecnológica</h3><p style="color:var(--ink-soft); font-size:0.92rem; margin-top:-0.4rem;">Cada peldaño es una versión completa y usable por sí sola; ninguno depende de que el siguiente exista.</p></div>
+    <div class="roadmap">
+      <div class="rung"><div class="tag">V0</div><div><p>Protocolo y catálogo en papel/Excel, gestores humanos capacitados.</p><div class="cost">Costo: cero &middot; sin software</div></div></div>
+      <div class="rung"><div class="tag">V1</div><div><p>Señalética, QR y micrositio estático (ubicación, horario, requisitos, accesibilidad), construido por Informática con HTML/CSS/JS o React sobre hosting institucional.</p><div class="cost">Costo: cero &middot; 100% open source</div></div></div>
+      <div class="rung"><div class="tag">V2</div><div><p>Canal de mensajería institucional con respuestas guiadas y estadísticas básicas, backend en FastAPI + PostgreSQL.</p><div class="cost">Costo: cero &middot; 100% open source</div></div></div>
+      <div class="rung"><div class="tag">V3</div><div><p>Asistente de interpretación de lenguaje natural sobre el catálogo validado, con modelos y librerías abiertas &mdash;la IA nunca es fuente primaria de datos.</p><div class="cost">Costo: cero &middot; open source, sujeto a factibilidad técnica</div></div></div>
+      <div class="rung"><div class="tag">V4</div><div><p>Panel con roles y auditoría (FastAPI + PostgreSQL), navegación interior avanzada si existe infraestructura.</p><div class="cost">Costo: cero en software &middot; fase futura, no comprometida</div></div></div>
+    </div>
+  </section>
+
+  <section id="gobernanza">
+    <div class="section-head"><span class="section-num">4</span><h2>Gobernanza, sostenibilidad y riesgos</h2></div>
+
+    <div class="table-wrap">
+      <table>
+        <caption>Quién sostiene la información después de la premiación.</caption>
+        <thead><tr><th scope="col">Rol</th><th scope="col">Responsabilidad</th></tr></thead>
+        <tbody>
+          <tr><td>Área usuaria (juzgado, sala o unidad)</td><td>Veracidad y actualización de su propia información en el catálogo.</td></tr>
+          <tr><td>Gestores de orientación</td><td>Atención humana en el ingreso, uso del catálogo, derivación cuando hay duda.</td></tr>
+          <tr><td>Responsable institucional (a designar por ODANC/Presidencia)</td><td>Aprobación de publicación de cambios y sostenibilidad del piloto.</td></tr>
+          <tr><td>Coordinación de Informática <span style="color:var(--accent2-strong); font-weight:600;">(confirmada como participante habilitada)</span></td><td>Desarrollo y mantenimiento del micrositio, señalética digital y futuras fases, íntegramente con herramientas de código abierto.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-wrap" style="margin-top:1.3rem;">
+      <table>
+        <caption>Riesgos principales identificados y su mitigación.</caption>
+        <thead><tr><th scope="col">Riesgo</th><th scope="col">Mitigación</th></tr></thead>
+        <tbody>
+          <tr><td>Información desactualizada</td><td>Responsable por área + revisión periódica programada.</td></tr>
+          <tr><td>Baja adopción del canal digital</td><td>QR visible en puntos clave + gestores humanos siempre disponibles + difusión interna.</td></tr>
+          <tr><td>Dependencia de un solo desarrollador o equipo técnico</td><td>Usar exclusivamente stack open source estándar (React, FastAPI, PostgreSQL) y documentar, para que cualquier persona de Informática pueda dar continuidad.</td></tr>
+          <tr><td>Sobre-promesa tecnológica ante el jurado</td><td>Presentar solo V0&ndash;V1 como compromiso del piloto; V2&ndash;V4 como hoja de ruta, no como oferta.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="checklist">
+    <div class="section-head"><span class="section-num">5</span><h2>Antes de postular</h2></div>
+    <p class="section-kicker">Las bases descalifican en la primera fase por incumplimiento de forma. Esto es lo que falta confirmar antes de imprimir y entregar.</p>
+    <div class="checklist">
+      <label><input type="checkbox" checked disabled /> Confirmado con ODANC Lima: la Coordinación de Informática puede participar como unidad administrativa.</label>
+      <label><input type="checkbox" /> Verificar que cada herramienta usada en cualquier fase sea de código abierto y sin costo de licencia (React, FastAPI, PostgreSQL u equivalentes libres).</label>
+      <label><input type="checkbox" /> Definir los 2 integrantes mínimos y quién firma como responsable, según el tipo de participante (sala, juzgado, unidad administrativa o mesa de partes).</label>
+      <label><input type="checkbox" /> Completar la Hoja de identificación y confirmar o cambiar el seudónimo &ldquo;Brújula Ciudadana&rdquo;.</label>
+      <label><input type="checkbox" /> Imprimir la propuesta anónima en papel bond A4 &mdash;5 ejemplares originales.</label>
+      <label><input type="checkbox" /> Pegar la etiqueta con título y seudónimo en el sobre cerrado y rotulado.</label>
+      <label><input type="checkbox" /> Verificar que la extensión final quede entre 2 y 4 páginas tras cualquier ajuste en Word.</label>
+      <label><input type="checkbox" /> Entregar antes del 31 de agosto de 2026, presencial en ODANC Lima o al correo institucional del concurso.</label>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <p>Justicia Orienta &middot; brief de diseño de servicio &middot; ODANC Lima 2026</p>
+  <div class="files">
+    <div><code>01_Propuesta_Anonima.docx</code><span>Cuerpo del concurso &mdash; A4, Arial 12, doble espacio, sin nombres.</span></div>
+    <div><code>02_Etiqueta_Sobre.docx</code><span>Título y seudónimo para pegar en el sobre cerrado.</span></div>
+    <div><code>03_Hoja_Identificacion.docx</code><span>Único ejemplar con nombres, correo y firmas &mdash; no anónimo.</span></div>
+  </div>
+</footer>
