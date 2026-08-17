@@ -2,26 +2,61 @@ from typing import Optional
 
 from sqlalchemy.orm import Session, joinedload
 
-from app import models
+from app import models, nlp
 from app.models import normalizar
 
-PREFIJOS_IGNORADOS = [
-    "donde esta", "donde queda", "necesito", "quiero ir a",
-    "como llego a", "quiero", "busco",
-]
+
+def _puntuar(nq: str, tokens: list[str], dep: models.Dependencia) -> float:
+    score = 0.0
+    nombre_norm = dep.nombre_normalizado or normalizar(dep.nombre)
+    alias_norm = [a.alias_normalizado or normalizar(a.alias) for a in dep.alias]
+
+    if nombre_norm == nq:
+        score += 10
+    if nq in alias_norm:
+        score += 10
+    if any(nq in a or a in nq for a in alias_norm):
+        score += 6
+    if nq in nombre_norm:
+        score += 5
+    for tok in tokens:
+        if tok in nombre_norm:
+            score += 1
+        if any(tok in a for a in alias_norm):
+            score += 1
+        if dep.servicios and tok in normalizar(dep.servicios):
+            score += 0.5
+    return score
 
 
-def _quitar_prefijos(texto_normalizado: str) -> str:
-    t = texto_normalizado
-    for pref in PREFIJOS_IGNORADOS:
-        t = t.replace(pref, " ")
-    return " ".join(t.split())
+def _puntuar_por_similitud(tokens: list[str], dep: models.Dependencia) -> float:
+    """Respaldo para errores de tipeo: solo se usa cuando la búsqueda exacta
+    no encontró nada, para no opacar coincidencias reales con adivinanzas."""
+    nombre_norm = dep.nombre_normalizado or normalizar(dep.nombre)
+    alias_norm = [a.alias_normalizado or normalizar(a.alias) for a in dep.alias]
+    vocabulario = set(nombre_norm.split())
+    for a in alias_norm:
+        vocabulario.update(a.split())
+
+    score = 0.0
+    for tok in tokens:
+        if len(tok) < 4:
+            continue
+        if any(nlp.es_similar(tok, palabra) for palabra in vocabulario):
+            score += 2
+    return score
 
 
 def buscar_dependencias(db: Session, query: str, limite: int = 10) -> list[models.Dependencia]:
-    """Búsqueda simple por coincidencia de texto, en Python -- portable entre
-    SQLite y PostgreSQL sin depender de extensiones como pg_trgm."""
-    nq = _quitar_prefijos(normalizar(query))
+    """Búsqueda en lenguaje natural, en Python -- portable entre SQLite y
+    PostgreSQL sin depender de extensiones como pg_trgm.
+
+    Entiende: mayúsculas/tildes, frases de cortesía ("¿me podría decir
+    dónde queda...?"), números escritos en palabras ("once" == "11",
+    "treinta y dos" == "32", "onceavo" == "11") y tolera errores de tipeo
+    menores como respaldo cuando no hay coincidencia exacta.
+    """
+    nq = nlp.interpretar(query)
     if not nq:
         return []
     # Tokens de al menos 3 letras: evita falsos positivos por coincidencias de
@@ -35,30 +70,15 @@ def buscar_dependencias(db: Session, query: str, limite: int = 10) -> list[model
         .all()
     )
 
-    puntuadas = []
-    for dep in activas:
-        score = 0.0
-        nombre_norm = dep.nombre_normalizado or normalizar(dep.nombre)
-        alias_norm = [a.alias_normalizado or normalizar(a.alias) for a in dep.alias]
+    puntuadas = [(_puntuar(nq, tokens, dep), dep) for dep in activas]
+    puntuadas = [(s, d) for s, d in puntuadas if s > 0]
 
-        if nombre_norm == nq:
-            score += 10
-        if nq in alias_norm:
-            score += 10
-        if any(nq in a or a in nq for a in alias_norm):
-            score += 6
-        if nq in nombre_norm:
-            score += 5
-        for tok in tokens:
-            if tok in nombre_norm:
-                score += 1
-            if any(tok in a for a in alias_norm):
-                score += 1
-            if dep.servicios and tok in normalizar(dep.servicios):
-                score += 0.5
-
-        if score > 0:
-            puntuadas.append((score, dep))
+    if not puntuadas:
+        # Respaldo por similitud: solo entra en juego si la búsqueda normal
+        # no encontró nada, para tolerar errores de tipeo sin restar
+        # precisión a las búsquedas que sí coinciden exactamente.
+        puntuadas = [(_puntuar_por_similitud(tokens, dep), dep) for dep in activas]
+        puntuadas = [(s, d) for s, d in puntuadas if s > 0]
 
     puntuadas.sort(key=lambda x: x[0], reverse=True)
     return [dep for _, dep in puntuadas[:limite]]

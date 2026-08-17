@@ -34,16 +34,35 @@ python -m app.seed
 # 2. Carga el catálogo desde el Excel de levantamiento (real o de ejemplo)
 python -m app.import_excel "JusticiaOrienta_04_Plantilla_Catalogo_Piloto.xlsx"
 
-# 3. Levanta el servidor
-python -m uvicorn app.main:app --reload
+# 3. Levanta el servidor (backend y frontend son el mismo proceso, un solo puerto)
+python run.py
 ```
 
 Luego abre:
 
-- **http://127.0.0.1:8000/** — el micrositio público (lo que ve el ciudadano).
-- **http://127.0.0.1:8000/admin** — el panel de administración (lo que usa cada área para mantener su información).
+- **http://127.0.0.1:8743/** — el micrositio público (lo que ve el ciudadano).
+- **http://127.0.0.1:8743/admin** — el panel de administración (lo que usa cada área para mantener su información).
   - Usuario inicial: `admin@justiciaorienta.local` / contraseña impresa por `app.seed` — **cámbiala de inmediato**.
-- **http://127.0.0.1:8000/api/docs** — documentación interactiva de la API (generada automáticamente por FastAPI).
+- **http://127.0.0.1:8743/api/docs** — documentación interactiva de la API (generada automáticamente por FastAPI).
+
+### Sobre el puerto
+
+`app/main.py` sirve el sitio público, el panel de administración y la API desde el
+**mismo proceso** (así evita tener que correr y sincronizar dos servidores distintos
+en el piloto). Por eso hay un solo puerto, no uno de "backend" y otro de "frontend".
+
+Por defecto es **8743**, elegido a propósito para no chocar con puertos comunes de
+otras herramientas que suelen correr en la misma máquina de desarrollo: ni
+3000/3001/5173/5174/5180 (típicos de Vite/React), ni 8000/8001/4100/8085 (típicos de
+otros backends). Si aun así choca en tu equipo, cámbialo sin tocar código:
+
+```bash
+PORT=9231 python run.py       # Windows PowerShell: $env:PORT=9231; python run.py
+```
+
+Si más adelante se separa el frontend en un proyecto propio (por ejemplo al construir
+V3), lo natural será darle igualmente un puerto propio poco común y habilitar CORS en
+la API para ese origen -- hoy no aplica porque ambos viven en el mismo proceso.
 
 ### Flujo de trabajo pensado para las áreas
 
