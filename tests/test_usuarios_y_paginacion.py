@@ -132,6 +132,16 @@ def test_admin_no_puede_desactivar_su_propia_cuenta(admin_usuario):
     assert r.status_code == 400
 
 
+def test_admin_no_puede_quitarse_a_si_mismo_el_rol_de_admin(admin_usuario):
+    atoken = _login("10000001", "clave123")
+    r = client.put(
+        f"/api/v1/admin/usuarios/{admin_usuario.id}",
+        json={"nombre": admin_usuario.nombre, "rol": "gestor", "area": "X", "activo": True},
+        headers=_auth(atoken),
+    )
+    assert r.status_code == 400
+
+
 def test_gestor_no_puede_editar_usuarios(admin_usuario, gestor_usuario):
     gtoken = _login("10000002", "clave123")
     r = client.put(

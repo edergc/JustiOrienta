@@ -138,3 +138,54 @@ def test_gestor_no_puede_crear_fuera_de_su_area(sede, gestor_usuario):
     }
     r = client.post("/api/v1/admin/dependencias", json=payload, headers=_auth(gtoken))
     assert r.status_code == 403
+
+
+def test_crear_dependencia_rechaza_sede_inexistente(admin_usuario):
+    atoken = _login("10000001", "clave123")
+    payload = {
+        "tipo": "administrativa", "nombre": "Huérfana", "sede_id": 999999,
+        "area": "Recursos Humanos", "alias": "",
+    }
+    r = client.post("/api/v1/admin/dependencias", json=payload, headers=_auth(atoken))
+    assert r.status_code == 404
+
+
+def test_crear_dependencia_rechaza_edificio_de_otra_sede(db, sede, admin_usuario):
+    from app import models
+
+    otra_sede = models.Sede(nombre="Otra Sede")
+    db.add(otra_sede)
+    db.commit()
+    db.refresh(otra_sede)
+    edificio_ajeno = models.Edificio(sede_id=otra_sede.id, nombre="Torre Ajena")
+    db.add(edificio_ajeno)
+    db.commit()
+    db.refresh(edificio_ajeno)
+
+    atoken = _login("10000001", "clave123")
+    payload = {
+        "tipo": "administrativa", "nombre": "Mal Ubicada", "sede_id": sede.id,
+        "edificio_id": edificio_ajeno.id, "area": "Recursos Humanos", "alias": "",
+    }
+    r = client.post("/api/v1/admin/dependencias", json=payload, headers=_auth(atoken))
+    assert r.status_code == 400
+
+
+def test_crear_dependencia_rechaza_tipo_invalido(sede, admin_usuario):
+    atoken = _login("10000001", "clave123")
+    payload = {
+        "tipo": "inventado", "nombre": "Tipo Raro", "sede_id": sede.id,
+        "area": "Recursos Humanos", "alias": "",
+    }
+    r = client.post("/api/v1/admin/dependencias", json=payload, headers=_auth(atoken))
+    assert r.status_code == 422
+
+
+def test_crear_sede_rechaza_estado_invalido(admin_usuario):
+    atoken = _login("10000001", "clave123")
+    r = client.post(
+        "/api/v1/admin/sedes",
+        json={"nombre": "Sede Rara", "estado": "publicada"},
+        headers=_auth(atoken),
+    )
+    assert r.status_code == 422

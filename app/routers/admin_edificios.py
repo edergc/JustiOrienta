@@ -24,6 +24,8 @@ def crear_edificio(
     db: Session = Depends(get_db),
     usuario=Depends(security.requiere_admin),
 ):
+    if not crud.sedes.obtener(db, payload.sede_id):
+        raise HTTPException(404, "La sede indicada no existe")
     edificio = crud.edificios.crear(db, payload)
     crud.auditoria.registrar(db, usuario.dni, "edificio", edificio.id, "CREATE", f"Creó edificio '{edificio.nombre}'")
     return edificio
@@ -39,6 +41,8 @@ def actualizar_edificio(
     edificio = crud.edificios.obtener(db, edificio_id)
     if not edificio:
         raise HTTPException(404, "Edificio no encontrado")
+    if not crud.sedes.obtener(db, payload.sede_id):
+        raise HTTPException(404, "La sede indicada no existe")
     edificio = crud.edificios.actualizar(db, edificio, payload)
     crud.auditoria.registrar(db, usuario.dni, "edificio", edificio.id, "UPDATE", f"Actualizó edificio '{edificio.nombre}'")
     return edificio

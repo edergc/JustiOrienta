@@ -138,9 +138,25 @@ PALABRAS_ACCESIBILIDAD = {
 }
 
 
+_PALABRAS_ACCESIBILIDAD_UNA_SOLA = {p for p in PALABRAS_ACCESIBILIDAD if " " not in p}
+_FRASES_ACCESIBILIDAD = {p for p in PALABRAS_ACCESIBILIDAD if " " in p}
+
+
 def es_pregunta_de_accesibilidad(texto_normalizado: str) -> bool:
+    """Reconoce la frase tal cual, y además tolera errores de tipeo menores
+    en las palabras de una sola palabra ("rrampa", "acesible") -- igual que
+    el resto del buscador, para no ser la única parte que exige ortografía
+    exacta."""
     t = f" {texto_normalizado} "
-    return any(f" {palabra} " in t or t.strip() == palabra for palabra in PALABRAS_ACCESIBILIDAD)
+    if any(f" {frase} " in t for frase in _FRASES_ACCESIBILIDAD):
+        return True
+    tokens = texto_normalizado.split()
+    return any(
+        es_similar(tok, palabra)
+        for tok in tokens
+        if len(tok) >= 4
+        for palabra in _PALABRAS_ACCESIBILIDAD_UNA_SOLA
+    )
 
 
 def distancia_edicion(a: str, b: str) -> int:

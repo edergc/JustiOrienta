@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict
 
@@ -9,7 +9,7 @@ class EdificioBase(BaseModel):
     direccion: Optional[str] = None
     pisos: Optional[int] = None
     informacion: Optional[str] = None
-    estado: str = "activo"
+    estado: Literal["activo", "inactivo"] = "activo"
 
 
 class EdificioCreate(EdificioBase):

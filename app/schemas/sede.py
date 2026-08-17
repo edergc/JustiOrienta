@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict
 
@@ -18,7 +18,7 @@ class SedeBase(BaseModel):
     banio_accesible: bool = False
     estacionamiento_accesible: bool = False
     personal_asistencia: bool = False
-    estado: str = "activo"
+    estado: Literal["activo", "inactivo"] = "activo"
 
 
 class SedeCreate(SedeBase):

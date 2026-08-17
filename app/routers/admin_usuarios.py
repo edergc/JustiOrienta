@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app import crud, schemas, security
+from app import crud, models, schemas, security
 from app.database import get_db
 
 router = APIRouter()
@@ -40,6 +40,8 @@ def actualizar_usuario(
         raise HTTPException(404, "Usuario no encontrado")
     if objetivo.id == usuario.id and not payload.activo:
         raise HTTPException(400, "No puedes desactivar tu propia cuenta")
+    if objetivo.id == usuario.id and payload.rol != models.Rol.admin:
+        raise HTTPException(400, "No puedes quitarte a ti mismo el rol de administrador")
 
     detalle = f"rol={payload.rol.value}, área={payload.area or '-'}, activo={payload.activo}"
     if payload.nueva_password:

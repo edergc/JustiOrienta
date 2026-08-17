@@ -12,6 +12,22 @@ from app.models import Rol
 router = APIRouter()
 
 
+def _validar_referencias(db: Session, sede_id: int, edificio_id: Optional[int]) -> None:
+    """SQLite no aplica las llaves foráneas de este proyecto (ver migraciones) --
+    sin este chequeo, un sede_id/edificio_id inválido o de otra sede crea
+    silenciosamente una dependencia huérfana que en el sitio público se ve
+    como 'Sede no registrada', sin ningún error que apunte a la causa."""
+    sede = crud.sedes.obtener(db, sede_id)
+    if not sede:
+        raise HTTPException(404, "La sede indicada no existe")
+    if edificio_id is not None:
+        edificio = crud.edificios.obtener(db, edificio_id)
+        if not edificio:
+            raise HTTPException(404, "El edificio indicado no existe")
+        if edificio.sede_id != sede_id:
+            raise HTTPException(400, "El edificio indicado no pertenece a la sede seleccionada")
+
+
 # ── Dependencias ──────────────────────────────────────────────
 
 @router.get("/dependencias", response_model=schemas.DependenciaListaOut)
@@ -41,6 +57,7 @@ def crear_dependencia(
 ):
     if not security.puede_editar_area(usuario, payload.area):
         raise HTTPException(403, "Solo puedes crear dependencias dentro de tu propia área")
+    _validar_referencias(db, payload.sede_id, payload.edificio_id)
 
     data = payload.model_dump(exclude={"alias"})
     if usuario.rol != Rol.admin:
@@ -64,6 +81,7 @@ def actualizar_dependencia(
         raise HTTPException(404, "Dependencia no encontrada")
     if not security.puede_editar_area(usuario, dep.area):
         raise HTTPException(403, "No tienes permiso para editar esta dependencia")
+    _validar_referencias(db, payload.sede_id, payload.edificio_id)
 
     data = payload.model_dump(exclude={"alias"})
     if data.get("estado") == "activo" and not security.puede_aprobar(usuario, dep.area):

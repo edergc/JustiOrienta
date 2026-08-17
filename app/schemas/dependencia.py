@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
@@ -9,7 +9,7 @@ from app.schemas.servicio import ServicioOut
 
 
 class DependenciaBase(BaseModel):
-    tipo: str
+    tipo: Literal["jurisdiccional", "administrativa", "servicio"]
     categoria: Optional[str] = None
     nombre: str
     sede_id: int
@@ -26,7 +26,7 @@ class DependenciaBase(BaseModel):
     banio_accesible: bool = False
     ruta_accesible: bool = False
     instrucciones_internas: Optional[str] = None
-    estado: str = "revision"
+    estado: Literal["revision", "activo", "inactivo"] = "revision"
     area: Optional[str] = None
     responsable_validar: Optional[str] = None
 

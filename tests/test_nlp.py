@@ -34,3 +34,16 @@ def test_similitud_exige_mas_cercania_en_palabras_cortas():
     assert nlp.es_similar("casa", "caja")
     # pero "casa" y "mesa" (dist=2) no deberían serlo
     assert not nlp.es_similar("casa", "mesa")
+
+
+def test_pregunta_de_accesibilidad_reconoce_la_frase_exacta():
+    assert nlp.es_pregunta_de_accesibilidad(nlp.interpretar("hay rampa de acceso"))
+    assert nlp.es_pregunta_de_accesibilidad(nlp.interpretar("tienen ascensor"))
+    assert not nlp.es_pregunta_de_accesibilidad(nlp.interpretar("recursos humanos"))
+
+
+def test_pregunta_de_accesibilidad_tolera_errores_de_tipeo():
+    # igual que el resto del buscador -- no debería ser la única parte
+    # que exige ortografía perfecta
+    assert nlp.es_pregunta_de_accesibilidad(nlp.interpretar("hay rrampa"))
+    assert nlp.es_pregunta_de_accesibilidad(nlp.interpretar("es acesible"))
