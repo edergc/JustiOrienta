@@ -51,6 +51,16 @@
 
   <main class="wide">
     <div class="stat-row" id="stats"></div>
+    <div class="stat-row" id="stats-detalle" style="margin-top:-0.6rem; margin-bottom:1.2rem;">
+      <div class="card" style="padding:0.9rem 1rem;">
+        <strong>Consultas más frecuentes</strong>
+        <ol id="lista-top-consultas" class="meta" style="padding-left:1.2rem; margin:0.5rem 0 0;"></ol>
+      </div>
+      <div class="card" style="padding:0.9rem 1rem;">
+        <strong>Consultas por sede</strong>
+        <ol id="lista-consultas-sede" class="meta" style="padding-left:1.2rem; margin:0.5rem 0 0;"></ol>
+      </div>
+    </div>
 
     <nav class="toolbar" style="justify-content:flex-start; border:1px solid var(--line); border-radius:10px; margin-bottom:1.2rem;" aria-label="Secciones del panel">
       <button type="button" class="tab-btn" data-tab="tab-dependencias" aria-pressed="true">Dependencias</button>
@@ -124,6 +134,10 @@
               <label><input type="checkbox" id="f-ascensor" /> Ascensor</label>
               <label><input type="checkbox" id="f-banio" /> Baño accesible</label>
               <label><input type="checkbox" id="f-ruta" /> Ruta accesible</label>
+            </div>
+            <div class="field">
+              <label for="f-instrucciones">Cómo llegar dentro del edificio (opcional)</label>
+              <textarea id="f-instrucciones" placeholder="Ej.: Desde el ingreso principal, dirígete a los ascensores y sube al piso 5."></textarea>
             </div>
             <div class="field">
               <label for="f-estado">Estado *</label>

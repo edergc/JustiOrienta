@@ -25,6 +25,7 @@ class DependenciaBase(BaseModel):
     ascensor: bool = False
     banio_accesible: bool = False
     ruta_accesible: bool = False
+    instrucciones_internas: Optional[str] = None
     estado: str = "revision"
     area: Optional[str] = None
     responsable_validar: Optional[str] = None

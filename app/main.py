@@ -1,4 +1,5 @@
 import logging
+from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 from fastapi import FastAPI, Request
@@ -13,21 +14,31 @@ from app.routers import (
     admin_dependencias,
     admin_edificios,
     admin_metricas,
+    admin_qr,
     admin_sedes,
     admin_usuarios,
     auth,
     public,
 )
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
-)
-logger = logging.getLogger("justicia_orienta")
-
 BASE_DIR = Path(__file__).resolve().parent
 STATIC_DIR = BASE_DIR / "static"
 API_PREFIX = "/api/v1"
+LOGS_DIR = BASE_DIR.parent / "logs"
+LOGS_DIR.mkdir(exist_ok=True)
+
+# Consola (para desarrollo) + archivo rotativo de 1 MB x 5 respaldos (para
+# poder revisar errores en producción sin depender de la consola, que no
+# persiste al reiniciar el proceso).
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    handlers=[
+        logging.StreamHandler(),
+        RotatingFileHandler(LOGS_DIR / "justicia_orienta.log", maxBytes=1_000_000, backupCount=5, encoding="utf-8"),
+    ],
+)
+logger = logging.getLogger("justicia_orienta")
 
 app = FastAPI(
     title=settings.app_name,
@@ -69,6 +80,7 @@ app.include_router(admin_edificios.router, prefix=f"{API_PREFIX}/admin/edificios
 app.include_router(admin_usuarios.router, prefix=f"{API_PREFIX}/admin/usuarios", tags=["admin-usuarios"])
 app.include_router(admin_auditoria.router, prefix=f"{API_PREFIX}/admin/auditoria", tags=["admin-auditoria"])
 app.include_router(admin_metricas.router, prefix=f"{API_PREFIX}/admin/metricas", tags=["admin-métricas"])
+app.include_router(admin_qr.router, prefix=f"{API_PREFIX}/admin/qr", tags=["admin-qr"])
 
 app.mount("/css", StaticFiles(directory=STATIC_DIR / "css"), name="css")
 app.mount("/js", StaticFiles(directory=STATIC_DIR / "js"), name="js")

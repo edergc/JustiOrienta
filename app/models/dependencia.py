@@ -30,6 +30,10 @@ class Dependencia(Base, TimestampMixin):
     ascensor = Column(Boolean, default=False)
     banio_accesible = Column(Boolean, default=False)
     ruta_accesible = Column(Boolean, default=False)
+    # Orientación interna simple ("Nivel 2" del proyecto -- nunca GPS/mapa
+    # indoor, eso es "Nivel 3" y no se promete). Ej.: "Desde el ingreso
+    # principal, dirígete a los ascensores y sube al piso 5."
+    instrucciones_internas = Column(Text, nullable=True)
 
     estado = Column(String(20), default="revision", index=True)  # revision | activo | inactivo
     area = Column(String(150), index=True)  # límite de permisos para gestor/validador

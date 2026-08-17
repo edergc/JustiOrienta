@@ -114,8 +114,32 @@ def buscar_dependencias(db: Session, query: str, limite: int = 10) -> list[model
     return [dep for _, dep in puntuadas[:limite]]
 
 
-def registrar_consulta(db: Session, query: str, encontrado: bool) -> models.ConsultaLog:
-    log = models.ConsultaLog(query_text=query[:300], encontrado=encontrado)
+def info_accesibilidad_sede(db: Session, sede_id: int) -> "models.Sede | None":
+    """Responde directo desde los booleanos de la sede cuando la persona
+    pregunta por accesibilidad en general (rampa, ascensor...) y ya se sabe
+    en qué sede está, sin necesidad de nombrar una dependencia puntual."""
+    return db.query(models.Sede).filter(models.Sede.id == sede_id).first()
+
+
+def registrar_consulta(
+    db: Session,
+    query: str,
+    encontrado: bool,
+    sede_contexto_id: int | None = None,
+    dependencia_resultado_id: int | None = None,
+    modo_accesible: bool = False,
+    via_voz: bool = False,
+    sobre_accesibilidad: bool = False,
+) -> models.ConsultaLog:
+    log = models.ConsultaLog(
+        query_text=query[:300],
+        encontrado=encontrado,
+        sede_contexto_id=sede_contexto_id,
+        dependencia_resultado_id=dependencia_resultado_id,
+        modo_accesible=modo_accesible,
+        via_voz=via_voz,
+        sobre_accesibilidad=sobre_accesibilidad,
+    )
     db.add(log)
     db.commit()
     db.refresh(log)

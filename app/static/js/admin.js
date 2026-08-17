@@ -34,6 +34,20 @@ async function api(path, opts = {}) {
   return res.status === 204 ? null : res.json();
 }
 
+// El QR se pide con fetch (no <a href> directo) porque el endpoint exige el
+// token de sesión en el header Authorization -- un enlace normal del
+// navegador no lo enviaría. Se abre en pestaña nueva para poder imprimirlo.
+async function abrirQR(tipo, id) {
+  try {
+    const res = await fetch(`${API}/admin/qr/${tipo}/${id}`, { headers: headers(false) });
+    if (!res.ok) throw new Error("No se pudo generar el código QR");
+    const blob = await res.blob();
+    window.open(URL.createObjectURL(blob), "_blank");
+  } catch (err) {
+    mostrarToast(err.message || "No se pudo generar el código QR");
+  }
+}
+
 function esAdmin() { return USUARIO && USUARIO.rol === "admin"; }
 function puedeLeerAuditoria() { return USUARIO && (USUARIO.rol === "admin" || USUARIO.rol === "auditor"); }
 function puedeAprobar(dep) {
@@ -156,11 +170,16 @@ async function cargarStats() {
   const s = await api("/admin/metricas/resumen");
   const box = document.getElementById("stats");
   box.innerHTML = "";
+  const porcentaje = (v) => (v !== null && v !== undefined ? v + "%" : "—");
   const items = [
     [s.total_consultas, "Consultas totales"],
     [s.consultas_resueltas, "Resueltas"],
     [s.consultas_sin_resultado, "Sin resultado"],
-    [s.porcentaje_resueltas !== null ? s.porcentaje_resueltas + "%" : "—", "% de acierto"],
+    [porcentaje(s.porcentaje_resueltas), "% de acierto"],
+    [porcentaje(s.porcentaje_satisfaccion), "% satisfacción (de quienes respondieron)"],
+    [porcentaje(s.porcentaje_modo_accesible), "% en modo accesible"],
+    [porcentaje(s.porcentaje_via_voz), "% por voz"],
+    [porcentaje(s.porcentaje_sobre_accesibilidad), "% sobre accesibilidad"],
   ];
   for (const [n, l] of items) {
     const d = document.createElement("div");
@@ -168,6 +187,16 @@ async function cargarStats() {
     d.innerHTML = `<div class="n">${n}</div><div class="l">${l}</div>`;
     box.appendChild(d);
   }
+
+  const listaTop = document.getElementById("lista-top-consultas");
+  listaTop.innerHTML = s.top_consultas.length
+    ? s.top_consultas.map((t) => `<li>${t.consulta} <span class="hint">(${t.veces})</span></li>`).join("")
+    : '<li class="hint" style="list-style:none;">Todavía no hay datos.</li>';
+
+  const listaSede = document.getElementById("lista-consultas-sede");
+  listaSede.innerHTML = s.consultas_por_sede.length
+    ? s.consultas_por_sede.map((c) => `<li>${c.sede} <span class="hint">(${c.veces})</span></li>`).join("")
+    : '<li class="hint" style="list-style:none;">Todavía no hay datos.</li>';
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -181,11 +210,17 @@ async function cargarSedes() {
   for (const s of CACHE_SEDES) {
     const tr = document.createElement("tr");
     tr.innerHTML = `<td>${s.nombre}</td><td>${s.direccion || "—"}</td><td>${estadoBadge(s.estado)}</td>
-      <td>${esAdmin() ? `<button class="btn secondary" data-editar-sede="${s.id}">Editar</button>` : ""}</td>`;
+      <td>
+        ${esAdmin() ? `<button class="btn secondary" data-editar-sede="${s.id}">Editar</button>` : ""}
+        <button class="btn secondary" data-qr-sede="${s.id}">QR</button>
+      </td>`;
     tbody.appendChild(tr);
   }
   tbody.querySelectorAll("[data-editar-sede]").forEach((b) =>
     b.addEventListener("click", () => cargarSedeEnFormulario(parseInt(b.dataset.editarSede)))
+  );
+  tbody.querySelectorAll("[data-qr-sede]").forEach((b) =>
+    b.addEventListener("click", () => abrirQR("sede", parseInt(b.dataset.qrSede)))
   );
 
   const selSede = document.getElementById("f-sede");
@@ -413,12 +448,16 @@ async function cargarDependencias() {
       <td>${estadoBadge(d.estado)}</td>
       <td class="actions">
         <button class="btn secondary" data-editar="${d.id}">Editar</button>
+        <button class="btn secondary" data-qr="${d.id}">QR</button>
         <button class="btn secondary" data-desactivar="${d.id}">Desactivar</button>
       </td>`;
     tbody.appendChild(tr);
   }
   tbody.querySelectorAll("[data-editar]").forEach((b) =>
     b.addEventListener("click", () => cargarEnFormulario(parseInt(b.dataset.editar)))
+  );
+  tbody.querySelectorAll("[data-qr]").forEach((b) =>
+    b.addEventListener("click", () => abrirQR("dependencia", parseInt(b.dataset.qr)))
   );
   tbody.querySelectorAll("[data-desactivar]").forEach((b) =>
     b.addEventListener("click", () => desactivar(parseInt(b.dataset.desactivar)))
@@ -508,6 +547,7 @@ async function cargarEnFormulario(id) {
   document.getElementById("f-ascensor").checked = !!d.ascensor;
   document.getElementById("f-banio").checked = !!d.banio_accesible;
   document.getElementById("f-ruta").checked = !!d.ruta_accesible;
+  document.getElementById("f-instrucciones").value = d.instrucciones_internas || "";
   document.getElementById("f-estado").value = d.estado;
   document.getElementById("f-responsable").value = d.responsable_validar || "";
 
@@ -571,6 +611,7 @@ document.getElementById("form-dep").addEventListener("submit", async (e) => {
     ascensor: document.getElementById("f-ascensor").checked,
     banio_accesible: document.getElementById("f-banio").checked,
     ruta_accesible: document.getElementById("f-ruta").checked,
+    instrucciones_internas: document.getElementById("f-instrucciones").value || null,
     estado: document.getElementById("f-estado").value,
     responsable_validar: document.getElementById("f-responsable").value || null,
   };

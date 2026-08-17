@@ -127,6 +127,22 @@ def interpretar(query: str) -> str:
     return t
 
 
+# Palabras/frases que indican que la persona pregunta por accesibilidad,
+# no por una dependencia puntual. Sirve para dos cosas: (a) responder con la
+# información de accesibilidad de la sede cuando no se nombra una dependencia
+# específica, y (b) alimentar el indicador "consultas sobre rutas accesibles".
+PALABRAS_ACCESIBILIDAD = {
+    "rampa", "rampas", "ascensor", "ascensores", "accesible", "accesibilidad",
+    "discapacidad", "discapacitados", "silla de ruedas", "sillas de ruedas",
+    "movilidad reducida", "banio accesible", "ruta accesible",
+}
+
+
+def es_pregunta_de_accesibilidad(texto_normalizado: str) -> bool:
+    t = f" {texto_normalizado} "
+    return any(f" {palabra} " in t or t.strip() == palabra for palabra in PALABRAS_ACCESIBILIDAD)
+
+
 def distancia_edicion(a: str, b: str) -> int:
     """Distancia de Levenshtein clásica (programación dinámica), sin
     dependencias externas -- para tolerar errores de tipeo menores."""

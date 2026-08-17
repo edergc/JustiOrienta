@@ -32,11 +32,18 @@ function badgeLabel(tipo) {
   return { jurisdiccional: "Jurisdiccional", administrativa: "Administrativa", servicio: "Servicio" }[tipo] || tipo;
 }
 
-function leerEnVozAlta(dep) {
+function leerTexto(texto) {
   if (!("speechSynthesis" in window)) {
     alert("La lectura en voz alta no está disponible en este navegador.");
     return;
   }
+  const u = new SpeechSynthesisUtterance(texto);
+  u.lang = "es-PE";
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(u);
+}
+
+function leerEnVozAlta(dep) {
   const partes = [
     `${dep.nombre}.`,
     dep.sede ? `Se encuentra en ${dep.sede.nombre}` : "",
@@ -44,11 +51,9 @@ function leerEnVozAlta(dep) {
     dep.oficina && dep.oficina !== "—" ? `, oficina ${dep.oficina}.` : ".",
     dep.horario ? `Horario: ${dep.horario}.` : "",
     dep.ruta_accesible ? "Cuenta con ruta accesible." : "",
+    dep.instrucciones_internas ? `Cómo llegar dentro del edificio: ${dep.instrucciones_internas}` : "",
   ];
-  const u = new SpeechSynthesisUtterance(partes.join(" "));
-  u.lang = "es-PE";
-  window.speechSynthesis.cancel();
-  window.speechSynthesis.speak(u);
+  leerTexto(partes.join(" "));
 }
 
 function tarjeta(dep) {
@@ -71,6 +76,7 @@ function tarjeta(dep) {
     ${dep.horario ? `<p class="meta">Horario: ${dep.horario}</p>` : ""}
     ${dep.servicios ? `<p class="meta">${dep.servicios}</p>` : ""}
     ${servicios ? `<ul class="meta" style="padding-left:1.1rem; margin-top:0.4rem;">${servicios}</ul>` : ""}
+    ${dep.instrucciones_internas ? `<p class="meta"><strong>Cómo llegar dentro del edificio:</strong> ${dep.instrucciones_internas}</p>` : ""}
     <div class="a11y-row">
       ${dep.rampa || (dep.sede && dep.sede.rampa) ? "<span>Rampa</span>" : ""}
       ${dep.ascensor || (dep.sede && dep.sede.ascensor) ? "<span>Ascensor</span>" : ""}
@@ -82,6 +88,33 @@ function tarjeta(dep) {
     </div>
   `;
   el.querySelector("[data-leer]").addEventListener("click", () => leerEnVozAlta(dep));
+  return el;
+}
+
+function tarjetaAccesibilidadSede(sede) {
+  const el = document.createElement("article");
+  el.className = "card";
+  const items = [
+    sede.rampa ? "Rampa de acceso" : null,
+    sede.ascensor ? "Ascensor" : null,
+    sede.banio_accesible ? "Baño accesible" : null,
+    sede.estacionamiento_accesible ? "Estacionamiento accesible" : null,
+    sede.personal_asistencia ? "Personal de asistencia disponible" : null,
+  ].filter(Boolean);
+  const texto = items.length
+    ? `${sede.nombre} cuenta con: ${items.join(", ")}.`
+    : `No tenemos registrada información de accesibilidad confirmada para ${sede.nombre}. Consulta en el módulo de orientación.`;
+  el.innerHTML = `
+    <div class="card-top">
+      <h2>Accesibilidad en ${sede.nombre}</h2>
+      <span class="badge servicio">Sede</span>
+    </div>
+    ${items.length ? `<div class="a11y-row">${items.map((i) => `<span>${i}</span>`).join("")}</div>` : `<p class="meta">${texto}</p>`}
+    <div class="card-actions">
+      <button class="primary" type="button" data-leer>🔊 Escuchar</button>
+    </div>
+  `;
+  el.querySelector("[data-leer]").addEventListener("click", () => leerTexto(texto));
   return el;
 }
 
@@ -119,7 +152,20 @@ function renderFeedback(consultaId) {
   });
 }
 
-async function buscarYRenderizar(q) {
+// Contexto conocido de la sesión: llega por ?sede= o ?dependencia= en la URL.
+let sedeContextoId = null;
+
+// El indicador de "modo accesible" es de la sesión (contraste/texto/tema),
+// no de la búsqueda puntual -- se calcula al momento de cada consulta.
+function modoAccesibleActivo() {
+  return (
+    root.getAttribute("data-contrast") === "alto" ||
+    fontStep !== 0 ||
+    temaEfectivoEsOscuro()
+  );
+}
+
+async function buscarYRenderizar(q, opciones = {}) {
   const cont = document.getElementById("resultados");
   const vacio = document.getElementById("estado-vacio");
   const feedback = document.getElementById("feedback-caja");
@@ -134,15 +180,25 @@ async function buscarYRenderizar(q) {
   cont.innerHTML = `<p class="hint">Buscando…</p>`;
   feedback.innerHTML = "";
   try {
-    const res = await fetch(`${API}/buscar?q=${encodeURIComponent(q)}`);
+    const params = new URLSearchParams({ q });
+    if (sedeContextoId) params.set("sede_contexto", sedeContextoId);
+    if (modoAccesibleActivo()) params.set("modo_accesible", "true");
+    if (opciones.viaVoz) params.set("via_voz", "true");
+
+    const res = await fetch(`${API}/buscar?${params.toString()}`);
     const data = await res.json();
     cont.innerHTML = "";
+    if (data.sede_accesibilidad) {
+      cont.appendChild(tarjetaAccesibilidadSede(data.sede_accesibilidad));
+    }
     if (data.fallback || data.resultados.length === 0) {
-      cont.innerHTML = `
-        <div class="fallback" role="status">
-          <strong>No podemos identificar con seguridad lo que buscas.</strong>
-          ${data.mensaje || "Acércate al módulo de orientación en el ingreso o escribe al canal institucional de atención."}
-        </div>`;
+      if (!data.sede_accesibilidad) {
+        cont.innerHTML = `
+          <div class="fallback" role="status">
+            <strong>No podemos identificar con seguridad lo que buscas.</strong>
+            ${data.mensaje || "Acércate al módulo de orientación en el ingreso o escribe al canal institucional de atención."}
+          </div>`;
+      }
       renderFeedback(data.consulta_id);
       return;
     }
@@ -184,7 +240,7 @@ document.getElementById("buscar").addEventListener("input", (e) => {
   recognition.addEventListener("result", (e) => {
     const texto = e.results[0][0].transcript;
     document.getElementById("buscar").value = texto;
-    buscarYRenderizar(texto);
+    buscarYRenderizar(texto, { viaVoz: true });
     estado.textContent = `Escuché: "${texto}"`;
   });
   recognition.addEventListener("error", (e) => {
@@ -217,16 +273,37 @@ document.getElementById("buscar").addEventListener("input", (e) => {
   });
 })();
 
-// ── Saludo contextual al llegar desde un QR de sede (?sede=<id>) ──
+// ── Saludo contextual al llegar desde un QR de sede o dependencia
+// (?sede=<id> / ?dependencia=<id>) ──
 (async function saludoContextual() {
   const params = new URLSearchParams(window.location.search);
   const sedeId = params.get("sede");
+  const depId = params.get("dependencia");
+  const banner = document.getElementById("banner-contexto");
+
+  if (depId) {
+    try {
+      const dep = await (await fetch(`${API}/dependencias/${depId}`)).json();
+      if (dep && dep.sede) {
+        sedeContextoId = dep.sede.id;
+        banner.textContent = `Estás consultando información de "${dep.nombre}", en ${dep.sede.nombre}.`;
+        banner.classList.add("visible");
+        const cont = document.getElementById("resultados");
+        document.getElementById("estado-vacio").style.display = "none";
+        cont.appendChild(tarjeta(dep));
+      }
+    } catch {
+      // sin conexión: la búsqueda normal sigue funcionando igual.
+    }
+    return;
+  }
+
   if (!sedeId) return;
   try {
     const sedes = await (await fetch(`${API}/sedes`)).json();
     const sede = sedes.find((s) => String(s.id) === sedeId);
     if (!sede) return;
-    const banner = document.getElementById("banner-contexto");
+    sedeContextoId = sede.id;
     const nombre = /^sede\s/i.test(sede.nombre) ? sede.nombre : `sede ${sede.nombre}`;
     banner.textContent = `Estás consultando información de la ${nombre}. ¿Qué necesitas encontrar?`;
     banner.classList.add("visible");

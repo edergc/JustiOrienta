@@ -1,8 +1,10 @@
+from typing import Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from app import crud, schemas
+from app import crud, nlp, schemas
 from app.config import settings
 from app.database import get_db
 
@@ -10,29 +12,63 @@ router = APIRouter()
 
 
 @router.get("/buscar", response_model=schemas.BusquedaRespuesta)
-def buscar(q: str = Query("", min_length=0), db: Session = Depends(get_db)):
+def buscar(
+    q: str = Query("", min_length=0),
+    sede_contexto: Optional[int] = Query(None, description="Id de sede conocida por ?sede= en la URL"),
+    modo_accesible: bool = Query(False, description="Alto contraste, texto ampliado o tema oscuro activos"),
+    via_voz: bool = Query(False, description="La consulta llegó por reconocimiento de voz"),
+    db: Session = Depends(get_db),
+):
     if not q.strip():
         return schemas.BusquedaRespuesta(resultados=[], total=0, fallback=False)
 
+    nq = nlp.interpretar(q)
+    sobre_accesibilidad = nlp.es_pregunta_de_accesibilidad(nq)
+
+    sede_accesibilidad = None
+    if sobre_accesibilidad and sede_contexto:
+        sede_accesibilidad = crud.busqueda.info_accesibilidad_sede(db, sede_contexto)
+    sede_out = schemas.SedeOut.model_validate(sede_accesibilidad) if sede_accesibilidad else None
+
     resultados = crud.busqueda.buscar_dependencias(db, q)
     encontrado = len(resultados) > 0
-    consulta = crud.busqueda.registrar_consulta(db, q, encontrado)
+    dependencia_resultado_id = resultados[0].id if encontrado else None
+
+    consulta = crud.busqueda.registrar_consulta(
+        db,
+        q,
+        encontrado,
+        sede_contexto_id=sede_contexto,
+        dependencia_resultado_id=dependencia_resultado_id,
+        modo_accesible=modo_accesible,
+        via_voz=via_voz,
+        sobre_accesibilidad=sobre_accesibilidad,
+    )
 
     if not encontrado:
         return schemas.BusquedaRespuesta(
             resultados=[],
             total=0,
-            fallback=True,
+            # Si pudimos responder la accesibilidad directo desde la sede, no
+            # es realmente un callejón sin salida aunque no haya dependencias.
+            fallback=sede_out is None,
             consulta_id=consulta.id,
+            sede_accesibilidad=sede_out,
             mensaje=(
-                "No podemos identificar con seguridad lo que buscas. "
+                None
+                if sede_out
+                else "No podemos identificar con seguridad lo que buscas. "
                 "Acércate al módulo de orientación o escribe al canal institucional de atención."
             ),
         )
 
     salida = [schemas.DependenciaOut.model_validate(d) for d in resultados]
     return schemas.BusquedaRespuesta(
-        resultados=salida, total=len(salida), fallback=False, consulta_id=consulta.id
+        resultados=salida,
+        total=len(salida),
+        fallback=False,
+        consulta_id=consulta.id,
+        sede_accesibilidad=sede_out,
     )
 
 

@@ -19,12 +19,14 @@ FastAPI, SQLAlchemy, SQLite/PostgreSQL, HTML/CSS/JS nativos.
 | `JusticiaOrienta_04_Plantilla_Catalogo_Piloto.xlsx` | Plantilla para el levantamiento real del catálogo (dependencias, horarios, accesibilidad). |
 | `JusticiaOrienta_05_Nota_Interna_para_Firma.docx` | Nota de una página, no anónima, para conseguir la autorización y firma del responsable. |
 | `JusticiaOrienta_06_Manual_Panel_Administracion.docx` | Manual paso a paso, con capturas reales, para personal de área que no programa. |
+| `JusticiaOrienta_07_Manual_Ciudadano.docx` | Guía en lenguaje simple para quien usa el sitio público, con capturas reales. |
 | `prototipo-v1/` | **V1** — micrositio estático de un solo archivo, sin backend, para demostrar el concepto sin instalar nada. |
 | `app/` | **V2** — aplicación real: backend FastAPI + base de datos + panel de administración. Esto es lo que sigue creciendo. |
 | `migrations/` | Migraciones versionadas de la base de datos (Alembic). |
 | `fuentes/` | Documentos oficiales usados como fuente de datos reales (ver más abajo). |
 | `tests/` | Pruebas automatizadas (`pytest`). |
 | `run.py` | Punto de arranque único del servidor. |
+| `backup_db.py` | Respaldo manual de la base de datos (ver "Respaldos y registro de errores"). |
 
 ## Cómo correr la aplicación real (`app/`)
 
@@ -138,6 +140,28 @@ python -m alembic revision --autogenerate -m "descripción del cambio"
 python -m alembic upgrade head
 ```
 
+### Respaldos y registro de errores
+
+```bash
+python backup_db.py
+```
+
+Copia `justicia_orienta.db` a `backups/` con marca de fecha y hora. Es una acción manual y explícita
+(no corre sola ni programada): antes de cargar datos nuevos, o como rutina periódica de quien administra
+el sistema. En producción con PostgreSQL, este script se reemplaza por `pg_dump` según la política de
+respaldos del área de TI -- no hay una versión propia para Postgres porque esa decisión (frecuencia,
+retención, dónde se guarda) le corresponde a Informática, no a este repositorio.
+
+Los errores del servidor quedan en `logs/justicia_orienta.log` (rotación automática: 1 MB por archivo,
+5 respaldos), además de la consola -- así se puede revisar qué pasó después de un reinicio, sin depender
+de una terminal que ya se cerró.
+
+**Sobre HTTPS**: el piloto corre en HTTP simple porque `127.0.0.1`/red interna no lo necesita para
+pruebas. Antes de exponer esto en un dominio público, es obligatorio ponerlo detrás de HTTPS (por
+ejemplo con un proxy inverso como Caddy o Nginx + Let's Encrypt, o el balanceador que use la institución)
+-- eso es una decisión de infraestructura de Informática, no algo que este repositorio pueda resolver
+por sí solo corriendo en `127.0.0.1`.
+
 ## De dónde salen los datos reales
 
 El catálogo ya **no** tiene datos de ejemplo: se cargó el
@@ -211,6 +235,16 @@ incompatible, puede convivir `/api/v2` sin romper lo existente).
   siempre a "activo" al guardar, así que editar una sede inactiva la reactivaba sin querer.
 - **Paginación y búsqueda por nombre** en la tabla de dependencias, para catálogos grandes (10 por página,
   con "Mostrando X–Y de Z").
+- **Código QR por sede y por dependencia** (botón "QR" en cada fila de la tabla de Sedes y de Dependencias):
+  genera al vuelo, con la librería `qrcode` (100% local, sin servicio de terceros), un PNG que apunta al
+  sitio público con el contexto ya resuelto (`?sede=<id>` o `?dependencia=<id>`) para imprimir y pegar en
+  un cartel físico.
+- **"Cómo llegar dentro del edificio"** (opcional, por dependencia): un campo de texto libre para
+  indicaciones simples ("desde el ingreso principal, sube al piso 5 por el ascensor"). Es deliberadamente
+  solo texto -- no un mapa interior ni geolocalización indoor, algo que este sistema no promete.
+- **Panel de indicadores ampliado**: además de consultas totales/resueltas/satisfacción, muestra
+  % de búsquedas hechas en modo accesible (alto contraste, texto ampliado o tema oscuro), % por voz,
+  % sobre accesibilidad, consultas más frecuentes y consultas por sede.
 - Confirmaciones visuales (un aviso breve arriba a la derecha) después de cada guardado exitoso.
 
 ## El sitio público (`/`)
@@ -221,11 +255,15 @@ incompatible, puede convivir `/api/v2` sin romper lo existente).
 - **Estado vacío con sugerencias por categoría**: antes de escribir nada, la persona ve tres caminos
   claros ("encontrar un juzgado", "trámites administrativos", "no sé qué necesito") en vez de una
   pantalla en blanco.
-- **Saludo contextual por QR de sede**: un enlace con `?sede=<id>` (el que llevaría el QR físico
-  instalado en una sede) muestra un aviso "Estás consultando información de la sede X" antes de buscar.
+- **Saludo contextual por QR de sede o de dependencia**: un enlace con `?sede=<id>` o `?dependencia=<id>`
+  (los que llevaría el QR físico instalado en una sede o en la puerta de una oficina) muestra un aviso de
+  contexto y, en el caso de `?dependencia=`, la ficha de esa oficina directamente, sin tener que buscarla.
+- **Preguntas de accesibilidad respondidas directo**: si alguien escribe o dice algo como "¿hay rampa?" o
+  "ascensor" y el sitio ya sabe en qué sede está (por el QR), responde de inmediato con la accesibilidad
+  real de esa sede -- sin inventar nada: si no hay dato confirmado, lo dice así y deriva a atención humana.
 - **Retroalimentación de una pregunta**: después de cada búsqueda, "¿Esto te resultó útil? Sí /
   Parcialmente / No" — anónimo, ligado solo al identificador de esa consulta puntual, visible en
-  `/admin` → Dependencias → estadísticas (`porcentaje_satisfaccion`).
+  `/admin` → estadísticas (`porcentaje_satisfaccion`).
 - Todo lo demás del diseño original se mantiene: alto contraste, texto ampliable, tema oscuro, lectura
   en voz alta de cada resultado, y el mensaje de respaldo cuando el sistema no tiene certeza.
 

@@ -11,3 +11,5 @@ resp_check.json
 check.txt
 debug_encoding.txt
 server.log
+logs/
+backups/
