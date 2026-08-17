@@ -169,6 +169,19 @@ incompatible, puede convivir `/api/v2` sin romper lo existente).
 | V3 | Asistente de interpretación de lenguaje natural sobre el catálogo validado | No iniciado |
 | V4 | Navegación interior avanzada, integraciones adicionales | No iniciado |
 
+## El panel de administración (`/admin`)
+
+- **Cambiar mi contraseña**: cualquier usuario, sin importar el rol, puede cambiarla desde el botón junto a
+  "Salir" -- pide la contraseña actual antes de aceptar la nueva.
+- **Gestión completa de usuarios** (solo admin): editar nombre, rol, área, activar/desactivar y restablecer
+  la contraseña de cualquier persona, sin tocar la base de datos a mano. Un(a) admin no puede desactivar su
+  propia cuenta por accidente.
+- **Sedes con estado real**: el formulario de sedes tiene un selector Activo/Inactivo -- antes se forzaba
+  siempre a "activo" al guardar, así que editar una sede inactiva la reactivaba sin querer.
+- **Paginación y búsqueda por nombre** en la tabla de dependencias, para catálogos grandes (10 por página,
+  con "Mostrando X–Y de Z").
+- Confirmaciones visuales (un aviso breve arriba a la derecha) después de cada guardado exitoso.
+
 ## El sitio público (`/`)
 
 - **Búsqueda por texto o por voz**: el botón de micrófono usa reconocimiento de habla nativo del

@@ -3,6 +3,16 @@ let TOKEN = sessionStorage.getItem("jo_token");
 let USUARIO = null;
 let CACHE_DEPS = [];
 let CACHE_SEDES = [];
+let CACHE_USUARIOS = [];
+
+let toastTimer;
+function mostrarToast(mensaje) {
+  const el = document.getElementById("toast");
+  el.textContent = mensaje;
+  el.classList.add("visible");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove("visible"), 2600);
+}
 
 function headers(json = true) {
   const h = {};
@@ -104,6 +114,33 @@ document.getElementById("form-login").addEventListener("submit", async (e) => {
 
 document.getElementById("btn-logout").addEventListener("click", cerrarSesion);
 
+// ── Mi contraseña ──
+document.getElementById("btn-mi-cuenta").addEventListener("click", () => {
+  document.getElementById("form-password").reset();
+  document.getElementById("form-password-error").innerHTML = "";
+  document.getElementById("modal-password").style.display = "flex";
+  document.getElementById("p-actual").focus();
+});
+document.getElementById("btn-password-cancelar").addEventListener("click", () => {
+  document.getElementById("modal-password").style.display = "none";
+});
+document.getElementById("form-password").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  try {
+    await api("/auth/mi-password", {
+      method: "PUT",
+      body: JSON.stringify({
+        password_actual: document.getElementById("p-actual").value,
+        password_nueva: document.getElementById("p-nueva").value,
+      }),
+    });
+    document.getElementById("modal-password").style.display = "none";
+    mostrarToast("Contraseña actualizada.");
+  } catch (err) {
+    document.getElementById("form-password-error").innerHTML = `<p class="error-msg">${err.message}</p>`;
+  }
+});
+
 // ── Pestañas ──
 document.querySelectorAll(".tab-btn").forEach((btn) => {
   btn.addEventListener("click", () => {
@@ -179,6 +216,7 @@ function cargarSedeEnFormulario(id) {
   document.getElementById("s-banio").checked = !!s.banio_accesible;
   document.getElementById("s-estacionamiento").checked = !!s.estacionamiento_accesible;
   document.getElementById("s-asistencia").checked = !!s.personal_asistencia;
+  document.getElementById("s-estado").value = s.estado || "activo";
 }
 
 document.getElementById("btn-sede-cancelar").addEventListener("click", limpiarFormularioSede);
@@ -197,13 +235,14 @@ document.getElementById("form-sede").addEventListener("submit", async (e) => {
     banio_accesible: document.getElementById("s-banio").checked,
     estacionamiento_accesible: document.getElementById("s-estacionamiento").checked,
     personal_asistencia: document.getElementById("s-asistencia").checked,
-    estado: "activo",
+    estado: document.getElementById("s-estado").value,
   };
   try {
     if (id) await api(`/admin/sedes/${id}`, { method: "PUT", body: JSON.stringify(payload) });
     else await api("/admin/sedes", { method: "POST", body: JSON.stringify(payload) });
     limpiarFormularioSede();
     await cargarSedes();
+    mostrarToast("Sede guardada.");
   } catch (err) {
     document.getElementById("form-sede-error").innerHTML = `<p class="error-msg">${err.message}</p>`;
   }
@@ -232,31 +271,91 @@ async function cargarEdificios(sedeId) {
 // ═══════════════════════════════════════════════════════════
 async function cargarUsuarios() {
   if (!esAdmin()) return;
-  const usuarios = await api("/admin/usuarios");
+  CACHE_USUARIOS = await api("/admin/usuarios");
   const tbody = document.querySelector("#tabla-usuarios tbody");
   tbody.innerHTML = "";
-  for (const u of usuarios) {
+  for (const u of CACHE_USUARIOS) {
     const tr = document.createElement("tr");
     const ultimo = u.ultimo_acceso ? new Date(u.ultimo_acceso).toLocaleString("es-PE") : "Nunca";
-    tr.innerHTML = `<td>${u.nombre}</td><td>${u.email}</td><td>${u.rol}</td><td>${u.area || "—"}</td><td>${ultimo}</td>`;
+    tr.innerHTML = `
+      <td>${u.nombre}</td><td>${u.email}</td><td>${u.rol}</td><td>${u.area || "—"}</td>
+      <td>${u.activo ? '<span class="badge activo">Activo</span>' : '<span class="badge inactivo">Inactivo</span>'}</td>
+      <td>${ultimo}</td>
+      <td><button class="btn secondary" data-editar-usuario="${u.id}">Editar</button></td>`;
     tbody.appendChild(tr);
   }
+  tbody.querySelectorAll("[data-editar-usuario]").forEach((b) =>
+    b.addEventListener("click", () => cargarUsuarioEnFormulario(parseInt(b.dataset.editarUsuario)))
+  );
 }
+
+function limpiarFormularioUsuario() {
+  document.getElementById("form-usuario-titulo").textContent = "Nuevo usuario";
+  document.getElementById("u-id").value = "";
+  document.getElementById("form-usuario").reset();
+  document.getElementById("form-usuario-error").innerHTML = "";
+  document.getElementById("campo-u-email").style.display = "";
+  document.getElementById("u-email").required = true;
+  document.getElementById("u-password").required = true;
+  document.getElementById("u-password").placeholder = "";
+  document.querySelector('#campo-u-password label').textContent = "Contraseña inicial *";
+  document.getElementById("campo-u-activo").style.display = "none";
+  document.getElementById("btn-usuario-guardar").textContent = "Crear usuario";
+  document.getElementById("btn-usuario-cancelar").style.display = "none";
+}
+
+function cargarUsuarioEnFormulario(id) {
+  const u = CACHE_USUARIOS.find((x) => x.id === id);
+  if (!u) return;
+  document.getElementById("form-usuario-titulo").textContent = `Editar: ${u.nombre}`;
+  document.getElementById("u-id").value = u.id;
+  document.getElementById("u-nombre").value = u.nombre;
+  document.getElementById("u-rol").value = u.rol;
+  document.getElementById("u-area").value = u.area || "";
+  document.getElementById("u-activo").checked = u.activo;
+
+  // El correo es el identificador de acceso: no se edita aquí.
+  document.getElementById("campo-u-email").style.display = "none";
+  document.getElementById("u-email").required = false;
+  document.getElementById("u-password").value = "";
+  document.getElementById("u-password").required = false;
+  document.getElementById("u-password").placeholder = "Dejar en blanco para no cambiarla";
+  document.querySelector('#campo-u-password label').textContent = "Nueva contraseña (opcional)";
+  document.getElementById("campo-u-activo").style.display = "";
+  document.getElementById("btn-usuario-guardar").textContent = "Guardar cambios";
+  document.getElementById("btn-usuario-cancelar").style.display = "";
+
+  window.scrollTo({ top: document.getElementById("form-usuario").offsetTop - 20, behavior: "smooth" });
+}
+
+document.getElementById("btn-usuario-cancelar").addEventListener("click", limpiarFormularioUsuario);
 
 document.getElementById("form-usuario").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const payload = {
-    nombre: document.getElementById("u-nombre").value,
-    email: document.getElementById("u-email").value,
-    password: document.getElementById("u-password").value,
-    rol: document.getElementById("u-rol").value,
-    area: document.getElementById("u-area").value || null,
-  };
+  const id = document.getElementById("u-id").value;
   try {
-    await api("/admin/usuarios", { method: "POST", body: JSON.stringify(payload) });
-    document.getElementById("form-usuario").reset();
-    document.getElementById("form-usuario-error").innerHTML = "";
+    if (id) {
+      const payload = {
+        nombre: document.getElementById("u-nombre").value,
+        rol: document.getElementById("u-rol").value,
+        area: document.getElementById("u-area").value || null,
+        activo: document.getElementById("u-activo").checked,
+        nueva_password: document.getElementById("u-password").value || null,
+      };
+      await api(`/admin/usuarios/${id}`, { method: "PUT", body: JSON.stringify(payload) });
+    } else {
+      const payload = {
+        nombre: document.getElementById("u-nombre").value,
+        email: document.getElementById("u-email").value,
+        password: document.getElementById("u-password").value,
+        rol: document.getElementById("u-rol").value,
+        area: document.getElementById("u-area").value || null,
+      };
+      await api("/admin/usuarios", { method: "POST", body: JSON.stringify(payload) });
+    }
+    limpiarFormularioUsuario();
     await cargarUsuarios();
+    mostrarToast("Usuario guardado.");
   } catch (err) {
     document.getElementById("form-usuario-error").innerHTML = `<p class="error-msg">${err.message}</p>`;
   }
@@ -287,12 +386,23 @@ function poblarOpcionesEstado() {
     .join("");
 }
 
+const DEP_LIMITE = 10;
+let depSkip = 0;
+
 async function cargarDependencias() {
   const estado = document.getElementById("filtro-estado").value;
-  const qs = estado ? `?estado=${estado}` : "";
-  CACHE_DEPS = await api(`/admin/dependencias${qs}`);
+  const q = document.getElementById("filtro-nombre").value.trim();
+  const params = new URLSearchParams({ skip: depSkip, limite: DEP_LIMITE });
+  if (estado) params.set("estado", estado);
+  if (q) params.set("q", q);
+
+  const resp = await api(`/admin/dependencias?${params}`);
+  CACHE_DEPS = resp.items;
+
   const tbody = document.querySelector("#tabla-dependencias tbody");
-  tbody.innerHTML = "";
+  tbody.innerHTML = CACHE_DEPS.length
+    ? ""
+    : '<tr><td colspan="5" class="hint" style="padding:1rem;">Sin resultados.</td></tr>';
   for (const d of CACHE_DEPS) {
     const tr = document.createElement("tr");
     const nombreSede = d.sede ? d.sede.nombre : "—";
@@ -313,13 +423,50 @@ async function cargarDependencias() {
   tbody.querySelectorAll("[data-desactivar]").forEach((b) =>
     b.addEventListener("click", () => desactivar(parseInt(b.dataset.desactivar)))
   );
+
+  renderPaginacionDep(resp.total);
 }
-document.getElementById("filtro-estado").addEventListener("change", cargarDependencias);
+
+function renderPaginacionDep(total) {
+  const box = document.getElementById("paginacion-dep");
+  if (total === 0) {
+    box.innerHTML = "";
+    return;
+  }
+  const desde = depSkip + 1;
+  const hasta = Math.min(depSkip + DEP_LIMITE, total);
+  box.innerHTML = `
+    <span>Mostrando ${desde}–${hasta} de ${total}</span>
+    <div style="display:flex; gap:0.5rem;">
+      <button class="btn secondary" id="btn-dep-anterior" ${depSkip === 0 ? "disabled" : ""}>← Anterior</button>
+      <button class="btn secondary" id="btn-dep-siguiente" ${hasta >= total ? "disabled" : ""}>Siguiente →</button>
+    </div>`;
+  document.getElementById("btn-dep-anterior").addEventListener("click", () => {
+    depSkip = Math.max(0, depSkip - DEP_LIMITE);
+    cargarDependencias();
+  });
+  document.getElementById("btn-dep-siguiente").addEventListener("click", () => {
+    depSkip += DEP_LIMITE;
+    cargarDependencias();
+  });
+}
+
+function reiniciarYCargarDependencias() {
+  depSkip = 0;
+  cargarDependencias();
+}
+document.getElementById("filtro-estado").addEventListener("change", reiniciarYCargarDependencias);
+let filtroNombreDebounce;
+document.getElementById("filtro-nombre").addEventListener("input", () => {
+  clearTimeout(filtroNombreDebounce);
+  filtroNombreDebounce = setTimeout(reiniciarYCargarDependencias, 300);
+});
 
 async function desactivar(id) {
   if (!confirm("¿Desactivar esta dependencia? Dejará de verse en el sitio público.")) return;
   await api(`/admin/dependencias/${id}`, { method: "DELETE" });
   await Promise.all([cargarDependencias(), cargarStats()]);
+  mostrarToast("Dependencia desactivada.");
 }
 
 function limpiarFormulario() {
@@ -382,6 +529,7 @@ document.getElementById("btn-aprobar").addEventListener("click", async () => {
     await api(`/admin/dependencias/${id}/aprobar`, { method: "POST" });
     limpiarFormulario();
     await Promise.all([cargarDependencias(), cargarStats()]);
+    mostrarToast("Publicado. Ya es visible en el sitio público.");
   } catch (err) {
     document.getElementById("form-error").innerHTML = `<p class="error-msg">${err.message}</p>`;
   }
@@ -395,6 +543,7 @@ document.getElementById("btn-rechazar").addEventListener("click", async () => {
     await api(`/admin/dependencias/${id}/rechazar?comentario=${encodeURIComponent(comentario)}`, { method: "POST" });
     limpiarFormulario();
     await Promise.all([cargarDependencias(), cargarStats()]);
+    mostrarToast("Devuelto a revisión.");
   } catch (err) {
     document.getElementById("form-error").innerHTML = `<p class="error-msg">${err.message}</p>`;
   }
@@ -433,6 +582,7 @@ document.getElementById("form-dep").addEventListener("submit", async (e) => {
     }
     limpiarFormulario();
     await Promise.all([cargarDependencias(), cargarStats(), cargarAuditoria()]);
+    mostrarToast("Dependencia guardada.");
   } catch (err) {
     document.getElementById("form-error").innerHTML = `<p class="error-msg">${err.message}</p>`;
   }
@@ -499,6 +649,9 @@ async function cargarAuditoria() {
 async function cargarTodo() {
   await cargarSedes();
   limpiarFormulario();
+  limpiarFormularioUsuario();
+  depSkip = 0;
+  document.getElementById("filtro-nombre").value = "";
   await Promise.all([cargarStats(), cargarDependencias(), cargarAuditoria(), cargarUsuarios()]);
 }
 

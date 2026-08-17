@@ -25,6 +25,19 @@ class UsuarioCreate(BaseModel):
     area: Optional[str] = None
 
 
+class UsuarioUpdate(BaseModel):
+    nombre: str
+    rol: Rol
+    area: Optional[str] = None
+    activo: bool = True
+    nueva_password: Optional[str] = None  # solo si un(a) admin quiere restablecerla
+
+
+class CambiarPasswordIn(BaseModel):
+    password_actual: str
+    password_nueva: str
+
+
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"

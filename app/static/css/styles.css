@@ -181,6 +181,35 @@ table.admin td.actions button { font-size: 0.78rem; padding: 0.3rem 0.6rem; }
 .topbar-admin { display: flex; justify-content: space-between; align-items: center; padding: 0.9rem 1.5rem; border-bottom: 1px solid var(--line); }
 .topbar-admin .who { font-size: 0.85rem; color: var(--ink-soft); }
 
+/* ── toast de confirmación ── */
+.toast {
+  position: fixed; top: 1rem; right: 1rem; z-index: 200;
+  background: var(--accent2-strong); color: #fff; padding: 0.7rem 1.1rem; border-radius: 8px;
+  font-size: 0.9rem; font-weight: 600; box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+  opacity: 0; transform: translateY(-8px); pointer-events: none; transition: opacity 0.2s, transform 0.2s;
+}
+.toast.visible { opacity: 1; transform: translateY(0); }
+@media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
+
+/* ── modal simple ── */
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 150;
+  display: flex; align-items: center; justify-content: center; padding: 1rem;
+}
+.modal {
+  background: var(--surface); border-radius: 12px; padding: 1.4rem; max-width: 26rem; width: 100%;
+  border: 1px solid var(--line);
+}
+.modal h3 { margin-top: 0; font-family: var(--font-display); }
+
+/* ── paginación ── */
+.paginacion {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.8rem;
+  margin-top: 0.8rem; font-size: 0.85rem; color: var(--ink-soft); flex-wrap: wrap;
+}
+.paginacion .btn { padding: 0.4rem 0.8rem; font-size: 0.85rem; }
+.paginacion .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
 /* ── sitio público: cabecera y saludo contextual ── */
 .site-mark { width: 2.75rem; height: 2.75rem; display: block; margin: 0 auto; }
 .context-banner {

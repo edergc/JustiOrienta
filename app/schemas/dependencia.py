@@ -54,3 +54,10 @@ class DependenciaOut(DependenciaBase):
         if v and hasattr(v[0] if len(v) else None, "alias"):
             return [a.alias for a in v]
         return v
+
+
+class DependenciaListaOut(BaseModel):
+    items: list[DependenciaOut]
+    total: int
+    skip: int
+    limite: int

@@ -27,7 +27,25 @@
     <a class="home" href="/" style="font-family:var(--font-display); font-weight:700; text-decoration:none; color:var(--ink);">Justicia Orienta</a>
     <div>
       <span class="who" id="who"></span>
-      <button class="btn secondary" id="btn-logout" style="margin-left:0.8rem;">Salir</button>
+      <button class="btn secondary" id="btn-mi-cuenta" style="margin-left:0.8rem;">Mi contraseña</button>
+      <button class="btn secondary" id="btn-logout" style="margin-left:0.5rem;">Salir</button>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <div id="modal-password" class="modal-backdrop" style="display:none;">
+    <div class="modal">
+      <h3>Cambiar mi contraseña</h3>
+      <form id="form-password">
+        <div class="field"><label for="p-actual">Contraseña actual</label><input id="p-actual" type="password" required /></div>
+        <div class="field"><label for="p-nueva">Contraseña nueva (mínimo 6 caracteres)</label><input id="p-nueva" type="password" required minlength="6" /></div>
+        <div id="form-password-error"></div>
+        <div style="display:flex; gap:0.6rem; margin-top:0.8rem;">
+          <button class="btn" type="submit">Guardar</button>
+          <button class="btn secondary" type="button" id="btn-password-cancelar">Cancelar</button>
+        </div>
+      </form>
     </div>
   </div>
 
@@ -46,14 +64,20 @@
       <div class="admin-grid">
         <div class="panel">
           <h3>Dependencias</h3>
-          <div class="field" style="max-width:14rem;">
-            <label for="filtro-estado">Filtrar por estado</label>
-            <select id="filtro-estado">
-              <option value="">Todos</option>
-              <option value="revision">En revisión</option>
-              <option value="activo">Activo</option>
-              <option value="inactivo">Inactivo</option>
-            </select>
+          <div style="display:flex; gap:0.8rem; flex-wrap:wrap; margin-bottom:0.8rem;">
+            <div class="field" style="max-width:14rem;">
+              <label for="filtro-estado">Filtrar por estado</label>
+              <select id="filtro-estado">
+                <option value="">Todos</option>
+                <option value="revision">En revisión</option>
+                <option value="activo">Activo</option>
+                <option value="inactivo">Inactivo</option>
+              </select>
+            </div>
+            <div class="field" style="flex:1; min-width:12rem;">
+              <label for="filtro-nombre">Buscar por nombre</label>
+              <input id="filtro-nombre" type="text" placeholder="Ej: civil, recursos..." />
+            </div>
           </div>
           <div class="table-wrap">
             <table class="admin" id="tabla-dependencias">
@@ -61,6 +85,7 @@
               <tbody></tbody>
             </table>
           </div>
+          <div id="paginacion-dep" class="paginacion"></div>
         </div>
 
         <div class="panel">
@@ -156,6 +181,13 @@
             <div class="field"><label for="s-horario">Horario de atención</label><input id="s-horario" /></div>
             <div class="field"><label for="s-telefono">Teléfono</label><input id="s-telefono" /></div>
             <div class="field">
+              <label for="s-estado">Estado *</label>
+              <select id="s-estado" required>
+                <option value="activo">Activo</option>
+                <option value="inactivo">Inactivo</option>
+              </select>
+            </div>
+            <div class="field">
               <label><input type="checkbox" id="s-rampa" /> Rampa</label>
               <label><input type="checkbox" id="s-ascensor" /> Ascensor</label>
               <label><input type="checkbox" id="s-banio" /> Baño accesible</label>
@@ -179,17 +211,18 @@
           <h3>Usuarios</h3>
           <div class="table-wrap">
             <table class="admin" id="tabla-usuarios">
-              <thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Área</th><th>Último acceso</th></tr></thead>
+              <thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Área</th><th>Estado</th><th>Último acceso</th><th></th></tr></thead>
               <tbody></tbody>
             </table>
           </div>
         </div>
         <div class="panel">
-          <h3>Nuevo usuario</h3>
+          <h3 id="form-usuario-titulo">Nuevo usuario</h3>
           <form id="form-usuario">
+            <input type="hidden" id="u-id" />
             <div class="field"><label for="u-nombre">Nombre *</label><input id="u-nombre" required /></div>
-            <div class="field"><label for="u-email">Correo *</label><input id="u-email" type="email" required /></div>
-            <div class="field"><label for="u-password">Contraseña inicial *</label><input id="u-password" type="text" required /></div>
+            <div class="field" id="campo-u-email"><label for="u-email">Correo *</label><input id="u-email" type="email" required /></div>
+            <div class="field" id="campo-u-password"><label for="u-password">Contraseña inicial *</label><input id="u-password" type="text" required /></div>
             <div class="field">
               <label for="u-rol">Rol *</label>
               <select id="u-rol" required>
@@ -200,8 +233,14 @@
               </select>
             </div>
             <div class="field"><label for="u-area">Área (para gestor/validador)</label><input id="u-area" placeholder="Ej: Recursos Humanos" /></div>
+            <div class="field" id="campo-u-activo" style="display:none;">
+              <label><input type="checkbox" id="u-activo" checked /> Cuenta activa</label>
+            </div>
             <div id="form-usuario-error"></div>
-            <button class="btn" type="submit" style="margin-top:0.4rem;">Crear usuario</button>
+            <div style="display:flex; gap:0.6rem; margin-top:0.6rem;">
+              <button class="btn" type="submit" id="btn-usuario-guardar">Crear usuario</button>
+              <button class="btn secondary" type="button" id="btn-usuario-cancelar" style="display:none;">Cancelar</button>
+            </div>
           </form>
         </div>
       </div>

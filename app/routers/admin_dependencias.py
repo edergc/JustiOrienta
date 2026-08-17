@@ -14,17 +14,23 @@ router = APIRouter()
 
 # ── Dependencias ──────────────────────────────────────────────
 
-@router.get("/dependencias", response_model=list[schemas.DependenciaOut])
+@router.get("/dependencias", response_model=schemas.DependenciaListaOut)
 def listar_dependencias(
     estado: Optional[str] = None,
+    q: Optional[str] = None,
     skip: int = 0,
-    limite: int = 50,
+    limite: int = 20,
     db: Session = Depends(get_db),
     usuario=Depends(security.get_usuario_actual),
 ):
     area = None if usuario.rol == Rol.admin else usuario.area
-    deps = crud.dependencias.listar(db, area=area, estado=estado, skip=skip, limite=min(limite, 200))
-    return [schemas.DependenciaOut.model_validate(d) for d in deps]
+    limite = min(limite, 100)
+    deps = crud.dependencias.listar(db, area=area, estado=estado, q_nombre=q, skip=skip, limite=limite)
+    total = crud.dependencias.contar(db, area=area, estado=estado, q_nombre=q)
+    return schemas.DependenciaListaOut(
+        items=[schemas.DependenciaOut.model_validate(d) for d in deps],
+        total=total, skip=skip, limite=limite,
+    )
 
 
 @router.post("/dependencias", response_model=schemas.DependenciaOut)

@@ -3,6 +3,7 @@ from typing import Optional
 from sqlalchemy.orm import Session, joinedload
 
 from app import models, schemas
+from app.models import normalizar
 
 
 def _cargar(q):
@@ -14,27 +15,30 @@ def _cargar(q):
     )
 
 
+def _filtrar(q, area: Optional[str], estado: Optional[str], q_nombre: Optional[str]):
+    if area is not None:
+        q = q.filter(models.Dependencia.area == area)
+    if estado is not None:
+        q = q.filter(models.Dependencia.estado == estado)
+    if q_nombre:
+        q = q.filter(models.Dependencia.nombre_normalizado.contains(normalizar(q_nombre)))
+    return q
+
+
 def listar(
     db: Session,
     area: Optional[str] = None,
     estado: Optional[str] = None,
+    q_nombre: Optional[str] = None,
     skip: int = 0,
     limite: int = 50,
 ) -> list[models.Dependencia]:
-    q = _cargar(db.query(models.Dependencia))
-    if area is not None:
-        q = q.filter(models.Dependencia.area == area)
-    if estado is not None:
-        q = q.filter(models.Dependencia.estado == estado)
+    q = _filtrar(_cargar(db.query(models.Dependencia)), area, estado, q_nombre)
     return q.order_by(models.Dependencia.nombre).offset(skip).limit(limite).all()
 
 
-def contar(db: Session, area: Optional[str] = None, estado: Optional[str] = None) -> int:
-    q = db.query(models.Dependencia)
-    if area is not None:
-        q = q.filter(models.Dependencia.area == area)
-    if estado is not None:
-        q = q.filter(models.Dependencia.estado == estado)
+def contar(db: Session, area: Optional[str] = None, estado: Optional[str] = None, q_nombre: Optional[str] = None) -> int:
+    q = _filtrar(db.query(models.Dependencia), area, estado, q_nombre)
     return q.count()
 
 
