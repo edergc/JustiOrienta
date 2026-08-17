@@ -18,12 +18,12 @@ def crear_usuario(
     db: Session = Depends(get_db),
     usuario=Depends(security.requiere_admin),
 ):
-    if crud.usuarios.obtener_por_email(db, payload.email):
-        raise HTTPException(409, "Ya existe un usuario con ese correo")
+    if crud.usuarios.obtener_por_dni(db, payload.dni):
+        raise HTTPException(409, "Ya existe un usuario con ese DNI")
     nuevo = crud.usuarios.crear(db, payload)
     crud.auditoria.registrar(
-        db, usuario.email, "usuario", nuevo.id, "CREATE",
-        f"Creó usuario '{nuevo.email}' (rol={nuevo.rol.value}, área={nuevo.area or '-'})",
+        db, usuario.dni, "usuario", nuevo.id, "CREATE",
+        f"Creó usuario '{nuevo.nombre}' (DNI {nuevo.dni}, rol={nuevo.rol.value}, área={nuevo.area or '-'})",
     )
     return nuevo
 
@@ -45,5 +45,5 @@ def actualizar_usuario(
     if payload.nueva_password:
         detalle += ", contraseña restablecida"
     objetivo = crud.usuarios.actualizar(db, objetivo, payload)
-    crud.auditoria.registrar(db, usuario.email, "usuario", objetivo.id, "UPDATE", detalle)
+    crud.auditoria.registrar(db, usuario.dni, "usuario", objetivo.id, "UPDATE", detalle)
     return objetivo

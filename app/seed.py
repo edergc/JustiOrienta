@@ -10,21 +10,21 @@ from app import models
 from app.database import SessionLocal
 from app.security import hash_password
 
-ADMIN_EMAIL = "admin@justiciaorienta.local"
-ADMIN_PASSWORD_INICIAL = "CambiarAhora2026"
+ADMIN_DNI = "12345678"
+ADMIN_PASSWORD_INICIAL = "123456"
 
 
 def main():
     db = SessionLocal()
     try:
-        existe = db.query(models.Usuario).filter(models.Usuario.email == ADMIN_EMAIL).first()
+        existe = db.query(models.Usuario).filter(models.Usuario.dni == ADMIN_DNI).first()
         if existe:
-            print(f"El usuario administrador ya existe: {ADMIN_EMAIL}")
+            print(f"El usuario administrador ya existe: DNI {ADMIN_DNI}")
             return
 
         admin = models.Usuario(
             nombre="Administrador Justicia Orienta",
-            email=ADMIN_EMAIL,
+            dni=ADMIN_DNI,
             password_hash=hash_password(ADMIN_PASSWORD_INICIAL),
             rol=models.Rol.admin,
             activo=True,
@@ -32,7 +32,7 @@ def main():
         db.add(admin)
         db.commit()
         print("Usuario administrador creado:")
-        print(f"  correo:     {ADMIN_EMAIL}")
+        print(f"  DNI:        {ADMIN_DNI}")
         print(f"  contraseña: {ADMIN_PASSWORD_INICIAL}  (cámbiala apenas inicies sesión)")
     finally:
         db.close()

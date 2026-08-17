@@ -18,7 +18,7 @@ def _crear_dependencia_activa(db, sede, **extra):
 
 def _token_admin():
     return client.post(
-        "/api/v1/auth/login", data={"username": "admin@pruebas.local", "password": "clave123"}
+        "/api/v1/auth/login", data={"username": "10000001", "password": "clave123"}
     ).json()["access_token"]
 
 

@@ -101,10 +101,10 @@ async function iniciar() {
 
 document.getElementById("form-login").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const email = document.getElementById("login-email").value;
+  const dni = document.getElementById("login-dni").value;
   const pass = document.getElementById("login-pass").value;
   const body = new URLSearchParams();
-  body.set("username", email);
+  body.set("username", dni);
   body.set("password", pass);
   try {
     const res = await fetch(API + "/auth/login", {
@@ -113,7 +113,7 @@ document.getElementById("form-login").addEventListener("submit", async (e) => {
       body,
     });
     if (!res.ok) {
-      const err = await res.json().catch(() => ({ detail: "Correo o contraseña incorrectos" }));
+      const err = await res.json().catch(() => ({ detail: "DNI o contraseña incorrectos" }));
       throw new Error(err.detail);
     }
     const data = await res.json();
@@ -313,7 +313,7 @@ async function cargarUsuarios() {
     const tr = document.createElement("tr");
     const ultimo = u.ultimo_acceso ? new Date(u.ultimo_acceso).toLocaleString("es-PE") : "Nunca";
     tr.innerHTML = `
-      <td>${u.nombre}</td><td>${u.email}</td><td>${u.rol}</td><td>${u.area || "—"}</td>
+      <td>${u.nombre}</td><td>${u.dni}</td><td>${u.rol}</td><td>${u.area || "—"}</td>
       <td>${u.activo ? '<span class="badge activo">Activo</span>' : '<span class="badge inactivo">Inactivo</span>'}</td>
       <td>${ultimo}</td>
       <td><button class="btn secondary" data-editar-usuario="${u.id}">Editar</button></td>`;
@@ -329,8 +329,8 @@ function limpiarFormularioUsuario() {
   document.getElementById("u-id").value = "";
   document.getElementById("form-usuario").reset();
   document.getElementById("form-usuario-error").innerHTML = "";
-  document.getElementById("campo-u-email").style.display = "";
-  document.getElementById("u-email").required = true;
+  document.getElementById("campo-u-dni").style.display = "";
+  document.getElementById("u-dni").required = true;
   document.getElementById("u-password").required = true;
   document.getElementById("u-password").placeholder = "";
   document.querySelector('#campo-u-password label').textContent = "Contraseña inicial *";
@@ -349,9 +349,9 @@ function cargarUsuarioEnFormulario(id) {
   document.getElementById("u-area").value = u.area || "";
   document.getElementById("u-activo").checked = u.activo;
 
-  // El correo es el identificador de acceso: no se edita aquí.
-  document.getElementById("campo-u-email").style.display = "none";
-  document.getElementById("u-email").required = false;
+  // El DNI es el identificador de acceso: no se edita aquí.
+  document.getElementById("campo-u-dni").style.display = "none";
+  document.getElementById("u-dni").required = false;
   document.getElementById("u-password").value = "";
   document.getElementById("u-password").required = false;
   document.getElementById("u-password").placeholder = "Dejar en blanco para no cambiarla";
@@ -381,7 +381,7 @@ document.getElementById("form-usuario").addEventListener("submit", async (e) => 
     } else {
       const payload = {
         nombre: document.getElementById("u-nombre").value,
-        email: document.getElementById("u-email").value,
+        dni: document.getElementById("u-dni").value,
         password: document.getElementById("u-password").value,
         rol: document.getElementById("u-rol").value,
         area: document.getElementById("u-area").value || null,
@@ -682,7 +682,7 @@ async function cargarAuditoria() {
   for (const r of registros) {
     const tr = document.createElement("tr");
     const fecha = new Date(r.fecha).toLocaleString("es-PE");
-    tr.innerHTML = `<td>${fecha}</td><td>${r.usuario_email || "—"}</td><td>${r.entidad || "—"}</td><td>${r.accion}</td><td>${r.detalle || ""}</td>`;
+    tr.innerHTML = `<td>${fecha}</td><td>${r.usuario_dni || "—"}</td><td>${r.entidad || "—"}</td><td>${r.accion}</td><td>${r.detalle || ""}</td>`;
     tbody.appendChild(tr);
   }
 }

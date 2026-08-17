@@ -19,7 +19,7 @@ def crear_sede(
     usuario=Depends(security.requiere_admin),
 ):
     sede = crud.sedes.crear(db, payload)
-    crud.auditoria.registrar(db, usuario.email, "sede", sede.id, "CREATE", f"Creó sede '{sede.nombre}'")
+    crud.auditoria.registrar(db, usuario.dni, "sede", sede.id, "CREATE", f"Creó sede '{sede.nombre}'")
     return sede
 
 
@@ -34,5 +34,5 @@ def actualizar_sede(
     if not sede:
         raise HTTPException(404, "Sede no encontrada")
     sede = crud.sedes.actualizar(db, sede, payload)
-    crud.auditoria.registrar(db, usuario.email, "sede", sede.id, "UPDATE", f"Actualizó sede '{sede.nombre}'")
+    crud.auditoria.registrar(db, usuario.dni, "sede", sede.id, "UPDATE", f"Actualizó sede '{sede.nombre}'")
     return sede

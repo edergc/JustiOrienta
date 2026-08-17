@@ -3,6 +3,7 @@ from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 from fastapi import FastAPI, Request
+from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
@@ -59,10 +60,17 @@ app.add_middleware(
 
 @app.exception_handler(RequestValidationError)
 async def error_validacion(request: Request, exc: RequestValidationError):
-    """Respuesta consistente y en español ante datos de entrada inválidos."""
+    """Respuesta consistente y en español ante datos de entrada inválidos.
+
+    jsonable_encoder es necesario y no un simple exc.errors(): Pydantic v2
+    incluye la excepción original en errors()[i]["ctx"]["error"] (por ejemplo
+    el ValueError de un field_validator), y json.dumps no sabe serializar un
+    objeto de excepción -- sin esto, un dato inválido devolvía 500 en vez
+    de 422.
+    """
     return JSONResponse(
         status_code=422,
-        content={"detail": "Los datos enviados no son válidos.", "errores": exc.errors()},
+        content={"detail": "Los datos enviados no son válidos.", "errores": jsonable_encoder(exc.errors())},
     )
 
 

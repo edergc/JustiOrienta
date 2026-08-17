@@ -48,7 +48,7 @@ def crear_dependencia(
         data["estado"] = "revision"
 
     dep = crud.dependencias.crear(db, data, payload.alias)
-    crud.auditoria.registrar(db, usuario.email, "dependencia", dep.id, "CREATE", f"Creó '{dep.nombre}'")
+    crud.auditoria.registrar(db, usuario.dni, "dependencia", dep.id, "CREATE", f"Creó '{dep.nombre}'")
     return schemas.DependenciaOut.model_validate(dep)
 
 
@@ -81,7 +81,7 @@ def actualizar_dependencia(
 
     dep = crud.dependencias.actualizar(db, dep, data, payload.alias)
     crud.auditoria.registrar(
-        db, usuario.email, "dependencia", dep.id, "UPDATE", "; ".join(cambios) or "Sin cambios detectados"
+        db, usuario.dni, "dependencia", dep.id, "UPDATE", "; ".join(cambios) or "Sin cambios detectados"
     )
     return schemas.DependenciaOut.model_validate(dep)
 
@@ -101,7 +101,7 @@ def aprobar_dependencia(
         raise HTTPException(400, f"Solo se puede aprobar contenido en revisión (estado actual: {dep.estado})")
 
     dep = crud.dependencias.aprobar(db, dep)
-    crud.auditoria.registrar(db, usuario.email, "dependencia", dep.id, "APROBAR", f"Publicó '{dep.nombre}'")
+    crud.auditoria.registrar(db, usuario.dni, "dependencia", dep.id, "APROBAR", f"Publicó '{dep.nombre}'")
     return schemas.DependenciaOut.model_validate(dep)
 
 
@@ -120,7 +120,7 @@ def rechazar_dependencia(
 
     dep = crud.dependencias.enviar_a_revision(db, dep)
     detalle = f"Devolvió a revisión '{dep.nombre}'" + (f": {comentario}" if comentario else "")
-    crud.auditoria.registrar(db, usuario.email, "dependencia", dep.id, "RECHAZAR", detalle)
+    crud.auditoria.registrar(db, usuario.dni, "dependencia", dep.id, "RECHAZAR", detalle)
     return schemas.DependenciaOut.model_validate(dep)
 
 
@@ -137,7 +137,7 @@ def desactivar_dependencia(
         raise HTTPException(403, "No tienes permiso para modificar esta dependencia")
 
     crud.dependencias.desactivar(db, dep)
-    crud.auditoria.registrar(db, usuario.email, "dependencia", dep.id, "DELETE", f"Desactivó '{dep.nombre}'")
+    crud.auditoria.registrar(db, usuario.dni, "dependencia", dep.id, "DELETE", f"Desactivó '{dep.nombre}'")
     return {"ok": True}
 
 
@@ -169,7 +169,7 @@ def crear_servicio(
         raise HTTPException(403, "No tienes permiso para editar los servicios de esta dependencia")
 
     servicio = crud.servicios.crear(db, dep_id, payload)
-    crud.auditoria.registrar(db, usuario.email, "servicio", servicio.id, "CREATE", f"Creó servicio '{servicio.nombre}' en '{dep.nombre}'")
+    crud.auditoria.registrar(db, usuario.dni, "servicio", servicio.id, "CREATE", f"Creó servicio '{servicio.nombre}' en '{dep.nombre}'")
     return servicio
 
 
@@ -188,7 +188,7 @@ def actualizar_servicio(
         raise HTTPException(403, "No tienes permiso para editar este servicio")
 
     servicio = crud.servicios.actualizar(db, servicio, payload)
-    crud.auditoria.registrar(db, usuario.email, "servicio", servicio.id, "UPDATE", f"Actualizó servicio '{servicio.nombre}'")
+    crud.auditoria.registrar(db, usuario.dni, "servicio", servicio.id, "UPDATE", f"Actualizó servicio '{servicio.nombre}'")
     return servicio
 
 
@@ -206,5 +206,5 @@ def desactivar_servicio(
         raise HTTPException(403, "No tienes permiso para editar este servicio")
 
     crud.servicios.desactivar(db, servicio)
-    crud.auditoria.registrar(db, usuario.email, "servicio", servicio.id, "DELETE", f"Desactivó servicio '{servicio.nombre}'")
+    crud.auditoria.registrar(db, usuario.dni, "servicio", servicio.id, "DELETE", f"Desactivó servicio '{servicio.nombre}'")
     return {"ok": True}

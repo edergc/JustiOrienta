@@ -5,8 +5,8 @@ from sqlalchemy.orm import Session
 from app import models, schemas, security
 
 
-def obtener_por_email(db: Session, email: str) -> Optional[models.Usuario]:
-    return db.query(models.Usuario).filter(models.Usuario.email == email).first()
+def obtener_por_dni(db: Session, dni: str) -> Optional[models.Usuario]:
+    return db.query(models.Usuario).filter(models.Usuario.dni == dni).first()
 
 
 def obtener(db: Session, usuario_id: int) -> Optional[models.Usuario]:
@@ -20,7 +20,7 @@ def listar(db: Session) -> list[models.Usuario]:
 def crear(db: Session, data: schemas.UsuarioCreate) -> models.Usuario:
     usuario = models.Usuario(
         nombre=data.nombre,
-        email=data.email,
+        dni=data.dni,
         password_hash=security.hash_password(data.password),
         rol=data.rol,
         area=data.area,

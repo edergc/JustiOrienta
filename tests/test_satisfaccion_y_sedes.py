@@ -32,7 +32,7 @@ def test_registrar_satisfaccion_valida_y_actualiza_metricas(db, sede, admin_usua
     assert r2.status_code == 200
 
     atoken = client.post(
-        "/api/v1/auth/login", data={"username": "admin@pruebas.local", "password": "clave123"}
+        "/api/v1/auth/login", data={"username": "10000001", "password": "clave123"}
     ).json()["access_token"]
     resumen = client.get(
         "/api/v1/admin/metricas/resumen", headers={"Authorization": f"Bearer {atoken}"}

@@ -5,8 +5,8 @@ from app.main import app
 client = TestClient(app)
 
 
-def _login(email: str, password: str) -> str:
-    r = client.post("/api/v1/auth/login", data={"username": email, "password": password})
+def _login(dni: str, password: str) -> str:
+    r = client.post("/api/v1/auth/login", data={"username": dni, "password": password})
     assert r.status_code == 200, r.text
     return r.json()["access_token"]
 
@@ -16,13 +16,13 @@ def _auth(token: str) -> dict:
 
 
 def test_login_incorrecto_devuelve_401(admin_usuario):
-    r = client.post("/api/v1/auth/login", data={"username": "admin@pruebas.local", "password": "mala"})
+    r = client.post("/api/v1/auth/login", data={"username": "10000001", "password": "mala"})
     assert r.status_code == 401
 
 
 def test_flujo_completo_de_publicacion(sede, admin_usuario, gestor_usuario, validador_usuario):
-    gtoken = _login("gestor@pruebas.local", "clave123")
-    vtoken = _login("validador@pruebas.local", "clave123")
+    gtoken = _login("10000002", "clave123")
+    vtoken = _login("10000003", "clave123")
 
     # 1. El gestor crea contenido; aunque mande estado=activo, el servidor lo fuerza a revisión.
     payload = {
@@ -83,14 +83,14 @@ def test_validador_no_puede_aprobar_fuera_de_su_area(db, sede, validador_usuario
     db.commit()
     db.refresh(otra)
 
-    vtoken = _login("validador@pruebas.local", "clave123")
+    vtoken = _login("10000003", "clave123")
     r = client.post(f"/api/v1/admin/dependencias/{otra.id}/aprobar", headers=_auth(vtoken))
     assert r.status_code == 403
 
 
 def test_solo_admin_y_auditor_leen_auditoria(admin_usuario, gestor_usuario):
-    atoken = _login("admin@pruebas.local", "clave123")
-    gtoken = _login("gestor@pruebas.local", "clave123")
+    atoken = _login("10000001", "clave123")
+    gtoken = _login("10000002", "clave123")
 
     assert client.get("/api/v1/admin/auditoria", headers=_auth(atoken)).status_code == 200
     assert client.get("/api/v1/admin/auditoria", headers=_auth(gtoken)).status_code == 403
@@ -110,7 +110,7 @@ def test_editar_publicado_por_gestor_lo_regresa_a_revision_sin_403(db, sede, ges
     db.commit()
     db.refresh(dep)
 
-    gtoken = _login("gestor@pruebas.local", "clave123")
+    gtoken = _login("10000002", "clave123")
     payload = {
         "tipo": "administrativa",
         "nombre": "Recursos Humanos",
@@ -128,7 +128,7 @@ def test_editar_publicado_por_gestor_lo_regresa_a_revision_sin_403(db, sede, ges
 
 
 def test_gestor_no_puede_crear_fuera_de_su_area(sede, gestor_usuario):
-    gtoken = _login("gestor@pruebas.local", "clave123")
+    gtoken = _login("10000002", "clave123")
     payload = {
         "tipo": "jurisdiccional",
         "nombre": "Intento fuera de área",

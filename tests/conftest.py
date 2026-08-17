@@ -60,7 +60,7 @@ def sede(db):
 def admin_usuario(db):
     u = models.Usuario(
         nombre="Admin de Pruebas",
-        email="admin@pruebas.local",
+        dni="10000001",
         password_hash=security.hash_password("clave123"),
         rol=models.Rol.admin,
     )
@@ -74,7 +74,7 @@ def admin_usuario(db):
 def gestor_usuario(db):
     u = models.Usuario(
         nombre="Gestor de Pruebas",
-        email="gestor@pruebas.local",
+        dni="10000002",
         password_hash=security.hash_password("clave123"),
         rol=models.Rol.gestor,
         area="Recursos Humanos",
@@ -89,7 +89,7 @@ def gestor_usuario(db):
 def validador_usuario(db):
     u = models.Usuario(
         nombre="Validador de Pruebas",
-        email="validador@pruebas.local",
+        dni="10000003",
         password_hash=security.hash_password("clave123"),
         rol=models.Rol.validador,
         area="Recursos Humanos",
@@ -100,5 +100,5 @@ def validador_usuario(db):
     return u
 
 
-def token_para(email: str) -> str:
-    return security.crear_token(email)
+def token_para(dni: str) -> str:
+    return security.crear_token(dni)

@@ -1,16 +1,25 @@
+import re
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import BaseModel, ConfigDict, field_validator
 
 from app.models import Rol
+
+_DNI_RE = re.compile(r"^\d{8}$")
+
+
+def _validar_dni(v: str) -> str:
+    if not _DNI_RE.match(v):
+        raise ValueError("El DNI debe tener exactamente 8 dígitos numéricos")
+    return v
 
 
 class UsuarioOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
     nombre: str
-    email: str
+    dni: str
     rol: Rol
     area: Optional[str] = None
     activo: bool
@@ -19,10 +28,12 @@ class UsuarioOut(BaseModel):
 
 class UsuarioCreate(BaseModel):
     nombre: str
-    email: EmailStr
+    dni: str
     password: str
     rol: Rol = Rol.gestor
     area: Optional[str] = None
+
+    _validar_dni = field_validator("dni")(_validar_dni)
 
 
 class UsuarioUpdate(BaseModel):

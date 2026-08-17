@@ -15,10 +15,11 @@
     <h2>Iniciar sesión</h2>
     <div id="login-error"></div>
     <form id="form-login">
-      <div class="field"><label for="login-email">Correo</label><input id="login-email" type="email" required /></div>
+      <div class="field"><label for="login-dni">DNI</label><input id="login-dni" type="text" inputmode="numeric" pattern="[0-9]{8}" maxlength="8" placeholder="8 dígitos" required /></div>
       <div class="field"><label for="login-pass">Contraseña</label><input id="login-pass" type="password" required /></div>
       <button class="btn" type="submit" style="margin-top:0.4rem;">Ingresar</button>
     </form>
+    <p style="text-align:center; margin:0.6rem 0 0;"><a href="/">← Volver al inicio</a></p>
   </div>
 </div>
 
@@ -26,6 +27,7 @@
   <div class="topbar-admin">
     <a class="home" href="/" style="font-family:var(--font-display); font-weight:700; text-decoration:none; color:var(--ink);">Justicia Orienta</a>
     <div>
+      <a href="/" class="btn secondary" style="text-decoration:none; margin-right:0.5rem;">← Volver al inicio</a>
       <span class="who" id="who"></span>
       <button class="btn secondary" id="btn-mi-cuenta" style="margin-left:0.8rem;">Mi contraseña</button>
       <button class="btn secondary" id="btn-logout" style="margin-left:0.5rem;">Salir</button>
@@ -225,7 +227,7 @@
           <h3>Usuarios</h3>
           <div class="table-wrap">
             <table class="admin" id="tabla-usuarios">
-              <thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Área</th><th>Estado</th><th>Último acceso</th><th></th></tr></thead>
+              <thead><tr><th>Nombre</th><th>DNI</th><th>Rol</th><th>Área</th><th>Estado</th><th>Último acceso</th><th></th></tr></thead>
               <tbody></tbody>
             </table>
           </div>
@@ -235,7 +237,7 @@
           <form id="form-usuario">
             <input type="hidden" id="u-id" />
             <div class="field"><label for="u-nombre">Nombre *</label><input id="u-nombre" required /></div>
-            <div class="field" id="campo-u-email"><label for="u-email">Correo *</label><input id="u-email" type="email" required /></div>
+            <div class="field" id="campo-u-dni"><label for="u-dni">DNI *</label><input id="u-dni" type="text" inputmode="numeric" pattern="[0-9]{8}" maxlength="8" placeholder="8 dígitos" required /></div>
             <div class="field" id="campo-u-password"><label for="u-password">Contraseña inicial *</label><input id="u-password" type="text" required /></div>
             <div class="field">
               <label for="u-rol">Rol *</label>

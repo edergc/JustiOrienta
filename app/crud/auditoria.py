@@ -7,7 +7,7 @@ from app import models
 
 def registrar(
     db: Session,
-    usuario_email: str,
+    usuario_dni: str,
     entidad: str,
     entidad_id: Optional[int],
     accion: str,
@@ -15,7 +15,7 @@ def registrar(
 ) -> None:
     db.add(
         models.Auditoria(
-            usuario_email=usuario_email,
+            usuario_dni=usuario_dni,
             entidad=entidad,
             entidad_id=entidad_id,
             accion=accion,

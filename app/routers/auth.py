@@ -11,11 +11,11 @@ router = APIRouter()
 
 @router.post("/login", response_model=schemas.Token)
 def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    usuario = crud.usuarios.obtener_por_email(db, form.username)
+    usuario = crud.usuarios.obtener_por_dni(db, form.username)
     if not usuario or not security.verificar_password(form.password, usuario.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Correo o contraseña incorrectos",
+            detail="DNI o contraseña incorrectos",
         )
     if not usuario.activo:
         raise HTTPException(status_code=403, detail="Usuario deshabilitado")
@@ -23,7 +23,7 @@ def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
     usuario.ultimo_acceso = ahora_utc()
     db.commit()
 
-    token = security.crear_token(usuario.email)
+    token = security.crear_token(usuario.dni)
     return schemas.Token(access_token=token, usuario=schemas.UsuarioOut.model_validate(usuario))
 
 

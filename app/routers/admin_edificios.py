@@ -25,7 +25,7 @@ def crear_edificio(
     usuario=Depends(security.requiere_admin),
 ):
     edificio = crud.edificios.crear(db, payload)
-    crud.auditoria.registrar(db, usuario.email, "edificio", edificio.id, "CREATE", f"Creó edificio '{edificio.nombre}'")
+    crud.auditoria.registrar(db, usuario.dni, "edificio", edificio.id, "CREATE", f"Creó edificio '{edificio.nombre}'")
     return edificio
 
 
@@ -40,5 +40,5 @@ def actualizar_edificio(
     if not edificio:
         raise HTTPException(404, "Edificio no encontrado")
     edificio = crud.edificios.actualizar(db, edificio, payload)
-    crud.auditoria.registrar(db, usuario.email, "edificio", edificio.id, "UPDATE", f"Actualizó edificio '{edificio.nombre}'")
+    crud.auditoria.registrar(db, usuario.dni, "edificio", edificio.id, "UPDATE", f"Actualizó edificio '{edificio.nombre}'")
     return edificio

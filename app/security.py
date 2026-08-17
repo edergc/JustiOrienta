@@ -28,9 +28,9 @@ def verificar_password(password: str, password_hash: str) -> bool:
     return pwd_context.verify(password, password_hash)
 
 
-def crear_token(email: str) -> str:
+def crear_token(dni: str) -> str:
     expira = datetime.now(timezone.utc) + timedelta(minutes=settings.token_expire_minutes)
-    payload = {"sub": email, "exp": expira}
+    payload = {"sub": dni, "exp": expira}
     return jwt.encode(payload, settings.justicia_orienta_secret, algorithm=ALGORITHM)
 
 
@@ -44,13 +44,13 @@ def get_usuario_actual(
     )
     try:
         payload = jwt.decode(token, settings.justicia_orienta_secret, algorithms=[ALGORITHM])
-        email: Optional[str] = payload.get("sub")
-        if email is None:
+        dni: Optional[str] = payload.get("sub")
+        if dni is None:
             raise credenciales_invalidas
     except JWTError:
         raise credenciales_invalidas
 
-    usuario = db.query(models.Usuario).filter(models.Usuario.email == email).first()
+    usuario = db.query(models.Usuario).filter(models.Usuario.dni == dni).first()
     if usuario is None or not usuario.activo:
         raise credenciales_invalidas
     return usuario

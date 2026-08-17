@@ -52,8 +52,11 @@ Luego abre:
 
 - **http://127.0.0.1:8743/** — el micrositio público (lo que ve el ciudadano).
 - **http://127.0.0.1:8743/admin** — el panel de administración (lo que usa cada área para mantener su información).
-  - Usuario inicial: `admin@justiciaorienta.local` / contraseña impresa por `app.seed` — **cámbiala de inmediato**.
-- **http://127.0.0.1:8743/api/docs** — documentación interactiva de la API (generada automáticamente por FastAPI).
+  - Usuario inicial: DNI `12345678` / contraseña impresa por `app.seed` — **cámbiala de inmediato**. El
+    acceso es por DNI (8 dígitos), no por correo -- es el dato que toda persona en Perú tiene con
+    certeza, a diferencia de una cuenta de correo institucional que no todas las áreas tienen asignada.
+- **http://127.0.0.1:8743/api/docs** — documentación interactiva de la API (generada automáticamente por
+  FastAPI). No está enlazada desde el sitio público -- es para quien desarrolla, no para el ciudadano.
 
 ### Ejecutar las pruebas automatizadas
 
