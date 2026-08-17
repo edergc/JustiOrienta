@@ -21,6 +21,7 @@ FastAPI, SQLAlchemy, SQLite/PostgreSQL, HTML/CSS/JS nativos.
 | `prototipo-v1/` | **V1** — micrositio estático de un solo archivo, sin backend, para demostrar el concepto sin instalar nada. |
 | `app/` | **V2** — aplicación real: backend FastAPI + base de datos + panel de administración. Esto es lo que sigue creciendo. |
 | `migrations/` | Migraciones versionadas de la base de datos (Alembic). |
+| `fuentes/` | Documentos oficiales usados como fuente de datos reales (ver más abajo). |
 | `tests/` | Pruebas automatizadas (`pytest`). |
 | `run.py` | Punto de arranque único del servidor. |
 
@@ -135,6 +136,35 @@ Si cambias los modelos en `app/models/`, genera la migración correspondiente:
 python -m alembic revision --autogenerate -m "descripción del cambio"
 python -m alembic upgrade head
 ```
+
+## De dónde salen los datos reales
+
+El catálogo ya **no** tiene datos de ejemplo: se cargó el
+[Directorio Telefónico oficial de la CSJ Lima](https://www.pj.gob.pe), publicado por el propio Poder
+Judicial (`fuentes/Directorio_CSJLI_oficial_2025-05-08.pdf`, actualizado al 26 de junio de 2026) —
+**25 sedes y 542 dependencias**, con dirección, piso y anexo reales.
+
+```bash
+python -m app.cargar_directorio_pj
+```
+
+Extrae las tablas del PDF con `pdfplumber` (no transcripción a mano, para no meter errores de tipeo en
+cientos de filas) y las inserta sin duplicar si se vuelve a correr. Reglas que sigue, alineadas con
+"nunca inventar información":
+
+- Solo carga lo que el documento realmente dice: sede, dirección, central, dependencia, piso, anexo.
+  Horario, requisitos, accesibilidad y alias quedan en blanco — son trabajo de revisión de cada área,
+  no algo que un script deba adivinar.
+- Solo la **sede piloto** (Javier Alzamora Valdez) se publica como `activo`. Las otras 24 sedes quedan
+  cargadas en `revision`, listas para que cada una las revise antes de publicarlas — cargar en masa no
+  es lo mismo que validar.
+- Si el mismo PDF (u otra versión más nueva del Poder Judicial) se vuelve a procesar, no duplica lo que
+  ya existe.
+
+**Limitación real, ya encontrada:** el documento fuente repite nombres genéricos como "Mesa de Partes"
+para oficinas distintas dentro de la misma sede (Bienestar Social, Control de Asistencia, Escalafón y
+Registro) — quedaban 3 tarjetas idénticas en el buscador. Se corrigieron a mano restaurando el contexto
+que sí figura en el PDF (ver `/admin` → Auditoría), y el cargador ya sabe no volver a duplicarlas.
 
 ## Arquitectura del backend
 

@@ -1,10 +1,10 @@
 const API = "/api/v1";
 
 const EJEMPLOS = [
-  "11.º Juzgado Civil",
-  "Recursos Humanos",
-  "mi computadora no funciona",
-  "presentar un documento",
+  "1 juzgado constitucional",
+  "recursos humanos",
+  "informatica",
+  "mesa de partes",
 ];
 
 const chipsBox = document.getElementById("chips");

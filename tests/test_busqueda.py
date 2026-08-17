@@ -59,6 +59,31 @@ def test_busqueda_tolera_error_de_tipeo_como_respaldo(db, sede):
     assert resultados[0].nombre == "Coordinación de Informática"
 
 
+def test_busqueda_por_numero_no_confunde_juzgados_similares(db, sede):
+    """Regresión: al filtrar tokens de menos de 3 letras se descartaba el
+    número del juzgado ("11" por ejemplo), y buscar "11 juzgado civil"
+    devolvía CUALQUIER "Juzgado Civil Transitorio" en vez de nada o del
+    juzgado correcto -- justo el dato más específico se estaba ignorando."""
+    for i in range(1, 6):
+        _crear_dependencia(
+            db, sede, nombre=f"{i}.º Juzgado Civil Transitorio",
+            area="Juzgado civil", alias="",
+        )
+    _crear_dependencia(db, sede, nombre="11.º Juzgado Civil", area="Juzgado civil", alias="")
+
+    resultados = crud.busqueda.buscar_dependencias(db, "11 juzgado civil")
+    nombres = [d.nombre for d in resultados]
+    assert nombres == ["11.º Juzgado Civil"]
+
+    # Y sigue sin confundir "5" con el "15" o el "25" de otro nombre.
+    _crear_dependencia(db, sede, nombre="15.º Juzgado Civil", area="Juzgado civil", alias="")
+    _crear_dependencia(db, sede, nombre="25.º Juzgado Civil", area="Juzgado civil", alias="")
+    resultados5 = crud.busqueda.buscar_dependencias(db, "5 juzgado civil")
+    nombres5 = [d.nombre for d in resultados5]
+    assert "15.º Juzgado Civil" not in nombres5
+    assert "25.º Juzgado Civil" not in nombres5
+
+
 def test_busqueda_por_servicio_estructurado(db, sede):
     dep = _crear_dependencia(db, sede, tipo="administrativa", nombre="Recursos Humanos", area="Unidad")
     servicio = models.Servicio(dependencia_id=dep.id, nombre="Constancia de trabajo", estado="activo")

@@ -7,7 +7,9 @@ from app.models import normalizar
 def _puntuar(nq: str, tokens: list[str], dep: models.Dependencia) -> float:
     score = 0.0
     nombre_norm = dep.nombre_normalizado or normalizar(dep.nombre)
+    nombre_tokens = set(nombre_norm.split())
     alias_norm = [a.alias_normalizado or normalizar(a.alias) for a in dep.alias]
+    alias_tokens = [set(a.split()) for a in alias_norm]
 
     if nombre_norm == nq:
         score += 10
@@ -18,14 +20,17 @@ def _puntuar(nq: str, tokens: list[str], dep: models.Dependencia) -> float:
     if nq in nombre_norm:
         score += 5
     for tok in tokens:
-        if tok in nombre_norm:
+        # Coincidencia de palabra completa, no de substring: si fuera "tok in
+        # nombre_norm" a secas, buscar "5" encontraría falsos positivos
+        # dentro de "15", "25", "35"... igual que "no" dentro de "informaNOs".
+        if tok in nombre_tokens:
             score += 1
-        if any(tok in a for a in alias_norm):
+        if any(tok in a for a in alias_tokens):
             score += 1
-        if dep.servicios and tok in normalizar(dep.servicios):
+        if dep.servicios and tok in normalizar(dep.servicios).split():
             score += 0.5
         for serv in dep.servicios_detalle:
-            if serv.estado == "activo" and tok in normalizar(serv.nombre):
+            if serv.estado == "activo" and tok in normalizar(serv.nombre).split():
                 score += 0.5
     return score
 
@@ -48,6 +53,26 @@ def _puntuar_por_similitud(tokens: list[str], dep: models.Dependencia) -> float:
     return score
 
 
+def _filtrar_por_numero(tokens: list[str], puntuadas: list[tuple[float, "models.Dependencia"]]):
+    """Si la consulta trae un número ("11 juzgado civil"), es el dato más
+    específico que puede dar una persona -- de nada sirve mostrar cinco
+    juzgados civiles distintos si uno de ellos SÍ es el número exacto.
+    Cuando al menos un resultado coincide con todos los números pedidos, se
+    descartan los que no -- si ninguno coincide, se deja la lista tal cual en
+    vez de vaciarla (mejor una respuesta aproximada que ninguna)."""
+    numeros = [t for t in tokens if t.isdigit()]
+    if not numeros:
+        return puntuadas
+
+    def coincide(dep):
+        nombre_tokens = (dep.nombre_normalizado or "").split()
+        alias_tokens = {t for a in dep.alias for t in (a.alias_normalizado or "").split()}
+        return all(n in nombre_tokens or n in alias_tokens for n in numeros)
+
+    con_numero = [(s, d) for s, d in puntuadas if coincide(d)]
+    return con_numero if con_numero else puntuadas
+
+
 def buscar_dependencias(db: Session, query: str, limite: int = 10) -> list[models.Dependencia]:
     """Búsqueda en lenguaje natural, en Python -- portable entre SQLite y
     PostgreSQL sin depender de extensiones como pg_trgm.
@@ -60,7 +85,10 @@ def buscar_dependencias(db: Session, query: str, limite: int = 10) -> list[model
     nq = nlp.interpretar(query)
     if not nq:
         return []
-    tokens = [t for t in nq.split(" ") if len(t) >= 3]
+    # Al menos 3 letras para evitar ruido de palabras cortas ("no", "de"),
+    # pero los números se conservan siempre: "11", "23"... son justo el dato
+    # más específico de un juzgado y antes se estaban descartando.
+    tokens = [t for t in nq.split(" ") if len(t) >= 3 or t.isdigit()]
 
     activas = (
         db.query(models.Dependencia)
@@ -76,6 +104,7 @@ def buscar_dependencias(db: Session, query: str, limite: int = 10) -> list[model
 
     puntuadas = [(_puntuar(nq, tokens, dep), dep) for dep in activas]
     puntuadas = [(s, d) for s, d in puntuadas if s > 0]
+    puntuadas = _filtrar_por_numero(tokens, puntuadas)
 
     if not puntuadas:
         puntuadas = [(_puntuar_por_similitud(tokens, dep), dep) for dep in activas]

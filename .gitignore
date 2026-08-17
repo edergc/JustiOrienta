@@ -7,5 +7,7 @@ venv/
 *.egg-info/
 .pytest_cache/
 resp.json
+resp_check.json
+check.txt
 debug_encoding.txt
 server.log
