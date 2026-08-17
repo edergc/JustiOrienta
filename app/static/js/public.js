@@ -1,3 +1,5 @@
+const API = "/api/v1";
+
 const EJEMPLOS = [
   "11.º Juzgado Civil",
   "Recursos Humanos",
@@ -29,7 +31,7 @@ function leerEnVozAlta(dep) {
   }
   const partes = [
     `${dep.nombre}.`,
-    dep.sede ? `Se encuentra en ${dep.sede}` : "",
+    dep.sede ? `Se encuentra en ${dep.sede.nombre}` : "",
     dep.piso ? `, piso ${dep.piso}` : "",
     dep.oficina && dep.oficina !== "—" ? `, oficina ${dep.oficina}.` : ".",
     dep.horario ? `Horario: ${dep.horario}.` : "",
@@ -44,20 +46,28 @@ function leerEnVozAlta(dep) {
 function tarjeta(dep) {
   const el = document.createElement("article");
   el.className = "card";
-  const direccion = [dep.sede, "Cercado de Lima"].filter(Boolean).join(", ");
-  const osmQuery = encodeURIComponent(direccion);
+  const nombreSede = dep.sede ? dep.sede.nombre : null;
+  const direccion = (dep.sede && dep.sede.direccion) || [nombreSede, "Cercado de Lima"].filter(Boolean).join(", ");
+  const osmQuery = encodeURIComponent(direccion || nombreSede || dep.nombre);
+  const accesible = dep.rampa || dep.ascensor || dep.banio_accesible || (dep.sede && (dep.sede.rampa || dep.sede.ascensor || dep.sede.banio_accesible));
+
+  const servicios = (dep.servicios_detalle || [])
+    .map((s) => `<li><strong>${s.nombre}</strong>${s.requisitos ? " — " + s.requisitos : ""}</li>`)
+    .join("");
+
   el.innerHTML = `
     <div class="card-top">
       <h2>${dep.nombre}</h2>
       <span class="badge ${dep.tipo}">${badgeLabel(dep.tipo)}</span>
     </div>
-    <p class="meta"><strong>${dep.sede || "Sede no registrada"}</strong>${dep.piso ? " — Piso " + dep.piso : ""}${dep.oficina ? ", oficina " + dep.oficina : ""}</p>
+    <p class="meta"><strong>${nombreSede || "Sede no registrada"}</strong>${dep.piso ? " — Piso " + dep.piso : ""}${dep.oficina ? ", oficina " + dep.oficina : ""}</p>
     ${dep.horario ? `<p class="meta">Horario: ${dep.horario}</p>` : ""}
     ${dep.servicios ? `<p class="meta">${dep.servicios}</p>` : ""}
+    ${servicios ? `<ul class="meta" style="padding-left:1.1rem; margin-top:0.4rem;">${servicios}</ul>` : ""}
     <div class="a11y-row">
-      ${dep.rampa ? "<span>Rampa</span>" : ""}
-      ${dep.ascensor ? "<span>Ascensor</span>" : ""}
-      ${dep.banio_accesible ? "<span>Baño accesible</span>" : ""}
+      ${dep.rampa || (dep.sede && dep.sede.rampa) ? "<span>Rampa</span>" : ""}
+      ${dep.ascensor || (dep.sede && dep.sede.ascensor) ? "<span>Ascensor</span>" : ""}
+      ${dep.banio_accesible || (dep.sede && dep.sede.banio_accesible) ? "<span>Baño accesible</span>" : ""}
     </div>
     <div class="card-actions">
       <button class="primary" type="button" data-leer>🔊 Escuchar</button>
@@ -76,7 +86,7 @@ async function buscarYRenderizar(q) {
   }
   cont.innerHTML = `<p class="hint">Buscando…</p>`;
   try {
-    const res = await fetch(`/api/buscar?q=${encodeURIComponent(q)}`);
+    const res = await fetch(`${API}/buscar?q=${encodeURIComponent(q)}`);
     const data = await res.json();
     cont.innerHTML = "";
     if (data.fallback || data.resultados.length === 0) {

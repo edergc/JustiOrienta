@@ -1,7 +1,9 @@
-from fastapi import APIRouter, Depends, Query
-from sqlalchemy.orm import Session, joinedload
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import text
+from sqlalchemy.orm import Session
 
-from app import crud, models, schemas
+from app import crud, schemas
+from app.config import settings
 from app.database import get_db
 
 router = APIRouter()
@@ -12,9 +14,9 @@ def buscar(q: str = Query("", min_length=0), db: Session = Depends(get_db)):
     if not q.strip():
         return schemas.BusquedaRespuesta(resultados=[], total=0, fallback=False)
 
-    resultados = crud.buscar_dependencias(db, q)
+    resultados = crud.busqueda.buscar_dependencias(db, q)
     encontrado = len(resultados) > 0
-    crud.registrar_consulta(db, q, encontrado)
+    crud.busqueda.registrar_consulta(db, q, encontrado)
 
     if not encontrado:
         return schemas.BusquedaRespuesta(
@@ -27,24 +29,29 @@ def buscar(q: str = Query("", min_length=0), db: Session = Depends(get_db)):
             ),
         )
 
-    salida = [schemas.DependenciaOut(**crud.dependencia_a_out(d)) for d in resultados]
+    salida = [schemas.DependenciaOut.model_validate(d) for d in resultados]
     return schemas.BusquedaRespuesta(resultados=salida, total=len(salida), fallback=False)
 
 
 @router.get("/dependencias/{dep_id}", response_model=schemas.DependenciaOut)
 def obtener_dependencia(dep_id: int, db: Session = Depends(get_db)):
-    dep = (
-        db.query(models.Dependencia)
-        .options(joinedload(models.Dependencia.alias))
-        .filter(models.Dependencia.id == dep_id, models.Dependencia.estado == "activo")
-        .first()
-    )
+    dep = crud.dependencias.obtener_activa(db, dep_id)
     if not dep:
-        from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="Dependencia no encontrada o no publicada")
-    return schemas.DependenciaOut(**crud.dependencia_a_out(dep))
+    return schemas.DependenciaOut.model_validate(dep)
 
 
 @router.get("/salud")
-def salud():
-    return {"estado": "operativo", "proyecto": "Justicia Orienta"}
+def salud(db: Session = Depends(get_db)):
+    try:
+        db.execute(text("SELECT 1"))
+        db_ok = True
+    except Exception:
+        db_ok = False
+    return {
+        "proyecto": settings.app_name,
+        "version": settings.app_version,
+        "entorno": settings.entorno,
+        "estado": "operativo" if db_ok else "degradado",
+        "base_de_datos": "conectada" if db_ok else "sin conexión",
+    }

@@ -1,12 +1,19 @@
 fastapi
 uvicorn[standard]
 sqlalchemy
+alembic
 pydantic
+pydantic-settings
+email-validator
 passlib[bcrypt]
 python-jose[cryptography]
 python-multipart
 openpyxl
 qrcode
+
+# Pruebas automatizadas
+pytest
+httpx
 
 # Para producción con PostgreSQL (opcional, cero costo, código abierto):
 # psycopg2-binary

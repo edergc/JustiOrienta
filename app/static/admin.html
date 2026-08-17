@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="/css/styles.css" />
 </head>
 <body>
-<div class="top-banner admin" role="note">PANEL DE ADMINISTRACIÓN — cambios aquí se reflejan de inmediato en el sitio público</div>
+<div class="top-banner admin" role="note">PANEL DE ADMINISTRACIÓN — cambios aquí se reflejan de inmediato en el sitio público, salvo el contenido "en revisión"</div>
 
 <div id="vista-login">
   <header class="site"><a class="home" href="/"><h1>Justicia Orienta</h1></a><p>Panel de administración del catálogo</p></header>
@@ -34,76 +34,191 @@
   <main class="wide">
     <div class="stat-row" id="stats"></div>
 
-    <div class="admin-grid">
+    <nav class="toolbar" style="justify-content:flex-start; border:1px solid var(--line); border-radius:10px; margin-bottom:1.2rem;" aria-label="Secciones del panel">
+      <button type="button" class="tab-btn" data-tab="tab-dependencias" aria-pressed="true">Dependencias</button>
+      <button type="button" class="tab-btn" data-tab="tab-sedes" aria-pressed="false">Sedes</button>
+      <button type="button" class="tab-btn" data-tab="tab-usuarios" aria-pressed="false">Usuarios</button>
+      <button type="button" class="tab-btn" data-tab="tab-auditoria" aria-pressed="false">Auditoría</button>
+    </nav>
+
+    <!-- ═══ DEPENDENCIAS ═══ -->
+    <section id="tab-dependencias" class="tab-panel">
+      <div class="admin-grid">
+        <div class="panel">
+          <h3>Dependencias</h3>
+          <div class="field" style="max-width:14rem;">
+            <label for="filtro-estado">Filtrar por estado</label>
+            <select id="filtro-estado">
+              <option value="">Todos</option>
+              <option value="revision">En revisión</option>
+              <option value="activo">Activo</option>
+              <option value="inactivo">Inactivo</option>
+            </select>
+          </div>
+          <div class="table-wrap">
+            <table class="admin" id="tabla-dependencias">
+              <thead><tr><th>Nombre</th><th>Tipo</th><th>Sede / piso</th><th>Estado</th><th>Acciones</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3 id="form-titulo">Nueva dependencia</h3>
+          <form id="form-dep">
+            <input type="hidden" id="f-id" />
+            <div class="field"><label for="f-nombre">Nombre oficial *</label><input id="f-nombre" required /></div>
+            <div class="field"><label for="f-alias">Alias (separados por coma)</label><input id="f-alias" placeholder="once civil, 11 civil" /></div>
+            <div class="field">
+              <label for="f-tipo">Tipo *</label>
+              <select id="f-tipo" required>
+                <option value="jurisdiccional">Jurisdiccional</option>
+                <option value="administrativa">Administrativa</option>
+                <option value="servicio">Servicio</option>
+              </select>
+            </div>
+            <div class="field"><label for="f-area">Área (para permisos de edición) *</label><input id="f-area" required /></div>
+            <div class="field"><label for="f-categoria">Categoría</label><input id="f-categoria" /></div>
+            <div class="field">
+              <label for="f-sede">Sede *</label>
+              <select id="f-sede" required></select>
+            </div>
+            <div class="field">
+              <label for="f-edificio">Edificio</label>
+              <select id="f-edificio"><option value="">— Ninguno —</option></select>
+            </div>
+            <div class="field"><label for="f-piso">Piso</label><input id="f-piso" /></div>
+            <div class="field"><label for="f-oficina">Oficina</label><input id="f-oficina" /></div>
+            <div class="field"><label for="f-horario">Horario</label><input id="f-horario" /></div>
+            <div class="field"><label for="f-servicios">Resumen de servicios</label><textarea id="f-servicios"></textarea></div>
+            <div class="field"><label for="f-requisitos">Requisitos</label><textarea id="f-requisitos"></textarea></div>
+            <div class="field"><label for="f-telefono">Teléfono</label><input id="f-telefono" /></div>
+            <div class="field"><label for="f-correo">Correo</label><input id="f-correo" type="email" /></div>
+            <div class="field">
+              <label><input type="checkbox" id="f-rampa" /> Rampa</label>
+              <label><input type="checkbox" id="f-ascensor" /> Ascensor</label>
+              <label><input type="checkbox" id="f-banio" /> Baño accesible</label>
+              <label><input type="checkbox" id="f-ruta" /> Ruta accesible</label>
+            </div>
+            <div class="field">
+              <label for="f-estado">Estado *</label>
+              <select id="f-estado" required></select>
+            </div>
+            <div class="field"><label for="f-responsable">Responsable de validar</label><input id="f-responsable" /></div>
+            <div id="form-error"></div>
+            <div style="display:flex; gap:0.6rem; margin-top:0.6rem; flex-wrap:wrap;">
+              <button class="btn" type="submit">Guardar</button>
+              <button class="btn secondary" type="button" id="btn-cancelar">Cancelar</button>
+              <button class="btn" type="button" id="btn-aprobar" style="display:none; background:var(--accent2-strong);">✓ Aprobar y publicar</button>
+              <button class="btn secondary" type="button" id="btn-rechazar" style="display:none;">Devolver a revisión</button>
+            </div>
+          </form>
+
+          <div id="panel-servicios" style="display:none; margin-top:1.5rem; border-top:1px solid var(--line); padding-top:1rem;">
+            <h3 style="font-size:1rem;">Servicios de esta dependencia</h3>
+            <div id="lista-servicios" style="display:grid; gap:0.5rem; margin-bottom:0.8rem;"></div>
+            <form id="form-servicio" style="display:grid; gap:0.5rem;">
+              <div class="field"><label for="sv-nombre">Nuevo servicio</label><input id="sv-nombre" placeholder="Ej: Constancia de trabajo" required /></div>
+              <div class="field"><label for="sv-requisitos">Requisitos</label><input id="sv-requisitos" /></div>
+              <div class="field"><label for="sv-canal">Canal</label>
+                <select id="sv-canal">
+                  <option value="presencial">Presencial</option>
+                  <option value="virtual">Virtual</option>
+                  <option value="telefonico">Telefónico</option>
+                </select>
+              </div>
+              <button class="btn secondary" type="submit">Agregar servicio</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ SEDES ═══ -->
+    <section id="tab-sedes" class="tab-panel" style="display:none;">
+      <div class="admin-grid">
+        <div class="panel">
+          <h3>Sedes</h3>
+          <div class="table-wrap">
+            <table class="admin" id="tabla-sedes">
+              <thead><tr><th>Nombre</th><th>Dirección</th><th>Estado</th><th></th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="panel">
+          <h3 id="form-sede-titulo">Nueva sede</h3>
+          <form id="form-sede">
+            <input type="hidden" id="s-id" />
+            <div class="field"><label for="s-nombre">Nombre *</label><input id="s-nombre" required /></div>
+            <div class="field"><label for="s-direccion">Dirección</label><input id="s-direccion" /></div>
+            <div class="field"><label for="s-referencia">Referencia</label><input id="s-referencia" /></div>
+            <div class="field"><label for="s-horario">Horario de atención</label><input id="s-horario" /></div>
+            <div class="field"><label for="s-telefono">Teléfono</label><input id="s-telefono" /></div>
+            <div class="field">
+              <label><input type="checkbox" id="s-rampa" /> Rampa</label>
+              <label><input type="checkbox" id="s-ascensor" /> Ascensor</label>
+              <label><input type="checkbox" id="s-banio" /> Baño accesible</label>
+              <label><input type="checkbox" id="s-estacionamiento" /> Estacionamiento accesible</label>
+              <label><input type="checkbox" id="s-asistencia" /> Personal de asistencia</label>
+            </div>
+            <div id="form-sede-error"></div>
+            <div style="display:flex; gap:0.6rem; margin-top:0.6rem;">
+              <button class="btn" type="submit">Guardar</button>
+              <button class="btn secondary" type="button" id="btn-sede-cancelar">Cancelar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ USUARIOS ═══ -->
+    <section id="tab-usuarios" class="tab-panel" style="display:none;">
+      <div class="admin-grid">
+        <div class="panel">
+          <h3>Usuarios</h3>
+          <div class="table-wrap">
+            <table class="admin" id="tabla-usuarios">
+              <thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Área</th><th>Último acceso</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>Nuevo usuario</h3>
+          <form id="form-usuario">
+            <div class="field"><label for="u-nombre">Nombre *</label><input id="u-nombre" required /></div>
+            <div class="field"><label for="u-email">Correo *</label><input id="u-email" type="email" required /></div>
+            <div class="field"><label for="u-password">Contraseña inicial *</label><input id="u-password" type="text" required /></div>
+            <div class="field">
+              <label for="u-rol">Rol *</label>
+              <select id="u-rol" required>
+                <option value="gestor">Gestor — crea/edita contenido de su área</option>
+                <option value="validador">Validador — revisa y publica su área</option>
+                <option value="auditor">Auditor — solo lectura de auditoría</option>
+                <option value="admin">Administrador — control total</option>
+              </select>
+            </div>
+            <div class="field"><label for="u-area">Área (para gestor/validador)</label><input id="u-area" placeholder="Ej: Recursos Humanos" /></div>
+            <div id="form-usuario-error"></div>
+            <button class="btn" type="submit" style="margin-top:0.4rem;">Crear usuario</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ AUDITORÍA ═══ -->
+    <section id="tab-auditoria" class="tab-panel" style="display:none;">
       <div class="panel">
-        <h3>Dependencias</h3>
+        <h3>Auditoría reciente</h3>
         <div class="table-wrap">
-          <table class="admin" id="tabla-dependencias">
-            <thead>
-              <tr><th>Nombre</th><th>Tipo</th><th>Sede / piso</th><th>Estado</th><th>Acciones</th></tr>
-            </thead>
+          <table class="admin" id="tabla-auditoria">
+            <thead><tr><th>Fecha</th><th>Usuario</th><th>Entidad</th><th>Acción</th><th>Detalle</th></tr></thead>
             <tbody></tbody>
           </table>
         </div>
       </div>
-
-      <div class="panel">
-        <h3 id="form-titulo">Nueva dependencia</h3>
-        <form id="form-dep">
-          <input type="hidden" id="f-id" />
-          <div class="field"><label for="f-nombre">Nombre oficial *</label><input id="f-nombre" required /></div>
-          <div class="field"><label for="f-alias">Alias (separados por coma)</label><input id="f-alias" placeholder="once civil, 11 civil" /></div>
-          <div class="field">
-            <label for="f-tipo">Tipo *</label>
-            <select id="f-tipo" required>
-              <option value="jurisdiccional">Jurisdiccional</option>
-              <option value="administrativa">Administrativa</option>
-              <option value="servicio">Servicio</option>
-            </select>
-          </div>
-          <div class="field"><label for="f-area">Área (para permisos de edición) *</label><input id="f-area" required /></div>
-          <div class="field"><label for="f-categoria">Categoría</label><input id="f-categoria" /></div>
-          <div class="field"><label for="f-sede">Sede</label><input id="f-sede" /></div>
-          <div class="field"><label for="f-piso">Piso</label><input id="f-piso" /></div>
-          <div class="field"><label for="f-oficina">Oficina</label><input id="f-oficina" /></div>
-          <div class="field"><label for="f-horario">Horario</label><input id="f-horario" /></div>
-          <div class="field"><label for="f-servicios">Servicios</label><textarea id="f-servicios"></textarea></div>
-          <div class="field"><label for="f-requisitos">Requisitos</label><textarea id="f-requisitos"></textarea></div>
-          <div class="field"><label for="f-telefono">Teléfono</label><input id="f-telefono" /></div>
-          <div class="field"><label for="f-correo">Correo</label><input id="f-correo" type="email" /></div>
-          <div class="field">
-            <label><input type="checkbox" id="f-rampa" /> Rampa</label>
-            <label><input type="checkbox" id="f-ascensor" /> Ascensor</label>
-            <label><input type="checkbox" id="f-banio" /> Baño accesible</label>
-            <label><input type="checkbox" id="f-ruta" /> Ruta accesible</label>
-          </div>
-          <div class="field">
-            <label for="f-estado">Estado *</label>
-            <select id="f-estado" required>
-              <option value="revision">En revisión (no visible al público)</option>
-              <option value="activo">Activo (visible al público)</option>
-              <option value="inactivo">Inactivo</option>
-            </select>
-          </div>
-          <div class="field"><label for="f-responsable">Responsable de validar</label><input id="f-responsable" /></div>
-          <div id="form-error"></div>
-          <div style="display:flex; gap:0.6rem; margin-top:0.6rem;">
-            <button class="btn" type="submit">Guardar</button>
-            <button class="btn secondary" type="button" id="btn-cancelar">Cancelar</button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <div class="panel" id="panel-auditoria" style="margin-top:1.5rem; display:none;">
-      <h3>Auditoría reciente</h3>
-      <div class="table-wrap">
-        <table class="admin" id="tabla-auditoria">
-          <thead><tr><th>Fecha</th><th>Usuario</th><th>Acción</th><th>Detalle</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
+    </section>
   </main>
 </div>
 

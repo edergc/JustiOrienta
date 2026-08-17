@@ -17,9 +17,12 @@ FastAPI, SQLAlchemy, SQLite/PostgreSQL, HTML/CSS/JS nativos.
 | `JusticiaOrienta_02_Etiqueta_Sobre.docx` | Etiqueta con título y seudónimo para el sobre cerrado. |
 | `JusticiaOrienta_03_Hoja_Identificacion.docx` | Único ejemplar no anónimo: nombres, correo y firmas. |
 | `JusticiaOrienta_04_Plantilla_Catalogo_Piloto.xlsx` | Plantilla para el levantamiento real del catálogo (dependencias, horarios, accesibilidad). |
-| `JusticiaOrienta_05_Nota_Interna_para_Firma.docx` | Nota de una página para conseguir la autorización y firma del responsable. |
+| `JusticiaOrienta_05_Nota_Interna_para_Firma.docx` | Nota de una página, no anónima, para conseguir la autorización y firma del responsable. |
 | `prototipo-v1/` | **V1** — micrositio estático de un solo archivo, sin backend, para demostrar el concepto sin instalar nada. |
 | `app/` | **V2** — aplicación real: backend FastAPI + base de datos + panel de administración. Esto es lo que sigue creciendo. |
+| `migrations/` | Migraciones versionadas de la base de datos (Alembic). |
+| `tests/` | Pruebas automatizadas (`pytest`). |
+| `run.py` | Punto de arranque único del servidor. |
 
 ## Cómo correr la aplicación real (`app/`)
 
@@ -28,13 +31,16 @@ Requiere Python 3.10+ (ya viene con `pip`, no hace falta nada más para empezar)
 ```bash
 pip install -r requirements.txt
 
-# 1. Crea el usuario administrador inicial
+# 1. Crea el esquema de la base de datos (migraciones versionadas con Alembic)
+python -m alembic upgrade head
+
+# 2. Crea el usuario administrador inicial
 python -m app.seed
 
-# 2. Carga el catálogo desde el Excel de levantamiento (real o de ejemplo)
+# 3. Carga el catálogo desde el Excel de levantamiento (real o de ejemplo)
 python -m app.import_excel "JusticiaOrienta_04_Plantilla_Catalogo_Piloto.xlsx"
 
-# 3. Levanta el servidor (backend y frontend son el mismo proceso, un solo puerto)
+# 4. Levanta el servidor (backend y frontend son el mismo proceso, un solo puerto)
 python run.py
 ```
 
@@ -44,6 +50,16 @@ Luego abre:
 - **http://127.0.0.1:8743/admin** — el panel de administración (lo que usa cada área para mantener su información).
   - Usuario inicial: `admin@justiciaorienta.local` / contraseña impresa por `app.seed` — **cámbiala de inmediato**.
 - **http://127.0.0.1:8743/api/docs** — documentación interactiva de la API (generada automáticamente por FastAPI).
+
+### Ejecutar las pruebas automatizadas
+
+```bash
+python -m pytest
+```
+
+Corren contra una base de datos SQLite en memoria, aislada de tu base de desarrollo. Cubren el
+buscador (lenguaje natural, tolerancia a errores de tipeo, regresiones ya encontradas) y el flujo de
+publicación completo (quién puede crear, editar, aprobar y auditar).
 
 ### Sobre el puerto
 
@@ -64,30 +80,84 @@ Si más adelante se separa el frontend en un proyecto propio (por ejemplo al con
 V3), lo natural será darle igualmente un puerto propio poco común y habilitar CORS en
 la API para ese origen -- hoy no aplica porque ambos viven en el mismo proceso.
 
+### Roles y flujo editorial
+
+Cuatro roles, no dos. Cada uno mapea directamente a la gobernanza descrita en la ficha de buena práctica:
+
+| Rol | Puede |
+|---|---|
+| **admin** | Todo: sedes, edificios, usuarios, dependencias y servicios de cualquier área, aprobar cualquier cosa. |
+| **gestor** | Crear/editar dependencias y servicios **solo de su propia área**. Nunca publica directamente: todo lo que guarda queda (o vuelve a) en estado `revision`. |
+| **validador** | Lo mismo que gestor, más la capacidad de **aprobar** (`revision` → `activo`) o **devolver a revisión** contenido de su propia área. |
+| **auditor** | Solo lectura de `/admin/auditoria` y de los indicadores. No puede crear ni editar nada. |
+
+Ningún rol distinto de admin puede publicarse a sí mismo con solo guardar el formulario: aunque el
+payload incluya `estado: "activo"`, el servidor lo regresa a `revision` si quien edita no tiene permiso
+de aprobar esa área. Publicar es siempre una acción explícita (`POST /dependencias/{id}/aprobar`).
+
 ### Flujo de trabajo pensado para las áreas
 
-1. Cada área llena o corrige su parte del Excel de levantamiento (`JusticiaOrienta_04...xlsx`).
-2. Informática corre `python -m app.import_excel` para volcar esos cambios a la base de datos, **o** cada
-   gestor de área edita directamente desde `/admin` (solo ve y edita las dependencias de su propia área).
-3. El micrositio público (`/`) refleja los cambios de inmediato — solo muestra dependencias en estado
-   `activo`, para que nada salga a producción sin haber sido validado.
-4. Todo cambio queda registrado en `/api/admin/auditoria` (quién, cuándo, qué campo cambió).
+1. Cada área llena o corrige su parte del Excel de levantamiento (`JusticiaOrienta_04...xlsx`), **o**
+   un(a) gestor(a) de esa área carga la información directamente desde `/admin` → pestaña Dependencias.
+2. Informática corre `python -m app.import_excel` para volcar el Excel a la base de datos cuando corresponda.
+3. Un(a) validador(a) de esa misma área revisa lo que está "En revisión" y lo aprueba, o lo devuelve con
+   un comentario.
+4. El micrositio público (`/`) solo muestra dependencias en estado `activo` — nada llega al ciudadano sin
+   pasar por ese segundo par de ojos.
+5. Todo cambio (crear, editar, aprobar, rechazar, desactivar) queda en `/admin` → pestaña Auditoría:
+   quién, cuándo, qué entidad, qué cambió.
+
+Sedes y edificios ya no son texto libre repetido en cada fila: son entidades propias
+(`/admin/sedes`, `/admin/edificios`) que cualquier dependencia referencia. Cada dependencia puede además
+tener uno o más **servicios** estructurados (requisitos, canal, horario propios) además de su resumen
+general.
 
 ### Producción vs. desarrollo
 
 Por defecto la app usa SQLite (`justicia_orienta.db`, cero instalación). Para producción, define la
-variable de entorno `DATABASE_URL` apuntando a PostgreSQL — no hay que tocar código:
+variable de entorno `DATABASE_URL` apuntando a PostgreSQL y corre las migraciones — no hay que tocar
+código:
 
 ```
 DATABASE_URL=postgresql+psycopg2://usuario:clave@host:5432/justicia_orienta
 ```
 
+```bash
+python -m alembic upgrade head
+```
+
 Copia `.env.example` a `.env` y ajusta los valores (incluida `JUSTICIA_ORIENTA_SECRET`, que firma las
 sesiones — cámbiala antes de cualquier uso real).
 
-**Limitación conocida, honesta:** todavía no hay migraciones versionadas (Alembic); las tablas se crean
-automáticamente al iniciar. Es suficiente para el piloto; es la siguiente mejora recomendada antes de un
-despliegue institucional definitivo.
+Si cambias los modelos en `app/models/`, genera la migración correspondiente:
+
+```bash
+python -m alembic revision --autogenerate -m "descripción del cambio"
+python -m alembic upgrade head
+```
+
+## Arquitectura del backend
+
+Organizado por responsabilidad, no en un archivo gigante — cada capa tiene su propio paquete:
+
+```
+app/
+  config.py         Configuración centralizada (pydantic-settings, lee .env)
+  database.py       Motor SQLAlchemy y sesión
+  security.py       Hash de contraseñas, JWT, reglas de permiso por rol/área
+  nlp.py            Interpretación de lenguaje natural del buscador
+  main.py           Arma la app, monta routers, maneja errores
+
+  models/           Una tabla por archivo (Sede, Edificio, Dependencia, Servicio,
+                     Alias, Usuario, Auditoria, ConsultaLog)
+  schemas/          Esquemas Pydantic de entrada/salida, uno por entidad
+  crud/             Acceso a datos y reglas de negocio, uno por entidad
+  routers/          Endpoints HTTP, agrupados por recurso (no un solo admin.py)
+  static/           El sitio público y el panel de administración (HTML/CSS/JS)
+```
+
+La API vive bajo `/api/v1` (versionada desde el día uno: si en el futuro cambia algo de forma
+incompatible, puede convivir `/api/v2` sin romper lo existente).
 
 ## Hoja de ruta (de dónde venimos, hacia dónde va)
 
@@ -102,8 +172,10 @@ despliegue institucional definitivo.
 ## Principios que no se negocian
 
 - **Nunca inventar información institucional.** Si el buscador no tiene certeza, deriva a atención humana
-  en vez de adivinar (ver el mensaje de respaldo en `/api/buscar`).
-- **Cada área es dueña de su información.** Un/a gestor/a de área solo puede editar dependencias de su
-  propia área; Informática administra la plataforma, no el contenido.
+  en vez de adivinar (ver el mensaje de respaldo en `/api/v1/buscar`).
+- **Cada área es dueña de su información.** Gestores y validadores solo tocan las dependencias de su
+  propia área; Informática administra la plataforma, no decide el contenido de otras áreas.
+- **Nadie se autopublica.** Todo cambio de contenido pasa a revisión; publicar es una acción explícita de
+  quien tiene el rol de validador o administrador.
 - **Accesibilidad no es una fase futura.** Alto contraste, texto ampliable y lectura en voz alta están en
   el V1 y el V2, no reservados para una versión posterior.

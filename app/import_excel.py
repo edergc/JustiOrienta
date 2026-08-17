@@ -1,18 +1,23 @@
 """Importa la plantilla Excel de levantamiento del catálogo hacia la base de datos.
 
+Requiere que el esquema ya exista (alembic upgrade head).
+
 Uso:
     python -m app.import_excel "JusticiaOrienta_04_Plantilla_Catalogo_Piloto.xlsx"
 
-Empareja filas por 'Nombre oficial': si ya existe una dependencia con ese nombre
-la actualiza, si no, la crea. Las filas sin nombre se ignoran.
+Empareja dependencias por 'Nombre oficial': si ya existe, la actualiza; si no,
+la crea. Las sedes y edificios mencionados por nombre se crean automáticamente
+si todavía no existen (para no obligar a levantarlos aparte antes de poder
+cargar el catálogo). Las filas sin nombre se ignoran.
 """
 import sys
 from pathlib import Path
 
 from openpyxl import load_workbook
+from sqlalchemy.orm import Session
 
 from app import crud, models
-from app.database import Base, SessionLocal, engine
+from app.database import SessionLocal
 
 COLUMNAS = [
     "id_hoja", "tipo", "categoria", "nombre", "alias",
@@ -33,11 +38,34 @@ def _texto(v) -> str:
     return str(v).strip() if v is not None else ""
 
 
+def _obtener_o_crear_sede(db: Session, nombre: str) -> models.Sede:
+    sede = db.query(models.Sede).filter(models.Sede.nombre == nombre).first()
+    if sede:
+        return sede
+    sede = models.Sede(nombre=nombre, estado="activo")
+    db.add(sede)
+    db.flush()
+    return sede
+
+
+def _obtener_o_crear_edificio(db: Session, sede_id: int, nombre: str) -> models.Edificio:
+    edificio = (
+        db.query(models.Edificio)
+        .filter(models.Edificio.sede_id == sede_id, models.Edificio.nombre == nombre)
+        .first()
+    )
+    if edificio:
+        return edificio
+    edificio = models.Edificio(sede_id=sede_id, nombre=nombre, estado="activo")
+    db.add(edificio)
+    db.flush()
+    return edificio
+
+
 def importar(ruta_excel: str) -> None:
     wb = load_workbook(ruta_excel, data_only=True)
     ws = wb["Catálogo"]
 
-    Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     creadas, actualizadas, omitidas = 0, 0, 0
 
@@ -54,12 +82,27 @@ def importar(ruta_excel: str) -> None:
             estado_map = {"activo": "activo", "en revisión": "revision", "en revision": "revision", "inactivo": "inactivo"}
             estado = estado_map.get(_texto(valores.get("estado")).lower(), "revision")
 
+            nombre_sede = _texto(valores.get("sede"))
+            sede_id = None
+            edificio_id = None
+            if nombre_sede:
+                sede = _obtener_o_crear_sede(db, nombre_sede)
+                sede_id = sede.id
+                nombre_edificio = _texto(valores.get("edificio"))
+                if nombre_edificio:
+                    edificio_id = _obtener_o_crear_edificio(db, sede_id, nombre_edificio).id
+
+            if sede_id is None:
+                print(f"  omitida '{nombre}': no tiene sede indicada (columna 'Sede' vacía)")
+                omitidas += 1
+                continue
+
             data = {
                 "tipo": tipo,
                 "categoria": _texto(valores.get("categoria")) or None,
                 "nombre": nombre,
-                "sede": _texto(valores.get("sede")) or None,
-                "edificio": _texto(valores.get("edificio")) or None,
+                "sede_id": sede_id,
+                "edificio_id": edificio_id,
                 "piso": _texto(valores.get("piso")) or None,
                 "oficina": _texto(valores.get("oficina")) or None,
                 "horario": _texto(valores.get("horario")) or None,
@@ -79,13 +122,14 @@ def importar(ruta_excel: str) -> None:
 
             existente = db.query(models.Dependencia).filter(models.Dependencia.nombre == nombre).first()
             if existente:
-                crud.actualizar_dependencia(db, existente, data, alias_csv)
+                crud.dependencias.actualizar(db, existente, data, alias_csv)
                 actualizadas += 1
             else:
-                crud.crear_dependencia(db, data, alias_csv)
+                crud.dependencias.crear(db, data, alias_csv)
                 creadas += 1
 
-        print(f"Importación completa: {creadas} creadas, {actualizadas} actualizadas, {omitidas} filas vacías omitidas.")
+        db.commit()
+        print(f"Importación completa: {creadas} creadas, {actualizadas} actualizadas, {omitidas} filas omitidas.")
     finally:
         db.close()
 

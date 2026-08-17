@@ -1,19 +1,20 @@
 """Crea el usuario administrador inicial.
 
-Uso:
+Requiere que el esquema ya exista -- corre primero las migraciones:
+    alembic upgrade head
     python -m app.seed
 
 Cambia la contraseña por defecto de inmediato una vez que inicies sesión.
 """
-from app import models, security
-from app.database import Base, SessionLocal, engine
+from app import models
+from app.database import SessionLocal
+from app.security import hash_password
 
 ADMIN_EMAIL = "admin@justiciaorienta.local"
 ADMIN_PASSWORD_INICIAL = "CambiarAhora2026"
 
 
 def main():
-    Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
         existe = db.query(models.Usuario).filter(models.Usuario.email == ADMIN_EMAIL).first()
@@ -24,8 +25,8 @@ def main():
         admin = models.Usuario(
             nombre="Administrador Justicia Orienta",
             email=ADMIN_EMAIL,
-            password_hash=security.hash_password(ADMIN_PASSWORD_INICIAL),
-            rol="admin",
+            password_hash=hash_password(ADMIN_PASSWORD_INICIAL),
+            rol=models.Rol.admin,
             activo=True,
         )
         db.add(admin)

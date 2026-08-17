@@ -5,3 +5,7 @@ venv/
 *.db
 .env
 *.egg-info/
+.pytest_cache/
+resp.json
+debug_encoding.txt
+server.log
