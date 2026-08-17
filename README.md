@@ -18,6 +18,7 @@ FastAPI, SQLAlchemy, SQLite/PostgreSQL, HTML/CSS/JS nativos.
 | `JusticiaOrienta_03_Hoja_Identificacion.docx` | Único ejemplar no anónimo: nombres, correo y firmas. |
 | `JusticiaOrienta_04_Plantilla_Catalogo_Piloto.xlsx` | Plantilla para el levantamiento real del catálogo (dependencias, horarios, accesibilidad). |
 | `JusticiaOrienta_05_Nota_Interna_para_Firma.docx` | Nota de una página, no anónima, para conseguir la autorización y firma del responsable. |
+| `JusticiaOrienta_06_Manual_Panel_Administracion.docx` | Manual paso a paso, con capturas reales, para personal de área que no programa. |
 | `prototipo-v1/` | **V1** — micrositio estático de un solo archivo, sin backend, para demostrar el concepto sin instalar nada. |
 | `app/` | **V2** — aplicación real: backend FastAPI + base de datos + panel de administración. Esto es lo que sigue creciendo. |
 | `migrations/` | Migraciones versionadas de la base de datos (Alembic). |
