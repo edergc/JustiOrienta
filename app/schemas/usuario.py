@@ -15,6 +15,15 @@ def _validar_dni(v: str) -> str:
     return v
 
 
+def _validar_password_minima(v: str) -> str:
+    # Misma regla que el autoservicio (PUT /auth/mi-password) -- antes de
+    # este cambio, un(a) admin podía crear o restablecer una contraseña de
+    # un solo carácter, sin ninguna validación.
+    if len(v) < 6:
+        raise ValueError("La contraseña debe tener al menos 6 caracteres")
+    return v
+
+
 class UsuarioOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
@@ -34,6 +43,7 @@ class UsuarioCreate(BaseModel):
     area: Optional[str] = None
 
     _validar_dni = field_validator("dni")(_validar_dni)
+    _validar_password = field_validator("password")(_validar_password_minima)
 
 
 class UsuarioUpdate(BaseModel):
@@ -42,6 +52,11 @@ class UsuarioUpdate(BaseModel):
     area: Optional[str] = None
     activo: bool = True
     nueva_password: Optional[str] = None  # solo si un(a) admin quiere restablecerla
+
+    @field_validator("nueva_password")
+    @classmethod
+    def _validar_nueva_password(cls, v: Optional[str]) -> Optional[str]:
+        return _validar_password_minima(v) if v else v
 
 
 class CambiarPasswordIn(BaseModel):

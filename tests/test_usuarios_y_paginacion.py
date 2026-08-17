@@ -34,6 +34,29 @@ def test_crear_usuario_rechaza_dni_con_formato_invalido(admin_usuario):
     assert r.status_code == 422
 
 
+def test_crear_usuario_rechaza_password_corta(admin_usuario):
+    atoken = _login("10000001", "clave123")
+    r = client.post(
+        "/api/v1/admin/usuarios",
+        json={"nombre": "Alguien", "dni": "10000009", "password": "abc", "rol": "gestor", "area": "X"},
+        headers=_auth(atoken),
+    )
+    assert r.status_code == 422
+
+
+def test_admin_no_puede_restablecer_a_password_corta(admin_usuario, gestor_usuario):
+    atoken = _login("10000001", "clave123")
+    r = client.put(
+        f"/api/v1/admin/usuarios/{gestor_usuario.id}",
+        json={
+            "nombre": gestor_usuario.nombre, "rol": "gestor", "area": gestor_usuario.area,
+            "activo": True, "nueva_password": "123",
+        },
+        headers=_auth(atoken),
+    )
+    assert r.status_code == 422
+
+
 def test_crear_usuario_rechaza_dni_duplicado(admin_usuario, gestor_usuario):
     atoken = _login("10000001", "clave123")
     r = client.post(
