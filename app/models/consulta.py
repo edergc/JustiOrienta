@@ -12,4 +12,7 @@ class ConsultaLog(Base):
     id = Column(Integer, primary_key=True, index=True)
     query_text = Column(String(300))
     encontrado = Column(Boolean, default=False)
+    # "si" | "parcial" | "no" | NULL (nadie respondió). Igual de anónimo que
+    # el resto: no se une a ninguna sesión ni identificador de persona.
+    satisfaccion = Column(String(10), nullable=True)
     fecha = Column(DateTime, default=ahora_utc, index=True)

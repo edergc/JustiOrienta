@@ -10,3 +10,8 @@ class BusquedaRespuesta(BaseModel):
     total: int
     fallback: bool
     mensaje: Optional[str] = None
+    consulta_id: Optional[int] = None
+
+
+class SatisfaccionIn(BaseModel):
+    valor: str  # "si" | "parcial" | "no"

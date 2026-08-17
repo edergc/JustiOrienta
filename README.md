@@ -169,6 +169,22 @@ incompatible, puede convivir `/api/v2` sin romper lo existente).
 | V3 | Asistente de interpretación de lenguaje natural sobre el catálogo validado | No iniciado |
 | V4 | Navegación interior avanzada, integraciones adicionales | No iniciado |
 
+## El sitio público (`/`)
+
+- **Búsqueda por texto o por voz**: el botón de micrófono usa reconocimiento de habla nativo del
+  navegador (Web Speech API) — sin servicios de terceros. Si el navegador no lo soporta, o se niega el
+  permiso, el buscador de texto sigue funcionando igual.
+- **Estado vacío con sugerencias por categoría**: antes de escribir nada, la persona ve tres caminos
+  claros ("encontrar un juzgado", "trámites administrativos", "no sé qué necesito") en vez de una
+  pantalla en blanco.
+- **Saludo contextual por QR de sede**: un enlace con `?sede=<id>` (el que llevaría el QR físico
+  instalado en una sede) muestra un aviso "Estás consultando información de la sede X" antes de buscar.
+- **Retroalimentación de una pregunta**: después de cada búsqueda, "¿Esto te resultó útil? Sí /
+  Parcialmente / No" — anónimo, ligado solo al identificador de esa consulta puntual, visible en
+  `/admin` → Dependencias → estadísticas (`porcentaje_satisfaccion`).
+- Todo lo demás del diseño original se mantiene: alto contraste, texto ampliable, tema oscuro, lectura
+  en voz alta de cada resultado, y el mensaje de respaldo cuando el sistema no tiene certeza.
+
 ## Principios que no se negocian
 
 - **Nunca inventar información institucional.** Si el buscador no tiene certeza, deriva a atención humana

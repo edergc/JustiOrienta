@@ -13,8 +13,14 @@
 </div>
 
 <header class="site">
+  <svg class="site-mark" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+    <circle cx="24" cy="24" r="21" fill="none" stroke="var(--line)" stroke-width="2" />
+    <path d="M24 10 L28 24 L24 27 L20 24 Z" fill="var(--accent)" />
+    <path d="M24 38 L20 24 L24 21 L28 24 Z" fill="var(--accent2)" />
+    <circle cx="24" cy="24" r="2.4" fill="var(--ink)" />
+  </svg>
   <h1>Justicia Orienta</h1>
-  <p>Escribe qué necesitas. No hace falta que conozcas juzgados, salas ni oficinas.</p>
+  <p>Escribe o di qué necesitas. No hace falta que conozcas juzgados, salas ni oficinas.</p>
 </header>
 
 <div class="toolbar" role="toolbar" aria-label="Preferencias de accesibilidad">
@@ -25,19 +31,43 @@
 </div>
 
 <main>
+  <p id="banner-contexto" class="context-banner" role="status"></p>
+
   <div class="search-wrap">
     <form id="form-buscar">
       <label for="buscar">¿Qué necesitas?</label>
       <div class="search-row">
         <input id="buscar" type="text" autocomplete="off"
                placeholder="Ej: once civil, recursos humanos, mi computadora no funciona..." />
+        <button class="mic" type="button" id="btn-voz" aria-pressed="false" aria-label="Buscar por voz">🎙️</button>
         <button class="go" type="submit">Buscar</button>
       </div>
+      <p id="voz-estado" class="voice-status" role="status" aria-live="polite"></p>
     </form>
     <div class="chips" aria-label="Ejemplos de búsqueda" id="chips"></div>
   </div>
 
+  <div id="estado-vacio" class="empty-state">
+    <div class="tiles">
+      <button class="tile-btn" type="button" data-ej="juzgado civil">
+        <span class="ico" aria-hidden="true">⚖</span>
+        <span><strong>Encontrar un juzgado o sala</strong><span class="d">Ubicación, piso y horario</span></span>
+      </button>
+      <button class="tile-btn" type="button" data-ej="tramite administrativo">
+        <span class="ico" aria-hidden="true">🏢</span>
+        <span><strong>Trámites y áreas administrativas</strong><span class="d">Recursos Humanos, Logística, Informática...</span></span>
+      </button>
+      <button class="tile-btn" type="button" data-ej="no se que necesito">
+        <span class="ico" aria-hidden="true">?</span>
+        <span><strong>No sé qué necesito</strong><span class="d">Te derivamos al módulo de orientación</span></span>
+      </button>
+    </div>
+  </div>
+
   <div id="resultados" aria-live="polite"></div>
+
+  <div id="feedback-caja"></div>
+
   <p class="hint">Datos administrados por cada área de la Corte a través del panel de gestión. Si algo está desactualizado, repórtalo en el módulo de orientación.</p>
 </main>
 

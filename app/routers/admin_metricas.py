@@ -21,6 +21,20 @@ def resumen_metricas(
         or 0
     )
     sin_resultado = total - encontradas
+
+    con_respuesta = (
+        db.query(func.count(models.ConsultaLog.id))
+        .filter(models.ConsultaLog.satisfaccion.isnot(None))
+        .scalar()
+        or 0
+    )
+    satisfechas = (
+        db.query(func.count(models.ConsultaLog.id))
+        .filter(models.ConsultaLog.satisfaccion == "si")
+        .scalar()
+        or 0
+    )
+
     top = (
         db.query(models.ConsultaLog.query_text, func.count(models.ConsultaLog.id).label("n"))
         .group_by(models.ConsultaLog.query_text)
@@ -33,5 +47,7 @@ def resumen_metricas(
         "consultas_resueltas": encontradas,
         "consultas_sin_resultado": sin_resultado,
         "porcentaje_resueltas": round((encontradas / total) * 100, 1) if total else None,
+        "respuestas_satisfaccion": con_respuesta,
+        "porcentaje_satisfaccion": round((satisfechas / con_respuesta) * 100, 1) if con_respuesta else None,
         "top_consultas": [{"consulta": t, "veces": n} for t, n in top],
     }

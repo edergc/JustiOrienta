@@ -83,6 +83,12 @@ main.wide { max-width: 68rem; }
   font: inherit; font-weight: 700; background: var(--accent2); color: #fff; border: none;
   border-radius: 10px; padding: 0 1.3rem; cursor: pointer; font-size: 1rem;
 }
+@media (max-width: 480px) {
+  .search-row { flex-wrap: wrap; }
+  .search-row input { flex: 1 1 100%; }
+  .search-row button.mic, .search-row button.go { flex: 1; }
+}
+
 .chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.7rem; }
 .chips button {
   font: inherit; font-size: 0.82rem; background: var(--surface); border: 1px solid var(--line);
@@ -174,3 +180,64 @@ table.admin td.actions button { font-size: 0.78rem; padding: 0.3rem 0.6rem; }
 .stat .l { font-size: 0.75rem; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.04em; }
 .topbar-admin { display: flex; justify-content: space-between; align-items: center; padding: 0.9rem 1.5rem; border-bottom: 1px solid var(--line); }
 .topbar-admin .who { font-size: 0.85rem; color: var(--ink-soft); }
+
+/* ── sitio público: cabecera y saludo contextual ── */
+.site-mark { width: 2.75rem; height: 2.75rem; display: block; margin: 0 auto; }
+.context-banner {
+  display: none; max-width: 44rem; margin: 0 auto 1.4rem; padding: 0.85rem 1.1rem;
+  background: var(--accent2-tint); color: var(--accent2-strong); border-radius: 10px;
+  font-size: 0.92rem; font-weight: 600; text-align: center;
+}
+.context-banner.visible { display: block; }
+
+/* ── entrada por voz ── */
+.search-row button.mic {
+  flex: none; width: 3.1rem; border: 2px solid var(--line); border-radius: 10px;
+  background: var(--surface); cursor: pointer; display: grid; place-items: center;
+  color: var(--ink-soft);
+}
+.search-row button.mic[aria-pressed="true"] {
+  background: var(--danger-tint); color: var(--danger); border-color: var(--danger);
+  animation: jo-pulso 1.4s ease-in-out infinite;
+}
+.search-row button.mic:disabled { opacity: 0.4; cursor: not-allowed; }
+@keyframes jo-pulso {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(156, 59, 59, 0.35); }
+  50% { box-shadow: 0 0 0 7px rgba(156, 59, 59, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .search-row button.mic[aria-pressed="true"] { animation: none; }
+}
+.voice-status { font-size: 0.85rem; color: var(--accent2-strong); margin-top: 0.5rem; font-weight: 600; }
+
+/* ── estado vacío: sugerencias por categoría ── */
+.empty-state { margin-top: 0.4rem; }
+.empty-state .tiles {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 0.8rem;
+}
+.tile-btn {
+  text-align: left; padding: 1rem 1.1rem; border-radius: 12px; border: 1px solid var(--line);
+  background: var(--surface); cursor: pointer; font: inherit; color: var(--ink);
+  display: flex; gap: 0.75rem; align-items: flex-start;
+}
+.tile-btn:hover, .tile-btn:focus-visible { border-color: var(--accent2); }
+.tile-btn .ico {
+  flex: none; width: 2.1rem; height: 2.1rem; border-radius: 50%; display: grid; place-items: center;
+  background: var(--accent2-tint); color: var(--accent2-strong); font-weight: 700; font-size: 0.95rem;
+}
+.tile-btn strong { display: block; font-size: 0.98rem; margin-bottom: 0.15rem; }
+.tile-btn span.d { font-size: 0.82rem; color: var(--ink-soft); }
+
+/* ── retroalimentación ── */
+.feedback {
+  margin-top: 1.6rem; padding: 1.1rem 1.2rem; border: 1px solid var(--line); border-radius: 12px;
+  background: var(--surface); text-align: center;
+}
+.feedback p { margin: 0 0 0.7rem; font-weight: 600; }
+.feedback .opciones { display: flex; gap: 0.6rem; justify-content: center; flex-wrap: wrap; }
+.feedback button {
+  font: inherit; font-size: 0.88rem; padding: 0.5rem 1.1rem; border-radius: 100px;
+  border: 1px solid var(--line); background: var(--surface-soft); color: var(--ink); cursor: pointer;
+}
+.feedback button:hover { border-color: var(--accent2); }
+.feedback .gracias { color: var(--accent2-strong); font-weight: 600; margin: 0; }

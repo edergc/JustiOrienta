@@ -4,7 +4,7 @@ from app.schemas.servicio import ServicioBase, ServicioCreate, ServicioUpdate, S
 from app.schemas.dependencia import DependenciaBase, DependenciaCreate, DependenciaUpdate, DependenciaOut
 from app.schemas.usuario import UsuarioOut, UsuarioCreate, Token
 from app.schemas.auditoria import AuditoriaOut
-from app.schemas.busqueda import BusquedaRespuesta
+from app.schemas.busqueda import BusquedaRespuesta, SatisfaccionIn
 
 __all__ = [
     "SedeBase", "SedeCreate", "SedeUpdate", "SedeOut",
@@ -13,5 +13,5 @@ __all__ = [
     "DependenciaBase", "DependenciaCreate", "DependenciaUpdate", "DependenciaOut",
     "UsuarioOut", "UsuarioCreate", "Token",
     "AuditoriaOut",
-    "BusquedaRespuesta",
+    "BusquedaRespuesta", "SatisfaccionIn",
 ]

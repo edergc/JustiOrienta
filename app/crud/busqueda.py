@@ -85,7 +85,25 @@ def buscar_dependencias(db: Session, query: str, limite: int = 10) -> list[model
     return [dep for _, dep in puntuadas[:limite]]
 
 
-def registrar_consulta(db: Session, query: str, encontrado: bool) -> None:
+def registrar_consulta(db: Session, query: str, encontrado: bool) -> models.ConsultaLog:
     log = models.ConsultaLog(query_text=query[:300], encontrado=encontrado)
     db.add(log)
     db.commit()
+    db.refresh(log)
+    return log
+
+
+VALORES_SATISFACCION = {"si", "parcial", "no"}
+
+
+def registrar_satisfaccion(db: Session, consulta_id: int, valor: str) -> bool:
+    """Devuelve False si la consulta no existe o el valor no es válido --
+    la respuesta anónima no debe poder inventar registros nuevos."""
+    if valor not in VALORES_SATISFACCION:
+        return False
+    log = db.query(models.ConsultaLog).filter(models.ConsultaLog.id == consulta_id).first()
+    if not log:
+        return False
+    log.satisfaccion = valor
+    db.commit()
+    return True
