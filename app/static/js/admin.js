@@ -1,4 +1,15 @@
 const API = "/api/v1";
+
+// Los campos de DNI solo deben aceptar dígitos mientras se escribe -- el
+// patrón HTML5 ya bloquea el envío del formulario, pero corregir la letra
+// mal tecleada al vuelo es mejor experiencia que dejarla y recién avisar
+// al enviar, sobre todo para personal no técnico.
+document.querySelectorAll('input[pattern="[0-9]{8}"]').forEach((el) => {
+  el.addEventListener("input", () => {
+    el.value = el.value.replace(/\D/g, "").slice(0, 8);
+  });
+});
+
 let TOKEN = sessionStorage.getItem("jo_token");
 let USUARIO = null;
 let CACHE_DEPS = [];
