@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from app import crud, schemas, security
 from app.database import get_db
+from app.deteccion_duplicados import detectar_duplicados
 from app.models import Rol
 from app.models.base import ahora_utc
 
@@ -59,6 +60,21 @@ def listar_dependencias(
         items=[schemas.DependenciaOut.model_validate(d) for d in deps],
         total=total, skip=skip, limite=limite,
     )
+
+
+@router.get("/dependencias/duplicados")
+def duplicados_del_catalogo(
+    db: Session = Depends(get_db),
+    usuario=Depends(security.requiere_lectura_auditoria),
+):
+    """Posibles duplicados: mismo nombre (normalizado) repetido dentro de la
+    misma sede, sin importar el área -- justo el patrón que ya se documentó
+    y corrigió a mano una vez en 'De dónde salen los datos reales' del
+    README. Es una herramienta de auditoría de calidad de datos, no de
+    gestión del catálogo: mismo alcance que /admin/auditoria (admin/auditor),
+    no el de gestor/validador -- el objetivo es ver duplicados ENTRE áreas,
+    algo que la vista por área nunca mostraría."""
+    return detectar_duplicados(db)
 
 
 _ENCABEZADOS_EXPORTACION = [

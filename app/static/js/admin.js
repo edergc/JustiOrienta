@@ -862,6 +862,32 @@ async function cargarAuditoria() {
     tr.innerHTML = `<td>${fecha}</td><td>${r.usuario_dni || "—"}</td><td>${r.entidad || "—"}</td><td>${r.accion}</td><td>${r.detalle || ""}</td>`;
     tbody.appendChild(tr);
   }
+  await cargarDuplicados();
+}
+
+async function cargarDuplicados() {
+  const box = document.getElementById("lista-duplicados");
+  const grupos = await api("/admin/dependencias/duplicados");
+  if (!grupos.length) {
+    box.innerHTML = '<p class="hint" style="margin:0;">No se encontraron nombres repetidos dentro de la misma sede.</p>';
+    return;
+  }
+  box.innerHTML = grupos
+    .map((g) => {
+      const filas = g.dependencias
+        .map(
+          (d) =>
+            `<li>#${d.id} -- ${d.area}${d.piso ? `, piso ${d.piso}` : ""}${d.oficina ? `, oficina ${d.oficina}` : ""}` +
+            ` <span class="badge ${d.estado}">${d.estado}</span></li>`
+        )
+        .join("");
+      return `
+        <div class="card" style="padding:0.8rem 1rem; margin-bottom:0.6rem;">
+          <strong>"${g.nombre}"</strong> <span class="hint">-- ${g.sede} (${g.dependencias.length} veces)</span>
+          <ul class="meta" style="padding-left:1.2rem; margin:0.4rem 0 0;">${filas}</ul>
+        </div>`;
+    })
+    .join("");
 }
 
 async function cargarTodo() {

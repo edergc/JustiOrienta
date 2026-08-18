@@ -294,6 +294,12 @@ incompatible, puede convivir `/api/v2` sin romper lo existente).
   edición offline, o portarlo a otra instalación. Mismo alcance por área que el resto de la gestión del
   catálogo, y en las mismas 19 primeras columnas y orden que espera `python -m app.import_excel`, así que
   el archivo exportado se puede corregir y volver a importar tal cual.
+- **Detector de posibles duplicados** (`GET /api/v1/admin/dependencias/duplicados`, pestaña Auditoría,
+  solo admin/auditor): agrupa dependencias con el mismo nombre repetido dentro de la misma sede, sin
+  importar el área -- exactamente el patrón ya documentado más abajo ("Mesa de Partes" para oficinas
+  distintas). Exige nombre normalizado *idéntico*, nunca "parecido": los juzgados de este catálogo se
+  distinguen justo por un número ("10.º Juzgado Civil" vs "11.º Juzgado Civil"), así que tolerar errores
+  de tipeo aquí generaría más ruido que ayuda.
 - Confirmaciones visuales (un aviso breve arriba a la derecha) después de cada guardado exitoso.
 
 ## El sitio público (`/`)
