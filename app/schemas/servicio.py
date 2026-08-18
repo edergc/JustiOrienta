@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict
 
@@ -11,7 +11,7 @@ class ServicioBase(BaseModel):
     horario: Optional[str] = None
     costo: Optional[str] = None
     duracion_estimada: Optional[str] = None
-    estado: str = "activo"
+    estado: Literal["activo", "inactivo"] = "activo"
 
 
 class ServicioCreate(ServicioBase):

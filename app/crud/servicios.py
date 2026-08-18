@@ -5,13 +5,13 @@ from sqlalchemy.orm import Session
 from app import models, schemas
 
 
-def listar_por_dependencia(db: Session, dependencia_id: int) -> list[models.Servicio]:
-    return (
-        db.query(models.Servicio)
-        .filter(models.Servicio.dependencia_id == dependencia_id, models.Servicio.estado == "activo")
-        .order_by(models.Servicio.nombre)
-        .all()
-    )
+def listar_por_dependencia(
+    db: Session, dependencia_id: int, incluir_inactivos: bool = False
+) -> list[models.Servicio]:
+    q = db.query(models.Servicio).filter(models.Servicio.dependencia_id == dependencia_id)
+    if not incluir_inactivos:
+        q = q.filter(models.Servicio.estado == "activo")
+    return q.order_by(models.Servicio.nombre).all()
 
 
 def obtener(db: Session, servicio_id: int) -> Optional[models.Servicio]:
@@ -37,3 +37,10 @@ def actualizar(db: Session, servicio: models.Servicio, data: schemas.ServicioUpd
 def desactivar(db: Session, servicio: models.Servicio) -> None:
     servicio.estado = "inactivo"
     db.commit()
+
+
+def reactivar(db: Session, servicio: models.Servicio) -> models.Servicio:
+    servicio.estado = "activo"
+    db.commit()
+    db.refresh(servicio)
+    return servicio

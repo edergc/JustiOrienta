@@ -39,6 +39,13 @@ def listar_dependencias(
     db: Session = Depends(get_db),
     usuario=Depends(security.get_usuario_actual),
 ):
+    if usuario.rol == Rol.consulta:
+        # El rol "consulta" es de indicadores/reportes, no de gestión del
+        # catálogo -- sin este chequeo, cualquiera con esa cuenta podía pedir
+        # este endpoint directo y ver el catálogo completo de todas las áreas,
+        # incluido contenido "en revisión" todavía no publicado, aunque la
+        # pestaña correspondiente esté oculta en el panel.
+        raise HTTPException(403, "El rol de consulta no tiene acceso a la gestión del catálogo")
     area = None if usuario.rol == Rol.admin else usuario.area
     limite = min(limite, 100)
     deps = crud.dependencias.listar(db, area=area, estado=estado, q_nombre=q, skip=skip, limite=limite)
@@ -164,13 +171,14 @@ def desactivar_dependencia(
 @router.get("/dependencias/{dep_id}/servicios", response_model=list[schemas.ServicioOut])
 def listar_servicios(
     dep_id: int,
+    incluir_inactivos: bool = False,
     db: Session = Depends(get_db),
     usuario=Depends(security.get_usuario_actual),
 ):
     dep = crud.dependencias.obtener(db, dep_id)
     if not dep:
         raise HTTPException(404, "Dependencia no encontrada")
-    return crud.servicios.listar_por_dependencia(db, dep_id)
+    return crud.servicios.listar_por_dependencia(db, dep_id, incluir_inactivos=incluir_inactivos)
 
 
 @router.post("/dependencias/{dep_id}/servicios", response_model=schemas.ServicioOut)
@@ -226,3 +234,21 @@ def desactivar_servicio(
     crud.servicios.desactivar(db, servicio)
     crud.auditoria.registrar(db, usuario.dni, "servicio", servicio.id, "DELETE", f"Desactivó servicio '{servicio.nombre}'")
     return {"ok": True}
+
+
+@router.post("/servicios/{servicio_id}/reactivar", response_model=schemas.ServicioOut)
+def reactivar_servicio(
+    servicio_id: int,
+    db: Session = Depends(get_db),
+    usuario=Depends(security.get_usuario_actual),
+):
+    servicio = crud.servicios.obtener(db, servicio_id)
+    if not servicio:
+        raise HTTPException(404, "Servicio no encontrado")
+    dep = crud.dependencias.obtener(db, servicio.dependencia_id)
+    if not security.puede_editar_area(usuario, dep.area):
+        raise HTTPException(403, "No tienes permiso para editar este servicio")
+
+    servicio = crud.servicios.reactivar(db, servicio)
+    crud.auditoria.registrar(db, usuario.dni, "servicio", servicio.id, "REACTIVAR", f"Reactivó servicio '{servicio.nombre}'")
+    return servicio

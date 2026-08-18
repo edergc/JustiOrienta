@@ -237,6 +237,9 @@ incompatible, puede convivir `/api/v2` sin romper lo existente).
   propia cuenta por accidente.
 - **Sedes con estado real**: el formulario de sedes tiene un selector Activo/Inactivo -- antes se forzaba
   siempre a "activo" al guardar, así que editar una sede inactiva la reactivaba sin querer.
+- **Servicios reactivables**: "Quitar" un servicio de una dependencia lo desactiva, no lo borra -- la lista
+  de servicios ahora también muestra los inactivos (atenuados, con badge "Inactivo") con un botón
+  "Reactivar", en vez de perderlos para siempre salvo tocar la base de datos a mano.
 - **Paginación y búsqueda por nombre** en la tabla de dependencias, para catálogos grandes (10 por página,
   con "Mostrando X–Y de Z").
 - **Código QR por sede y por dependencia** (botón "QR" en cada fila de la tabla de Sedes y de Dependencias):

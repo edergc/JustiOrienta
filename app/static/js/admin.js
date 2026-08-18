@@ -720,19 +720,29 @@ document.getElementById("form-dep").addEventListener("submit", async (e) => {
 
 // ── Servicios de la dependencia en edición ──
 async function cargarServicios(depId) {
-  const servicios = await api(`/admin/dependencias/${depId}/servicios`);
+  // incluir_inactivos=true: si no, un servicio "Quitado" desaparece para
+  // siempre de esta lista -- sin forma de verlo de nuevo ni reactivarlo salvo
+  // tocando la base de datos a mano (el mismo bug que ya se corrigió para
+  // sedes con el selector de Estado real).
+  const servicios = await api(`/admin/dependencias/${depId}/servicios?incluir_inactivos=true`);
   const box = document.getElementById("lista-servicios");
   box.innerHTML = servicios.length
     ? ""
     : '<p class="hint" style="margin:0;">Todavía no hay servicios registrados.</p>';
   for (const s of servicios) {
+    const inactivo = s.estado !== "activo";
     const row = document.createElement("div");
     row.className = "card";
     row.style.padding = "0.7rem 0.9rem";
+    if (inactivo) row.style.opacity = "0.6";
     row.innerHTML = `
       <div class="card-top">
-        <strong>${s.nombre}</strong>
-        <button class="btn secondary" data-quitar-servicio="${s.id}" style="font-size:0.78rem; padding:0.25rem 0.6rem;">Quitar</button>
+        <strong>${s.nombre}</strong>${inactivo ? ' <span class="badge inactivo">Inactivo</span>' : ""}
+        ${
+          inactivo
+            ? `<button class="btn secondary" data-reactivar-servicio="${s.id}" style="font-size:0.78rem; padding:0.25rem 0.6rem;">Reactivar</button>`
+            : `<button class="btn secondary" data-quitar-servicio="${s.id}" style="font-size:0.78rem; padding:0.25rem 0.6rem;">Quitar</button>`
+        }
       </div>
       ${s.requisitos ? `<p class="meta">Requisitos: ${s.requisitos}</p>` : ""}
       ${s.canal ? `<p class="meta">Canal: ${s.canal}</p>` : ""}
@@ -743,6 +753,13 @@ async function cargarServicios(depId) {
     b.addEventListener("click", async () => {
       await api(`/admin/servicios/${b.dataset.quitarServicio}`, { method: "DELETE" });
       await cargarServicios(depId);
+    })
+  );
+  box.querySelectorAll("[data-reactivar-servicio]").forEach((b) =>
+    b.addEventListener("click", async () => {
+      await api(`/admin/servicios/${b.dataset.reactivarServicio}/reactivar`, { method: "POST" });
+      await cargarServicios(depId);
+      mostrarToast("Servicio reactivado.");
     })
   );
 }
@@ -777,6 +794,14 @@ async function cargarAuditoria() {
 }
 
 async function cargarTodo() {
+  // El rol "consulta" no ve ninguna de las pestañas de gestión del catálogo
+  // (ver mostrarApp) y el backend ahora rechaza /admin/dependencias para ese
+  // rol -- pedir estos datos igual sería un viaje de red desperdiciado, y en
+  // el caso de dependencias, un error 403 innecesario en la consola.
+  if (esSoloConsulta()) {
+    await cargarStats();
+    return;
+  }
   await cargarSedes();
   limpiarFormulario();
   limpiarFormularioUsuario();
