@@ -72,7 +72,19 @@
       </div>
     </div>
 
-    <nav class="toolbar" style="justify-content:flex-start; border:1px solid var(--line); border-radius:10px; margin-bottom:1.2rem;" aria-label="Secciones del panel">
+    <div id="fila-reporte" style="display:none; margin-bottom:1.2rem;">
+      <button class="btn secondary" id="btn-descargar-reporte" type="button">⬇ Descargar reporte (Excel)</button>
+    </div>
+
+    <section id="panel-solo-consulta" class="card" style="display:none; padding:1.2rem; margin-bottom:1.2rem;">
+      <p class="meta" style="margin:0;">
+        Tu perfil es de <strong>solo consulta</strong>: podés ver los indicadores de arriba y descargar el
+        reporte. La gestión del catálogo (dependencias, sedes, usuarios) la maneja cada área desde su
+        propio rol.
+      </p>
+    </section>
+
+    <nav class="toolbar" id="nav-tabs" style="justify-content:flex-start; border:1px solid var(--line); border-radius:10px; margin-bottom:1.2rem;" aria-label="Secciones del panel">
       <button type="button" class="tab-btn" data-tab="tab-dependencias" aria-pressed="true">Dependencias</button>
       <button type="button" class="tab-btn" data-tab="tab-sedes" aria-pressed="false">Sedes</button>
       <button type="button" class="tab-btn" data-tab="tab-usuarios" aria-pressed="false">Usuarios</button>
@@ -253,6 +265,7 @@
                 <option value="gestor">Gestor — crea/edita contenido de su área</option>
                 <option value="validador">Validador — revisa y publica su área</option>
                 <option value="auditor">Auditor — solo lectura de auditoría</option>
+                <option value="consulta">Consulta — indicadores y reportes, para toma de decisiones</option>
                 <option value="admin">Administrador — control total</option>
               </select>
             </div>

@@ -6,17 +6,21 @@ from app.models.base import Base, ahora_utc
 
 
 class Rol(str, enum.Enum):
-    """Cuatro roles, tal como se definieron en el diseño de gobernanza:
+    """Cinco roles, tal como se definieron en el diseño de gobernanza:
     - admin: control total, incluida la administración de sedes y usuarios.
     - gestor: crea/edita el contenido de su propia área -- nunca publica solo.
     - validador: revisa y aprueba (publica) el contenido de su área.
     - auditor: solo lectura de auditoría e indicadores, ninguna escritura.
+    - consulta: solo lectura de indicadores y reportes (sin auditoría detallada
+      de quién cambió qué) -- pensado para quien toma decisiones a partir de
+      las estadísticas, no para el día a día operativo del catálogo.
     """
 
     admin = "admin"
     gestor = "gestor"
     validador = "validador"
     auditor = "auditor"
+    consulta = "consulta"
 
 
 class Usuario(Base):

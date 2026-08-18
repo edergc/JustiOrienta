@@ -1,9 +1,16 @@
+import io
+
 from fastapi import APIRouter, Depends
+from fastapi.responses import StreamingResponse
+from openpyxl import Workbook
+from openpyxl.styles import Font
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app import models, security
+from app.config import settings
 from app.database import get_db
+from app.models.base import ahora_utc
 
 router = APIRouter()
 
@@ -87,3 +94,74 @@ def resumen_metricas(
         "consultas_por_area": [{"area": a or "Sin área", "veces": n} for a, n in por_area],
         "consultas_por_tipo": [{"tipo": t, "veces": n} for t, n in por_tipo],
     }
+
+
+def _hoja_tabla(wb: Workbook, titulo: str, encabezados: list[str], filas: list[tuple]):
+    ws = wb.create_sheet(titulo)
+    ws.append(encabezados)
+    for celda in ws[1]:
+        celda.font = Font(bold=True)
+    for fila in filas:
+        ws.append(fila)
+    for col in ws.columns:
+        ancho = max(len(str(c.value)) for c in col if c.value is not None) + 2
+        ws.column_dimensions[col[0].column_letter].width = min(max(ancho, 12), 60)
+    return ws
+
+
+@router.get("/reporte.xlsx")
+def descargar_reporte(
+    db: Session = Depends(get_db),
+    usuario=Depends(security.requiere_lectura_reportes),
+):
+    """Reporte descargable en Excel con la misma foto de indicadores que
+    muestra el panel -- pensado para llevar a una reunión o adjuntar a un
+    informe, sin depender de que quien lo necesita tenga acceso al sistema
+    en ese momento."""
+    datos = resumen_metricas(db=db, usuario=usuario)
+
+    wb = Workbook()
+    wb.remove(wb.active)
+
+    resumen = wb.create_sheet("Resumen")
+    resumen.append([settings.app_name, f"v{settings.app_version}"])
+    resumen["A1"].font = Font(bold=True, size=14)
+    resumen.append([f"Generado: {ahora_utc().strftime('%d/%m/%Y %H:%M')} UTC"])
+    resumen.append([])
+    filas_resumen = [
+        ("Consultas totales", datos["total_consultas"]),
+        ("Resueltas", datos["consultas_resueltas"]),
+        ("Sin resultado", datos["consultas_sin_resultado"]),
+        ("% de acierto", datos["porcentaje_resueltas"]),
+        ("Respuestas de satisfacción", datos["respuestas_satisfaccion"]),
+        ("% de satisfacción (de quienes respondieron)", datos["porcentaje_satisfaccion"]),
+        ("% en modo accesible", datos["porcentaje_modo_accesible"]),
+        ("% por voz", datos["porcentaje_via_voz"]),
+        ("% sobre accesibilidad", datos["porcentaje_sobre_accesibilidad"]),
+    ]
+    resumen.append(["Indicador", "Valor"])
+    for celda in resumen[4]:
+        celda.font = Font(bold=True)
+    for fila in filas_resumen:
+        resumen.append(fila)
+    resumen.column_dimensions["A"].width = 45
+    resumen.column_dimensions["B"].width = 18
+
+    _hoja_tabla(wb, "Consultas más frecuentes", ["Consulta", "Veces"],
+                [(t["consulta"], t["veces"]) for t in datos["top_consultas"]])
+    _hoja_tabla(wb, "Por sede", ["Sede", "Veces"],
+                [(c["sede"], c["veces"]) for c in datos["consultas_por_sede"]])
+    _hoja_tabla(wb, "Por área", ["Área", "Veces"],
+                [(c["area"], c["veces"]) for c in datos["consultas_por_area"]])
+    _hoja_tabla(wb, "Por tipo", ["Tipo", "Veces"],
+                [(c["tipo"], c["veces"]) for c in datos["consultas_por_tipo"]])
+
+    buffer = io.BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+    nombre_archivo = f"reporte_justicia_orienta_{ahora_utc().strftime('%Y%m%d')}.xlsx"
+    return StreamingResponse(
+        buffer,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="{nombre_archivo}"'},
+    )

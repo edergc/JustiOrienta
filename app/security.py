@@ -68,6 +68,15 @@ def requiere_lectura_auditoria(usuario: models.Usuario = Depends(get_usuario_act
     return usuario
 
 
+def requiere_lectura_reportes(usuario: models.Usuario = Depends(get_usuario_actual)) -> models.Usuario:
+    """Igual que requiere_lectura_auditoria pero también admite el rol
+    'consulta' -- puede ver indicadores/reportes, pero no el detalle de quién
+    cambió qué (eso sigue siendo solo admin/auditor)."""
+    if usuario.rol not in (Rol.admin, Rol.auditor, Rol.consulta):
+        raise HTTPException(status_code=403, detail="Requiere rol de administrador, auditor o consulta")
+    return usuario
+
+
 def puede_editar_area(usuario: models.Usuario, area: Optional[str]) -> bool:
     """Admin edita cualquier área. Gestor/validador solo la propia."""
     if usuario.rol == Rol.admin:

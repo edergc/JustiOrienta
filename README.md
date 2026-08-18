@@ -89,14 +89,15 @@ la API para ese origen -- hoy no aplica porque ambos viven en el mismo proceso.
 
 ### Roles y flujo editorial
 
-Cuatro roles, no dos. Cada uno mapea directamente a la gobernanza descrita en la ficha de buena práctica:
+Cinco roles. Cada uno mapea directamente a la gobernanza descrita en la ficha de buena práctica:
 
 | Rol | Puede |
 |---|---|
 | **admin** | Todo: sedes, edificios, usuarios, dependencias y servicios de cualquier área, aprobar cualquier cosa. |
 | **gestor** | Crear/editar dependencias y servicios **solo de su propia área**. Nunca publica directamente: todo lo que guarda queda (o vuelve a) en estado `revision`. |
 | **validador** | Lo mismo que gestor, más la capacidad de **aprobar** (`revision` → `activo`) o **devolver a revisión** contenido de su propia área. |
-| **auditor** | Solo lectura de `/admin/auditoria` y de los indicadores. No puede crear ni editar nada. |
+| **auditor** | Solo lectura de `/admin/auditoria` (el detalle de quién cambió qué) y de los indicadores. No puede crear ni editar nada. |
+| **consulta** | Pensado para quien toma decisiones a partir de las estadísticas, no del día a día operativo: al entrar ve directo el panel de indicadores y el botón para descargar el reporte en Excel -- sin las pestañas de gestión del catálogo, y sin acceso al detalle de auditoría (eso sigue siendo solo admin/auditor). |
 
 Ningún rol distinto de admin puede publicarse a sí mismo con solo guardar el formulario: aunque el
 payload incluya `estado: "activo"`, el servidor lo regresa a `revision` si quien edita no tiene permiso
@@ -249,6 +250,10 @@ incompatible, puede convivir `/api/v2` sin romper lo existente).
   % de búsquedas hechas en modo accesible (alto contraste, texto ampliado o tema oscuro), % por voz,
   % sobre accesibilidad, consultas más frecuentes y consultas por sede/área/tipo -- los tres desgloses
   que pide la sección 30 del proyecto original.
+- **Reporte descargable en Excel** (`GET /api/v1/admin/metricas/reporte.xlsx`, botón "Descargar reporte"
+  visible para admin/auditor/consulta): la misma foto de indicadores del panel, en un `.xlsx` con una
+  hoja de resumen y una hoja por cada desglose -- para llevar a una reunión sin depender de que quien lo
+  necesita tenga acceso al sistema en ese momento. Generado con `openpyxl`, sin ningún servicio externo.
 - Confirmaciones visuales (un aviso breve arriba a la derecha) después de cada guardado exitoso.
 
 ## El sitio público (`/`)

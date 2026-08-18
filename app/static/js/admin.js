@@ -59,8 +59,31 @@ async function abrirQR(tipo, id) {
   }
 }
 
+// Igual que abrirQR, pero forzando la descarga en vez de abrir una pestaña
+// -- un .xlsx no se puede previsualizar en el navegador, así que necesita
+// un enlace temporal con el atributo download en vez de window.open.
+async function descargarArchivo(path, nombreSugerido, mensajeError) {
+  try {
+    const res = await fetch(`${API}${path}`, { headers: headers(false) });
+    if (!res.ok) throw new Error(mensajeError);
+    const blob = await res.blob();
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = nombreSugerido;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  } catch (err) {
+    mostrarToast(err.message || mensajeError);
+  }
+}
+
 function esAdmin() { return USUARIO && USUARIO.rol === "admin"; }
 function puedeLeerAuditoria() { return USUARIO && (USUARIO.rol === "admin" || USUARIO.rol === "auditor"); }
+function puedeVerReportes() {
+  return USUARIO && (USUARIO.rol === "admin" || USUARIO.rol === "auditor" || USUARIO.rol === "consulta");
+}
+function esSoloConsulta() { return USUARIO && USUARIO.rol === "consulta"; }
 function puedeAprobar(dep) {
   if (!USUARIO) return false;
   if (USUARIO.rol === "admin") return true;
@@ -75,13 +98,22 @@ function mostrarApp() {
   document.querySelector('[data-tab="tab-sedes"]').style.display = esAdmin() ? "" : "none";
   document.querySelector('[data-tab="tab-usuarios"]').style.display = esAdmin() ? "" : "none";
   document.querySelector('[data-tab="tab-auditoria"]').style.display = puedeLeerAuditoria() ? "" : "none";
+  document.getElementById("fila-reporte").style.display = puedeVerReportes() ? "" : "none";
 
   // Siempre arrancar en "Dependencias": evita que quede activa una pestaña
   // que la sesión anterior dejó abierta y que este rol ya no puede ver.
   document.querySelectorAll(".tab-btn").forEach((b) => b.setAttribute("aria-pressed", "false"));
   document.querySelectorAll(".tab-panel").forEach((p) => (p.style.display = "none"));
   document.querySelector('[data-tab="tab-dependencias"]').setAttribute("aria-pressed", "true");
-  document.getElementById("tab-dependencias").style.display = "block";
+
+  // El rol "consulta" no gestiona el catálogo -- solo ve los indicadores de
+  // arriba y descarga el reporte. Mostrarle las pestañas de edición (aunque
+  // los botones fallaran con 403 al usarlos) sería confuso, no útil.
+  document.getElementById("nav-tabs").style.display = esSoloConsulta() ? "none" : "";
+  document.getElementById("panel-solo-consulta").style.display = esSoloConsulta() ? "block" : "none";
+  if (!esSoloConsulta()) {
+    document.getElementById("tab-dependencias").style.display = "block";
+  }
 
   poblarOpcionesEstado();
   cargarTodo();
@@ -138,6 +170,15 @@ document.getElementById("form-login").addEventListener("submit", async (e) => {
 });
 
 document.getElementById("btn-logout").addEventListener("click", cerrarSesion);
+
+document.getElementById("btn-descargar-reporte").addEventListener("click", () => {
+  const fecha = new Date().toISOString().slice(0, 10);
+  descargarArchivo(
+    "/admin/metricas/reporte.xlsx",
+    `reporte_justicia_orienta_${fecha}.xlsx`,
+    "No se pudo generar el reporte."
+  );
+});
 
 // ── Mi contraseña ──
 function cerrarModalPassword() {

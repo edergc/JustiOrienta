@@ -100,5 +100,19 @@ def validador_usuario(db):
     return u
 
 
+@pytest.fixture
+def consulta_usuario(db):
+    u = models.Usuario(
+        nombre="Consulta de Pruebas",
+        dni="10000004",
+        password_hash=security.hash_password("clave123"),
+        rol=models.Rol.consulta,
+    )
+    db.add(u)
+    db.commit()
+    db.refresh(u)
+    return u
+
+
 def token_para(dni: str) -> str:
     return security.crear_token(dni)
