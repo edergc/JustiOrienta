@@ -401,9 +401,16 @@ async function cargarUsuarios() {
   for (const u of CACHE_USUARIOS) {
     const tr = document.createElement("tr");
     const ultimo = u.ultimo_acceso ? new Date(u.ultimo_acceso).toLocaleString("es-PE") : "Nunca";
+    // Bloqueo automático tras intentos fallidos (ver app/crud/usuarios.py):
+    // se muestra aparte de Activo/Inactivo porque es temporal y se levanta
+    // solo con guardar la ficha desde "Editar", no con un interruptor propio.
+    const bloqueado = u.bloqueado_hasta && new Date(u.bloqueado_hasta) > new Date();
+    const badgeBloqueo = bloqueado
+      ? ` <span class="badge inactivo" title="Se levanta al guardar la ficha, o solo(a) al pasar la hora indicada">Bloqueada hasta ${new Date(u.bloqueado_hasta).toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" })}</span>`
+      : "";
     tr.innerHTML = `
       <td>${u.nombre}</td><td>${u.dni}</td><td>${u.rol}</td><td>${u.area || "—"}</td>
-      <td>${u.activo ? '<span class="badge activo">Activo</span>' : '<span class="badge inactivo">Inactivo</span>'}</td>
+      <td>${u.activo ? '<span class="badge activo">Activo</span>' : '<span class="badge inactivo">Inactivo</span>'}${badgeBloqueo}</td>
       <td>${ultimo}</td>
       <td><button class="btn secondary" data-editar-usuario="${u.id}">Editar</button></td>`;
     tbody.appendChild(tr);

@@ -12,7 +12,22 @@ router = APIRouter()
 @router.post("/login", response_model=schemas.Token)
 def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     usuario = crud.usuarios.obtener_por_dni(db, form.username)
+
+    # El bloqueo se revisa ANTES de validar la contraseña y sin importar si es
+    # correcta: mientras dura, ni siquiera la cuenta real (que finalmente
+    # recuerda su clave) debe poder saltárselo -- si no, el bloqueo protegería
+    # solo contra el atacante y no serviría de nada.
+    if usuario and usuario.bloqueado_hasta and usuario.bloqueado_hasta > ahora_utc():
+        minutos = max(1, -(-(usuario.bloqueado_hasta - ahora_utc()).seconds // 60))
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Cuenta bloqueada temporalmente por múltiples intentos fallidos. "
+            f"Intenta de nuevo en {minutos} minuto(s), o pide a un(a) administrador(a) que la desbloquee.",
+        )
+
     if not usuario or not security.verificar_password(form.password, usuario.password_hash):
+        if usuario:
+            crud.usuarios.registrar_intento_fallido(db, usuario)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="DNI o contraseña incorrectos",
@@ -20,6 +35,7 @@ def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
     if not usuario.activo:
         raise HTTPException(status_code=403, detail="Usuario deshabilitado")
 
+    crud.usuarios.resetear_intentos_fallidos(db, usuario)
     usuario.ultimo_acceso = ahora_utc()
     db.commit()
 

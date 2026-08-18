@@ -55,6 +55,10 @@ Luego abre:
   - Usuario inicial: DNI `12345678` / contraseña impresa por `app.seed` — **cámbiala de inmediato**. El
     acceso es por DNI (8 dígitos), no por correo -- es el dato que toda persona en Perú tiene con
     certeza, a diferencia de una cuenta de correo institucional que no todas las áreas tienen asignada.
+    Justamente porque el DNI es un dato público (no un secreto), el login se bloquea 15 minutos después de
+    5 intentos fallidos seguidos con esa cuenta -- la contraseña es la única barrera real contra fuerza
+    bruta y necesitaba esta protección. Guardar la ficha del usuario desde `/admin` → Usuarios → Editar
+    levanta el bloqueo de inmediato, sin esperar los 15 minutos.
 - **http://127.0.0.1:8743/api/docs** — documentación interactiva de la API (generada automáticamente por
   FastAPI). No está enlazada desde el sitio público -- es para quien desarrolla, no para el ciudadano.
 
@@ -102,6 +106,11 @@ Cinco roles. Cada uno mapea directamente a la gobernanza descrita en la ficha de
 Ningún rol distinto de admin puede publicarse a sí mismo con solo guardar el formulario: aunque el
 payload incluya `estado: "activo"`, el servidor lo regresa a `revision` si quien edita no tiene permiso
 de aprobar esa área. Publicar es siempre una acción explícita (`POST /dependencias/{id}/aprobar`).
+
+Por el mismo motivo, tampoco se puede "editarse a sí mismo" hacia otra área: solo admin puede cambiar el
+campo `area` de una dependencia existente. Un(a) gestor(a) o validador(a) que edita algo de su propia
+área no puede reescribir ese campo hacia un área distinta -- eso equivaldría a transferir contenido sin
+que nadie del área destino lo autorizara.
 
 ### Flujo de trabajo pensado para las áreas
 

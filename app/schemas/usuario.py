@@ -33,6 +33,7 @@ class UsuarioOut(BaseModel):
     area: Optional[str] = None
     activo: bool
     ultimo_acceso: Optional[datetime] = None
+    bloqueado_hasta: Optional[datetime] = None
 
 
 class UsuarioCreate(BaseModel):

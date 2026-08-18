@@ -39,5 +39,12 @@ class Usuario(Base):
     ultimo_acceso = Column(DateTime, nullable=True)
     creado_en = Column(DateTime, default=ahora_utc)
 
+    # Bloqueo temporal automático tras varios intentos fallidos seguidos (ver
+    # app/crud/usuarios.py) -- el DNI es un dato público en el Perú, no un
+    # secreto, así que la contraseña es la única barrera real contra fuerza
+    # bruta y necesita esta protección igual que cualquier login por usuario.
+    intentos_fallidos = Column(Integer, nullable=False, default=0)
+    bloqueado_hasta = Column(DateTime, nullable=True)
+
     def __repr__(self):
         return f"<Usuario {self.dni} ({self.rol})>"

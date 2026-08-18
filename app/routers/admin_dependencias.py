@@ -88,6 +88,14 @@ def actualizar_dependencia(
         raise HTTPException(404, "Dependencia no encontrada")
     if not security.puede_editar_area(usuario, dep.area):
         raise HTTPException(403, "No tienes permiso para editar esta dependencia")
+    if payload.area != dep.area and usuario.rol != Rol.admin:
+        # puede_editar_area() solo valida el área ACTUAL de la dependencia --
+        # sin este chequeo, un(a) gestor(a) o validador(a) podía reescribir el
+        # campo "area" del payload hacia un área ajena y así "transferir" una
+        # dependencia fuera de su propia área sin autorización de nadie del
+        # área destino, rompiendo "cada área es dueña de su información".
+        # Reasignar de área es una decisión editorial que solo admin toma.
+        raise HTTPException(403, "Solo un(a) administrador(a) puede cambiar el área de una dependencia")
     _validar_referencias(db, payload.sede_id, payload.edificio_id)
 
     data = payload.model_dump(exclude={"alias"})

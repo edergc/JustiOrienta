@@ -20,6 +20,60 @@ def test_login_incorrecto_devuelve_401(admin_usuario):
     assert r.status_code == 401
 
 
+def test_login_se_bloquea_tras_varios_intentos_fallidos(db, admin_usuario):
+    """El DNI es un dato público en el Perú, no un secreto -- la protección
+    real contra fuerza bruta tiene que ser esta, no la existencia del usuario."""
+    from app.crud.usuarios import MAX_INTENTOS_FALLIDOS
+
+    for _ in range(MAX_INTENTOS_FALLIDOS):
+        r = client.post("/api/v1/auth/login", data={"username": "10000001", "password": "mala"})
+        assert r.status_code == 401
+
+    # Ahora incluso con la contraseña CORRECTA, el bloqueo sigue vigente --
+    # si no fuera así, protegería solo al atacante que no adivinó a tiempo.
+    r = client.post("/api/v1/auth/login", data={"username": "10000001", "password": "clave123"})
+    assert r.status_code == 403
+    assert "bloqueada" in r.json()["detail"].lower()
+
+
+def test_login_correcto_resetea_el_contador_de_intentos_fallidos(admin_usuario):
+    from app.crud.usuarios import MAX_INTENTOS_FALLIDOS
+
+    for _ in range(MAX_INTENTOS_FALLIDOS - 1):
+        r = client.post("/api/v1/auth/login", data={"username": "10000001", "password": "mala"})
+        assert r.status_code == 401
+
+    r = client.post("/api/v1/auth/login", data={"username": "10000001", "password": "clave123"})
+    assert r.status_code == 200, r.text
+
+    # Un intento fallido más no debe bloquear: el login correcto ya reseteó el contador.
+    r = client.post("/api/v1/auth/login", data={"username": "10000001", "password": "mala"})
+    assert r.status_code == 401
+    r = client.post("/api/v1/auth/login", data={"username": "10000001", "password": "clave123"})
+    assert r.status_code == 200, r.text
+
+
+def test_admin_guarda_la_ficha_y_eso_desbloquea_al_usuario(db, admin_usuario, gestor_usuario):
+    from app.crud.usuarios import MAX_INTENTOS_FALLIDOS
+
+    for _ in range(MAX_INTENTOS_FALLIDOS):
+        r = client.post("/api/v1/auth/login", data={"username": "10000002", "password": "mala"})
+        assert r.status_code == 401
+    r = client.post("/api/v1/auth/login", data={"username": "10000002", "password": "clave123"})
+    assert r.status_code == 403
+
+    atoken = _login("10000001", "clave123")
+    r = client.put(
+        f"/api/v1/admin/usuarios/{gestor_usuario.id}",
+        json={"nombre": gestor_usuario.nombre, "rol": "gestor", "area": gestor_usuario.area, "activo": True},
+        headers=_auth(atoken),
+    )
+    assert r.status_code == 200, r.text
+
+    r = client.post("/api/v1/auth/login", data={"username": "10000002", "password": "clave123"})
+    assert r.status_code == 200, r.text
+
+
 def test_flujo_completo_de_publicacion(sede, admin_usuario, gestor_usuario, validador_usuario):
     gtoken = _login("10000002", "clave123")
     vtoken = _login("10000003", "clave123")
@@ -138,6 +192,63 @@ def test_gestor_no_puede_crear_fuera_de_su_area(sede, gestor_usuario):
     }
     r = client.post("/api/v1/admin/dependencias", json=payload, headers=_auth(gtoken))
     assert r.status_code == 403
+
+
+def test_gestor_no_puede_reasignar_area_de_su_dependencia(db, sede, gestor_usuario):
+    """Regresión: puede_editar_area() solo valida el área ACTUAL de la
+    dependencia -- sin este chequeo, el gestor de "Recursos Humanos" podía
+    editar una dependencia propia y, en el mismo payload, cambiarle el campo
+    "area" hacia "Juzgado civil", transfiriéndola fuera de su área sin que
+    nadie de "Juzgado civil" lo autorizara."""
+    from app import models
+
+    dep = models.Dependencia(
+        tipo="administrativa", nombre="Recursos Humanos", sede_id=sede.id,
+        area="Recursos Humanos", estado="activo",
+    )
+    db.add(dep)
+    db.commit()
+    db.refresh(dep)
+
+    gtoken = _login("10000002", "clave123")
+    payload = {
+        "tipo": "administrativa",
+        "nombre": "Recursos Humanos",
+        "sede_id": sede.id,
+        "area": "Juzgado civil",  # intenta moverla fuera de su propia área
+        "estado": "activo",
+        "alias": "",
+    }
+    r = client.put(f"/api/v1/admin/dependencias/{dep.id}", json=payload, headers=_auth(gtoken))
+    assert r.status_code == 403
+
+    db.refresh(dep)
+    assert dep.area == "Recursos Humanos"  # no debe haber cambiado
+
+
+def test_admin_si_puede_reasignar_area_de_una_dependencia(db, sede, admin_usuario):
+    from app import models
+
+    dep = models.Dependencia(
+        tipo="administrativa", nombre="Módulo Compartido", sede_id=sede.id,
+        area="Recursos Humanos", estado="activo",
+    )
+    db.add(dep)
+    db.commit()
+    db.refresh(dep)
+
+    atoken = _login("10000001", "clave123")
+    payload = {
+        "tipo": "administrativa",
+        "nombre": "Módulo Compartido",
+        "sede_id": sede.id,
+        "area": "Juzgado civil",
+        "estado": "activo",
+        "alias": "",
+    }
+    r = client.put(f"/api/v1/admin/dependencias/{dep.id}", json=payload, headers=_auth(atoken))
+    assert r.status_code == 200, r.text
+    assert r.json()["area"] == "Juzgado civil"
 
 
 def test_crear_dependencia_rechaza_sede_inexistente(admin_usuario):
