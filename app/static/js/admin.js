@@ -103,7 +103,11 @@ function puedeAprobar(dep) {
 function mostrarApp() {
   document.getElementById("vista-login").style.display = "none";
   document.getElementById("vista-app").style.display = "block";
-  document.getElementById("who").textContent = `${USUARIO.nombre} · ${USUARIO.rol}${USUARIO.area ? " · " + USUARIO.area : ""}`;
+  document.getElementById("perfil-nombre").textContent = USUARIO.nombre;
+  document.getElementById("perfil-dni").textContent = USUARIO.dni;
+  document.getElementById("perfil-rol").textContent = USUARIO.rol;
+  document.getElementById("perfil-area-fila").style.display = USUARIO.area ? "" : "none";
+  document.getElementById("perfil-area").textContent = USUARIO.area || "";
 
   if (USUARIO.debe_cambiar_password) {
     // Nadie usa el resto del panel con una contraseña que eligió otra
@@ -188,6 +192,41 @@ document.getElementById("form-login").addEventListener("submit", async (e) => {
 });
 
 document.getElementById("btn-logout").addEventListener("click", cerrarSesion);
+
+// "Volver al inicio" sale al sitio público -- cerrar la sesión ahí evita que
+// alguien en un equipo compartido (un mostrador de atención) vuelva a entrar
+// a /admin ya autenticado con solo el botón "atrás" o el enlace del pie de
+// página, sin haber tecleado ninguna contraseña.
+document.getElementById("link-volver-inicio").addEventListener("click", cerrarSesion);
+
+// ── Menú "Mi perfil" ──
+const btnPerfil = document.getElementById("btn-perfil");
+const menuPerfil = document.getElementById("menu-perfil");
+function cerrarMenuPerfil() {
+  menuPerfil.style.display = "none";
+  btnPerfil.setAttribute("aria-expanded", "false");
+}
+function alternarMenuPerfil() {
+  const abierto = menuPerfil.style.display !== "none";
+  menuPerfil.style.display = abierto ? "none" : "block";
+  btnPerfil.setAttribute("aria-expanded", String(!abierto));
+}
+btnPerfil.addEventListener("click", (e) => {
+  e.stopPropagation();
+  alternarMenuPerfil();
+});
+// Clic afuera, o Escape, cierran el menú -- mismo patrón esperado que
+// cualquier menú desplegable.
+document.addEventListener("click", (e) => {
+  if (!menuPerfil.contains(e.target) && e.target !== btnPerfil) cerrarMenuPerfil();
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") cerrarMenuPerfil();
+});
+// Elegir cualquier acción del menú (cambiar contraseña o salir) lo cierra
+// también, para no dejarlo abierto detrás del modal o de la pantalla de login.
+document.getElementById("btn-mi-cuenta").addEventListener("click", cerrarMenuPerfil);
+document.getElementById("btn-logout").addEventListener("click", cerrarMenuPerfil);
 
 document.getElementById("btn-descargar-reporte").addEventListener("click", () => {
   const fecha = new Date().toISOString().slice(0, 10);

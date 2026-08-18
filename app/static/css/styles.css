@@ -179,7 +179,13 @@ table.admin td.actions button { font-size: 0.78rem; padding: 0.3rem 0.6rem; }
 .stat .n { font-family: var(--font-mono); font-size: 1.5rem; font-weight: 700; color: var(--accent2-strong); }
 .stat .l { font-size: 0.75rem; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.04em; }
 .topbar-admin { display: flex; justify-content: space-between; align-items: center; padding: 0.9rem 1.5rem; border-bottom: 1px solid var(--line); }
-.topbar-admin .who { font-size: 0.85rem; color: var(--ink-soft); }
+
+/* ── menú "Mi perfil" ── */
+.perfil-menu { display: inline-block; position: relative; }
+.perfil-dropdown {
+  position: absolute; right: 0; top: calc(100% + 0.4rem); z-index: 120;
+  min-width: 14rem; padding: 0.9rem 1rem; box-shadow: 0 8px 22px rgba(0,0,0,0.16);
+}
 
 /* ── toast de confirmación ── */
 .toast {

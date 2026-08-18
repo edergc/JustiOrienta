@@ -27,10 +27,21 @@
   <div class="topbar-admin">
     <a class="home" href="/" style="font-family:var(--font-display); font-weight:700; text-decoration:none; color:var(--ink);">Justicia Orienta</a>
     <div>
-      <a href="/" class="btn secondary" style="text-decoration:none; margin-right:0.5rem;">← Volver al inicio</a>
-      <span class="who" id="who"></span>
-      <button class="btn secondary" id="btn-mi-cuenta" style="margin-left:0.8rem;">Mi contraseña</button>
-      <button class="btn secondary" id="btn-logout" style="margin-left:0.5rem;">Salir</button>
+      <a href="/" id="link-volver-inicio" class="btn secondary" style="text-decoration:none; margin-right:0.5rem;">← Volver al inicio</a>
+      <div class="perfil-menu">
+        <button class="btn secondary" id="btn-perfil" type="button" aria-haspopup="true" aria-expanded="false">
+          👤 Mi perfil
+        </button>
+        <div id="menu-perfil" class="card perfil-dropdown" style="display:none;">
+          <p class="meta" style="margin:0 0 0.3rem;"><strong id="perfil-nombre"></strong></p>
+          <p class="meta" style="margin:0 0 0.15rem;">DNI: <span id="perfil-dni"></span></p>
+          <p class="meta" style="margin:0 0 0.15rem;">Rol: <span id="perfil-rol"></span></p>
+          <p class="meta" id="perfil-area-fila" style="margin:0 0 0.7rem;">Área: <span id="perfil-area"></span></p>
+          <hr style="border:none; border-top:1px solid var(--line); margin:0 0 0.7rem;" />
+          <button class="btn secondary" id="btn-mi-cuenta" type="button" style="width:100%; margin-bottom:0.4rem;">Cambiar contraseña</button>
+          <button class="btn secondary" id="btn-logout" type="button" style="width:100%;">Cerrar sesión</button>
+        </div>
+      </div>
     </div>
   </div>
 
