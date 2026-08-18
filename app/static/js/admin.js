@@ -104,6 +104,7 @@ function mostrarApp() {
   document.getElementById("vista-login").style.display = "none";
   document.getElementById("vista-app").style.display = "block";
   document.getElementById("perfil-nombre").textContent = USUARIO.nombre;
+  document.getElementById("perfil-avatar").textContent = USUARIO.nombre ? USUARIO.nombre.trim()[0].toUpperCase() : "?";
   document.getElementById("perfil-dni").textContent = USUARIO.dni;
   document.getElementById("perfil-rol").textContent = USUARIO.rol;
   document.getElementById("perfil-area-fila").style.display = USUARIO.area ? "" : "none";
@@ -191,13 +192,17 @@ document.getElementById("form-login").addEventListener("submit", async (e) => {
   }
 });
 
-document.getElementById("btn-logout").addEventListener("click", cerrarSesion);
-
-// "Volver al inicio" sale al sitio público -- cerrar la sesión ahí evita que
-// alguien en un equipo compartido (un mostrador de atención) vuelva a entrar
-// a /admin ya autenticado con solo el botón "atrás" o el enlace del pie de
-// página, sin haber tecleado ninguna contraseña.
-document.getElementById("link-volver-inicio").addEventListener("click", cerrarSesion);
+// Salir del panel siempre cierra la sesión Y lleva al sitio público -- un
+// solo camino para irse, en vez de un botón "Volver al inicio" aparte que
+// dejaba el token vivo. En un equipo compartido (mostrador de atención), eso
+// permitía que alguien más volviera a /admin ya autenticado con solo el
+// botón "atrás", sin haber tecleado ninguna contraseña.
+function salir() {
+  cerrarSesion();
+  window.location.href = "/";
+}
+document.getElementById("btn-logout").addEventListener("click", salir);
+document.getElementById("link-marca-admin").addEventListener("click", salir);
 
 // ── Menú "Mi perfil" ──
 const btnPerfil = document.getElementById("btn-perfil");

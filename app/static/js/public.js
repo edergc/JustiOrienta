@@ -14,6 +14,7 @@ EJEMPLOS.forEach((ej) => {
   b.textContent = ej;
   b.addEventListener("click", () => {
     document.getElementById("buscar").value = ej;
+    actualizarBotonLimpiar();
     buscarYRenderizar(ej);
     document.getElementById("buscar").focus();
   });
@@ -23,6 +24,7 @@ EJEMPLOS.forEach((ej) => {
 document.querySelectorAll(".tile-btn").forEach((b) => {
   b.addEventListener("click", () => {
     document.getElementById("buscar").value = b.dataset.ej;
+    actualizarBotonLimpiar();
     buscarYRenderizar(b.dataset.ej);
     document.getElementById("buscar").focus();
   });
@@ -222,10 +224,23 @@ document.getElementById("form-buscar").addEventListener("submit", (e) => {
   e.preventDefault();
   buscarYRenderizar(document.getElementById("buscar").value);
 });
+
+const btnLimpiar = document.getElementById("btn-limpiar");
+function actualizarBotonLimpiar() {
+  btnLimpiar.style.display = document.getElementById("buscar").value ? "" : "none";
+}
 let debounce;
 document.getElementById("buscar").addEventListener("input", (e) => {
+  actualizarBotonLimpiar();
   clearTimeout(debounce);
   debounce = setTimeout(() => buscarYRenderizar(e.target.value), 300);
+});
+btnLimpiar.addEventListener("click", () => {
+  const campo = document.getElementById("buscar");
+  campo.value = "";
+  actualizarBotonLimpiar();
+  buscarYRenderizar("");
+  campo.focus();
 });
 
 // ── Entrada por voz (reconocimiento de habla) ──
@@ -249,6 +264,7 @@ document.getElementById("buscar").addEventListener("input", (e) => {
   recognition.addEventListener("result", (e) => {
     const texto = e.results[0][0].transcript;
     document.getElementById("buscar").value = texto;
+    actualizarBotonLimpiar();
     buscarYRenderizar(texto, { viaVoz: true });
     estado.textContent = `Escuché: "${texto}"`;
   });
