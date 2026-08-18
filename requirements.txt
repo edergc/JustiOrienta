@@ -11,6 +11,7 @@ openpyxl
 qrcode
 pdfplumber
 fpdf2
+beautifulsoup4
 
 # Pruebas automatizadas
 pytest

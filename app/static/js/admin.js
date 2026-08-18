@@ -286,6 +286,18 @@ async function cargarStats() {
   listaTipo.innerHTML = s.consultas_por_tipo.length
     ? s.consultas_por_tipo.map((c) => `<li>${TIPO_LABEL[c.tipo] || c.tipo} <span class="hint">(${c.veces})</span></li>`).join("")
     : listaVacia;
+
+  const listaSinResultado = document.getElementById("lista-top-sin-resultado");
+  listaSinResultado.innerHTML = s.top_consultas_sin_resultado.length
+    ? s.top_consultas_sin_resultado.map((t) => `<li>${t.consulta} <span class="hint">(${t.veces})</span></li>`).join("")
+    : '<li class="hint" style="list-style:none;">Sin búsquedas sin resultado todavía -- buena señal.</li>';
+
+  const listaPendientes = document.getElementById("lista-pendientes-area");
+  listaPendientes.innerHTML = s.pendientes_por_area.length
+    ? s.pendientes_por_area
+        .map((p) => `<li>${p.area} <span class="hint">(${p.cantidad}, ${p.antiguedad_promedio_dias} días en promedio)</span></li>`)
+        .join("")
+    : '<li class="hint" style="list-style:none;">No hay nada pendiente de aprobar en este momento.</li>';
 }
 
 // ═══════════════════════════════════════════════════════════

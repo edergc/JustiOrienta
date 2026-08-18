@@ -69,8 +69,19 @@ python -m pytest
 ```
 
 Corren contra una base de datos SQLite en memoria, aislada de tu base de desarrollo. Cubren el
-buscador (lenguaje natural, tolerancia a errores de tipeo, regresiones ya encontradas) y el flujo de
-publicación completo (quién puede crear, editar, aprobar y auditar).
+buscador (lenguaje natural, tolerancia a errores de tipeo, regresiones ya encontradas), el flujo de
+publicación completo (quién puede crear, editar, aprobar y auditar), y una auditoría de accesibilidad
+estática sobre el HTML servido (`app/auditoria_accesibilidad.py`): idioma declarado, imágenes con texto
+alternativo, cada control de formulario con una etiqueta programática, botones/enlaces con nombre
+accesible, y diálogos modales con nombre accesible. Es una versión ligera de lo que haría axe-core, sin
+depender de Node ni de un navegador headless -- corre en cada `pytest` y también sola:
+
+```bash
+python -m app.auditoria_accesibilidad
+```
+
+No reemplaza una revisión real con lector de pantalla ni verifica contraste de color (eso necesita
+render real), pero deja evidencia objetiva y repetible en cada cambio de plantilla.
 
 ### Sobre el puerto
 
@@ -262,6 +273,13 @@ incompatible, puede convivir `/api/v2` sin romper lo existente).
   % de búsquedas hechas en modo accesible (alto contraste, texto ampliado o tema oscuro), % por voz,
   % sobre accesibilidad, consultas más frecuentes y consultas por sede/área/tipo -- los tres desgloses
   que pide la sección 30 del proyecto original.
+- **Búsquedas sin resultado, más frecuentes**: además de "consultas más frecuentes" (que mezcla
+  encontradas y no encontradas), un bloque aparte solo con lo que la gente busca y todavía NO está en
+  el catálogo -- la señal más directa de qué falta cargar, pensada para quien decide qué priorizar.
+- **Pendientes de aprobar, por área**: cuántas dependencias siguen en "revisión" y cuántos días de
+  antigüedad promedio llevan sin que nadie las apruebe, agrupado por área -- ayuda a ver qué área no
+  está validando a tiempo. Solo agrega cantidades y promedios; nunca nombra la dependencia puntual (el
+  rol "consulta" ve este resumen y no debe terminar viendo contenido todavía no publicado).
 - **Reporte descargable en Excel** (`GET /api/v1/admin/metricas/reporte.xlsx`, botón "Descargar reporte"
   visible para admin/auditor/consulta): la misma foto de indicadores del panel, en un `.xlsx` con una
   hoja de resumen y una hoja por cada desglose -- para llevar a una reunión sin depender de que quien lo
