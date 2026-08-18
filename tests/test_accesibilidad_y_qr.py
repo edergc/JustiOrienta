@@ -60,6 +60,8 @@ def test_indicadores_de_consulta_se_reflejan_en_metricas(db, sede, admin_usuario
     assert resumen["porcentaje_via_voz"] == 50.0
     assert resumen["porcentaje_sobre_accesibilidad"] == 50.0
     assert any(c["sede"] == sede.nombre for c in resumen["consultas_por_sede"])
+    assert any(c["area"] == "Recursos Humanos" for c in resumen["consultas_por_area"])
+    assert any(c["tipo"] == "administrativa" for c in resumen["consultas_por_tipo"])
 
 
 def test_instrucciones_internas_se_guarda_y_se_devuelve(db, sede, admin_usuario):

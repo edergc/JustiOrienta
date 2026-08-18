@@ -54,6 +54,22 @@ def resumen_metricas(
         .order_by(func.count(models.ConsultaLog.id).desc())
         .all()
     )
+    # "consultas por área" y "consultas por tipo" -- indicadores de uso que
+    # pide explícitamente la sección 30 del proyecto, junto con por-sede.
+    por_area = (
+        db.query(models.Dependencia.area, func.count(models.ConsultaLog.id).label("n"))
+        .join(models.ConsultaLog, models.ConsultaLog.dependencia_resultado_id == models.Dependencia.id)
+        .group_by(models.Dependencia.area)
+        .order_by(func.count(models.ConsultaLog.id).desc())
+        .all()
+    )
+    por_tipo = (
+        db.query(models.Dependencia.tipo, func.count(models.ConsultaLog.id).label("n"))
+        .join(models.ConsultaLog, models.ConsultaLog.dependencia_resultado_id == models.Dependencia.id)
+        .group_by(models.Dependencia.tipo)
+        .order_by(func.count(models.ConsultaLog.id).desc())
+        .all()
+    )
 
     return {
         "total_consultas": total,
@@ -68,4 +84,6 @@ def resumen_metricas(
         "porcentaje_via_voz": _porcentaje(models.ConsultaLog.via_voz.is_(True)),
         "porcentaje_sobre_accesibilidad": _porcentaje(models.ConsultaLog.sobre_accesibilidad.is_(True)),
         "consultas_por_sede": [{"sede": s, "veces": n} for s, n in por_sede],
+        "consultas_por_area": [{"area": a or "Sin área", "veces": n} for a, n in por_area],
+        "consultas_por_tipo": [{"tipo": t, "veces": n} for t, n in por_tipo],
     }

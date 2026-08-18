@@ -21,8 +21,8 @@ class ConsultaLog(Base):
     # ── Indicadores de uso y accesibilidad (sección 30) ──
     # A qué sede/dependencia se refería -- para poder desglosar "consultas
     # por sede/área/dependencia". Nunca a una persona: sigue siendo anónimo.
-    sede_contexto_id = Column(Integer, ForeignKey("sedes.id"), nullable=True)
-    dependencia_resultado_id = Column(Integer, ForeignKey("dependencias.id"), nullable=True)
+    sede_contexto_id = Column(Integer, ForeignKey("sedes.id"), nullable=True, index=True)
+    dependencia_resultado_id = Column(Integer, ForeignKey("dependencias.id"), nullable=True, index=True)
     # Si la persona tenía activo alto contraste, texto ampliado o tema oscuro
     # al momento de buscar (indicador de uso de modo accesible).
     modo_accesible = Column(Boolean, default=False)

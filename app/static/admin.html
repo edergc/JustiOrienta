@@ -37,8 +37,8 @@
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <div id="modal-password" class="modal-backdrop" style="display:none;">
-    <div class="modal">
-      <h3>Cambiar mi contraseña</h3>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-password-titulo">
+      <h3 id="modal-password-titulo">Cambiar mi contraseña</h3>
       <form id="form-password">
         <div class="field"><label for="p-actual">Contraseña actual</label><input id="p-actual" type="password" required /></div>
         <div class="field"><label for="p-nueva">Contraseña nueva (mínimo 6 caracteres)</label><input id="p-nueva" type="password" required minlength="6" /></div>
@@ -61,6 +61,14 @@
       <div class="card" style="padding:0.9rem 1rem;">
         <strong>Consultas por sede</strong>
         <ol id="lista-consultas-sede" class="meta" style="padding-left:1.2rem; margin:0.5rem 0 0;"></ol>
+      </div>
+      <div class="card" style="padding:0.9rem 1rem;">
+        <strong>Consultas por área</strong>
+        <ol id="lista-consultas-area" class="meta" style="padding-left:1.2rem; margin:0.5rem 0 0;"></ol>
+      </div>
+      <div class="card" style="padding:0.9rem 1rem;">
+        <strong>Consultas por tipo</strong>
+        <ol id="lista-consultas-tipo" class="meta" style="padding-left:1.2rem; margin:0.5rem 0 0;"></ol>
       </div>
     </div>
 

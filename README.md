@@ -247,7 +247,8 @@ incompatible, puede convivir `/api/v2` sin romper lo existente).
   solo texto -- no un mapa interior ni geolocalización indoor, algo que este sistema no promete.
 - **Panel de indicadores ampliado**: además de consultas totales/resueltas/satisfacción, muestra
   % de búsquedas hechas en modo accesible (alto contraste, texto ampliado o tema oscuro), % por voz,
-  % sobre accesibilidad, consultas más frecuentes y consultas por sede.
+  % sobre accesibilidad, consultas más frecuentes y consultas por sede/área/tipo -- los tres desgloses
+  que pide la sección 30 del proyecto original.
 - Confirmaciones visuales (un aviso breve arriba a la derecha) después de cada guardado exitoso.
 
 ## El sitio público (`/`)

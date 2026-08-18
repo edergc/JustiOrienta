@@ -140,15 +140,19 @@ document.getElementById("form-login").addEventListener("submit", async (e) => {
 document.getElementById("btn-logout").addEventListener("click", cerrarSesion);
 
 // ── Mi contraseña ──
+function cerrarModalPassword() {
+  document.getElementById("modal-password").style.display = "none";
+  // Devuelve el foco a quien abrió el modal -- sin esto, alguien navegando
+  // solo con teclado queda "perdido" en el body tras cerrar.
+  document.getElementById("btn-mi-cuenta").focus();
+}
 document.getElementById("btn-mi-cuenta").addEventListener("click", () => {
   document.getElementById("form-password").reset();
   document.getElementById("form-password-error").innerHTML = "";
   document.getElementById("modal-password").style.display = "flex";
   document.getElementById("p-actual").focus();
 });
-document.getElementById("btn-password-cancelar").addEventListener("click", () => {
-  document.getElementById("modal-password").style.display = "none";
-});
+document.getElementById("btn-password-cancelar").addEventListener("click", cerrarModalPassword);
 document.getElementById("form-password").addEventListener("submit", async (e) => {
   e.preventDefault();
   try {
@@ -159,10 +163,30 @@ document.getElementById("form-password").addEventListener("submit", async (e) =>
         password_nueva: document.getElementById("p-nueva").value,
       }),
     });
-    document.getElementById("modal-password").style.display = "none";
+    cerrarModalPassword();
     mostrarToast("Contraseña actualizada.");
   } catch (err) {
     document.getElementById("form-password-error").innerHTML = `<p class="error-msg">${err.message}</p>`;
+  }
+});
+// Escape cierra el modal, y Tab no debe poder escaparse de él mientras está
+// abierto -- si no, alguien navegando solo con teclado termina detrás del
+// fondo oscurecido que visualmente tapa el resto de la página.
+document.getElementById("modal-password").addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    cerrarModalPassword();
+    return;
+  }
+  if (e.key !== "Tab") return;
+  const enfocables = [...document.querySelectorAll("#modal-password button, #modal-password input")];
+  const primero = enfocables[0];
+  const ultimo = enfocables[enfocables.length - 1];
+  if (e.shiftKey && document.activeElement === primero) {
+    e.preventDefault();
+    ultimo.focus();
+  } else if (!e.shiftKey && document.activeElement === ultimo) {
+    e.preventDefault();
+    primero.focus();
   }
 });
 
@@ -204,10 +228,23 @@ async function cargarStats() {
     ? s.top_consultas.map((t) => `<li>${t.consulta} <span class="hint">(${t.veces})</span></li>`).join("")
     : '<li class="hint" style="list-style:none;">Todavía no hay datos.</li>';
 
+  const listaVacia = '<li class="hint" style="list-style:none;">Todavía no hay datos.</li>';
+
   const listaSede = document.getElementById("lista-consultas-sede");
   listaSede.innerHTML = s.consultas_por_sede.length
     ? s.consultas_por_sede.map((c) => `<li>${c.sede} <span class="hint">(${c.veces})</span></li>`).join("")
-    : '<li class="hint" style="list-style:none;">Todavía no hay datos.</li>';
+    : listaVacia;
+
+  const listaArea = document.getElementById("lista-consultas-area");
+  listaArea.innerHTML = s.consultas_por_area.length
+    ? s.consultas_por_area.map((c) => `<li>${c.area} <span class="hint">(${c.veces})</span></li>`).join("")
+    : listaVacia;
+
+  const TIPO_LABEL = { jurisdiccional: "Jurisdiccional", administrativa: "Administrativa", servicio: "Servicio" };
+  const listaTipo = document.getElementById("lista-consultas-tipo");
+  listaTipo.innerHTML = s.consultas_por_tipo.length
+    ? s.consultas_por_tipo.map((c) => `<li>${TIPO_LABEL[c.tipo] || c.tipo} <span class="hint">(${c.veces})</span></li>`).join("")
+    : listaVacia;
 }
 
 // ═══════════════════════════════════════════════════════════
