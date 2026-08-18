@@ -73,6 +73,29 @@ def test_admin_restablece_password_y_vuelve_a_exigir_el_cambio(admin_usuario, ge
     assert r.status_code == 403
 
 
+def test_admin_puede_restablecerse_su_propia_password_sin_bloquearse(admin_usuario):
+    """Regresión: admin editando su PROPIA ficha en la pestaña Usuarios y
+    restableciendo su contraseña ahí (en vez de por /auth/mi-password) no
+    debe quedar con debe_cambiar_password=True -- si no, su propia siguiente
+    acción (ej. la actualización de la tabla que sigue al guardado) recibía
+    403 hasta recargar la página, aunque la contraseña la haya elegido el/ella
+    mismo/a."""
+    atoken = _login("10000001", "clave123")
+    r = client.put(
+        f"/api/v1/admin/usuarios/{admin_usuario.id}",
+        json={
+            "nombre": admin_usuario.nombre, "rol": "admin", "area": None,
+            "activo": True, "nueva_password": "miPropiaClave1",
+        },
+        headers=_auth(atoken),
+    )
+    assert r.status_code == 200, r.text
+    assert r.json()["debe_cambiar_password"] is False
+
+    atoken2 = _login("10000001", "miPropiaClave1")
+    assert client.get("/api/v1/admin/metricas/resumen", headers=_auth(atoken2)).status_code == 200
+
+
 def test_editar_usuario_sin_restablecer_password_no_marca_el_cambio_pendiente(admin_usuario, gestor_usuario):
     atoken = _login("10000001", "clave123")
     r = client.put(

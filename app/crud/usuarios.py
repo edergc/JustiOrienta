@@ -40,14 +40,22 @@ def crear(db: Session, data: schemas.UsuarioCreate) -> models.Usuario:
     return usuario
 
 
-def actualizar(db: Session, usuario: models.Usuario, data: schemas.UsuarioUpdate) -> models.Usuario:
+def actualizar(
+    db: Session, usuario: models.Usuario, data: schemas.UsuarioUpdate, es_autoedicion: bool = False
+) -> models.Usuario:
     usuario.nombre = data.nombre
     usuario.rol = data.rol
     usuario.area = data.area
     usuario.activo = data.activo
     if data.nueva_password:
         usuario.password_hash = security.hash_password(data.nueva_password)
-        usuario.debe_cambiar_password = True  # de nuevo, alguien más eligió esta contraseña
+        if not es_autoedicion:
+            # Alguien MÁS eligió esta contraseña por esta persona -- se exige
+            # cambiarla. Si es admin editando su PROPIA cuenta, la eligió
+            # él/ella mismo/a: forzarlo igual lo dejaría bloqueado fuera de su
+            # propia sesión (403 en el siguiente clic) hasta recargar la
+            # página, sin ganar nada en seguridad.
+            usuario.debe_cambiar_password = True
     # Un(a) admin guardando cambios en la cuenta es, de por sí, la revisión
     # humana que un bloqueo automático espera -- se levanta aquí para no dejar
     # a alguien esperando los MINUTOS_BLOQUEO después de que admin ya intervino.

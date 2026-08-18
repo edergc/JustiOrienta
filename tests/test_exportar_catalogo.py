@@ -81,6 +81,33 @@ def test_exportar_catalogo_incluye_revision_e_inactivo_no_solo_activo(db, sede, 
     assert "Ya Inactiva" in nombres
 
 
+def test_exportar_catalogo_distingue_sin_confirmar_de_no(db, sede, admin_usuario):
+    """Si rampa/ascensor quedan en NULL en la base (columna nullable -- p. ej.
+    datos corregidos a mano, o cargados antes de que este campo existiera),
+    exportar eso como "No" afirmaría que se confirmó la falta de accesibilidad,
+    cuando en realidad nadie la revisó. Se fuerza el NULL con un UPDATE en vez
+    de pasarlo al crear la dependencia: una asignación None a nivel de
+    instancia ORM cae en el default=False de la columna (comportamiento
+    estándar de SQLAlchemy), así que no sirve para simular este estado."""
+    from sqlalchemy import update
+
+    from app import crud, models
+
+    dep = crud.dependencias.crear(
+        db, dict(tipo="administrativa", nombre="Recien Cargada", sede_id=sede.id, area="X", estado="revision"), "",
+    )
+    db.execute(update(models.Dependencia).where(models.Dependencia.id == dep.id).values(rampa=None, ascensor=None))
+    db.commit()
+
+    atoken = _login("10000001", "clave123")
+    r = client.get("/api/v1/admin/dependencias/exportar.xlsx", headers=_auth(atoken))
+    wb = load_workbook(io.BytesIO(r.content))
+    ws = wb["Catálogo"]
+    fila = next(row for row in ws.iter_rows(min_row=2, values_only=True) if row[_POS["nombre"]] == "Recien Cargada")
+    assert fila[_POS["rampa"]] == "Sin confirmar"
+    assert fila[_POS["ascensor"]] == "Sin confirmar"
+
+
 def test_gestor_exporta_solo_su_propia_area(db, sede, gestor_usuario):
     from app import crud
 

@@ -16,6 +16,16 @@ let CACHE_DEPS = [];
 let CACHE_SEDES = [];
 let CACHE_USUARIOS = [];
 
+// El contenido del catálogo lo escribe cada área (texto libre, sin
+// restricciones) -- cualquier innerHTML que lo interpole tiene que pasar por
+// acá primero, o un nombre malicioso se ejecuta como HTML/JS en la sesión de
+// quien lo vea (por ejemplo admin/auditor viendo "Posibles duplicados").
+function escaparHtml(valor) {
+  return String(valor ?? "").replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  }[c]));
+}
+
 let toastTimer;
 function mostrarToast(mensaje) {
   const el = document.getElementById("toast");
@@ -240,7 +250,7 @@ document.getElementById("form-password").addEventListener("submit", async (e) =>
     const eraObligatorio = passwordObligatorio;
     passwordObligatorio = false;
     document.getElementById("btn-password-cancelar").style.display = "";
-    document.getElementById("modal-password").style.display = "none";
+    cerrarModalPassword(); // ya no es obligatorio: cierra normal y devuelve el foco
     mostrarToast("Contraseña actualizada.");
     if (eraObligatorio) mostrarApp(); // recién ahora carga las pestañas y sus datos
   } catch (err) {
@@ -877,13 +887,14 @@ async function cargarDuplicados() {
       const filas = g.dependencias
         .map(
           (d) =>
-            `<li>#${d.id} -- ${d.area}${d.piso ? `, piso ${d.piso}` : ""}${d.oficina ? `, oficina ${d.oficina}` : ""}` +
+            `<li>#${d.id} -- ${escaparHtml(d.area)}${d.piso ? `, piso ${escaparHtml(d.piso)}` : ""}${d.oficina ? `, oficina ${escaparHtml(d.oficina)}` : ""}` +
+            // d.estado viene de un campo restringido del servidor (Literal), no de texto libre -- no hace falta escaparlo
             ` <span class="badge ${d.estado}">${d.estado}</span></li>`
         )
         .join("");
       return `
         <div class="card" style="padding:0.8rem 1rem; margin-bottom:0.6rem;">
-          <strong>"${g.nombre}"</strong> <span class="hint">-- ${g.sede} (${g.dependencias.length} veces)</span>
+          <strong>"${escaparHtml(g.nombre)}"</strong> <span class="hint">-- ${escaparHtml(g.sede)} (${g.dependencias.length} veces)</span>
           <ul class="meta" style="padding-left:1.2rem; margin:0.4rem 0 0;">${filas}</ul>
         </div>`;
     })

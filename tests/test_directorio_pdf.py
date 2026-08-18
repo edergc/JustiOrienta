@@ -45,6 +45,23 @@ def test_directorio_pdf_filtrado_por_sede_devuelve_pdf(db, sede):
     assert r.content[:5] == b"%PDF-"
 
 
+def test_directorio_pdf_no_falla_con_caracteres_fuera_de_latin1(db, sede):
+    """Regresión: fpdf2 con la fuente núcleo "helvetica" solo soporta Latin-1
+    -- antes de _texto_seguro(), un solo carácter fuera de ese rango (rayas
+    largas, comillas curvas de Word, emoji) en cualquier campo libre rompía
+    la generación de TODO el directorio en un endpoint público sin login."""
+    db.add(models.Dependencia(
+        tipo="administrativa", nombre="Oficina — “Atención” 😀 al ciudadano", sede_id=sede.id,
+        area="Recursos Humanos", estado="activo",
+        horario="Lunes–Viernes, 8:00…17:00", telefono="Anexo 123 — externo",
+    ))
+    db.commit()
+
+    r = client.get("/api/v1/directorio.pdf")
+    assert r.status_code == 200
+    assert r.content[:5] == b"%PDF-"
+
+
 def test_directorio_pdf_no_incluye_contenido_en_revision(db, sede):
     """El PDF es un canal público más -- las mismas reglas que la búsqueda:
     nada en revisión llega hasta que alguien lo aprueba."""

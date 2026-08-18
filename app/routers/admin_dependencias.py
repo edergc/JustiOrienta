@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from app import crud, schemas, security
 from app.database import get_db
 from app.deteccion_duplicados import detectar_duplicados
+from app.excel_utils import autoajustar_columnas
 from app.models import Rol
 from app.models.base import ahora_utc
 
@@ -86,7 +87,15 @@ _ENCABEZADOS_EXPORTACION = [
 ]
 
 
-def _si_no(v: bool) -> str:
+def _si_no(v: Optional[bool]) -> str:
+    # v puede ser None: el cargador del directorio oficial (cargar_directorio_pj.py)
+    # deja la accesibilidad en blanco a propósito para más de 500 dependencias
+    # ("no algo que un script deba adivinar" -- ver README). "No" ahí sería
+    # afirmar que se confirmó la falta de accesibilidad, cuando en realidad
+    # nadie la revisó todavía -- la misma distinción que ya hace el PDF
+    # público (app/reportes_pdf.py) para el mismo dato.
+    if v is None:
+        return "Sin confirmar"
     return "Sí" if v else "No"
 
 
@@ -122,9 +131,7 @@ def exportar_catalogo(
             _si_no(dep.rampa), _si_no(dep.ascensor), _si_no(dep.banio_accesible), _si_no(dep.ruta_accesible),
             dep.estado, dep.responsable_validar or "", dep.area or "", dep.instrucciones_internas or "",
         ])
-    for col in ws.columns:
-        ancho = max((len(str(c.value)) for c in col if c.value is not None), default=10) + 2
-        ws.column_dimensions[col[0].column_letter].width = min(max(ancho, 10), 50)
+    autoajustar_columnas(ws)
 
     buffer = io.BytesIO()
     wb.save(buffer)
@@ -169,7 +176,7 @@ def actualizar_dependencia(
         raise HTTPException(404, "Dependencia no encontrada")
     if not security.puede_editar_area(usuario, dep.area):
         raise HTTPException(403, "No tienes permiso para editar esta dependencia")
-    if payload.area != dep.area and usuario.rol != Rol.admin:
+    if payload.area != dep.area and not security.puede_reasignar_area(usuario):
         # puede_editar_area() solo valida el área ACTUAL de la dependencia --
         # sin este chequeo, un(a) gestor(a) o validador(a) podía reescribir el
         # campo "area" del payload hacia un área ajena y así "transferir" una

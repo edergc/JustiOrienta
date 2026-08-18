@@ -103,3 +103,12 @@ def puede_aprobar(usuario: models.Usuario, area: Optional[str]) -> bool:
     if usuario.rol == Rol.validador:
         return bool(usuario.area) and usuario.area == area
     return False
+
+
+def puede_reasignar_area(usuario: models.Usuario) -> bool:
+    """Reasignar de área una dependencia existente es una decisión editorial
+    distinta a editarla: puede_editar_area() solo valida el área ACTUAL, así
+    que sin esta regla aparte, un(a) gestor(a) o validador(a) podría
+    reescribir el campo "area" del payload hacia un área ajena y "transferir"
+    contenido sin que nadie del área destino lo autorizara. Solo admin."""
+    return usuario.rol == Rol.admin

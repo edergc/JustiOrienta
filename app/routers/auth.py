@@ -16,9 +16,14 @@ def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
     # El bloqueo se revisa ANTES de validar la contraseña y sin importar si es
     # correcta: mientras dura, ni siquiera la cuenta real (que finalmente
     # recuerda su clave) debe poder saltárselo -- si no, el bloqueo protegería
-    # solo contra el atacante y no serviría de nada.
-    if usuario and usuario.bloqueado_hasta and usuario.bloqueado_hasta > ahora_utc():
-        minutos = max(1, -(-(usuario.bloqueado_hasta - ahora_utc()).seconds // 60))
+    # solo contra el atacante y no serviría de nada. Una sola llamada a
+    # ahora_utc(), reutilizada: con dos llamadas separadas, si el bloqueo
+    # vencía justo entre una y otra, la resta podía dar un timedelta negativo
+    # y el mensaje mostraba un disparate como "1440 minutos" para una cuenta
+    # que ya estaba desbloqueada.
+    ahora = ahora_utc()
+    if usuario and usuario.bloqueado_hasta and usuario.bloqueado_hasta > ahora:
+        minutos = max(1, -(-(usuario.bloqueado_hasta - ahora).seconds // 60))
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=f"Cuenta bloqueada temporalmente por múltiples intentos fallidos. "

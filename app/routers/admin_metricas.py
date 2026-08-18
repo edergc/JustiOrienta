@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from app import models, security
 from app.config import settings
 from app.database import get_db
+from app.excel_utils import hoja_con_tabla
 from app.models.base import ahora_utc
 
 router = APIRouter()
@@ -133,19 +134,6 @@ def resumen_metricas(
     }
 
 
-def _hoja_tabla(wb: Workbook, titulo: str, encabezados: list[str], filas: list[tuple]):
-    ws = wb.create_sheet(titulo)
-    ws.append(encabezados)
-    for celda in ws[1]:
-        celda.font = Font(bold=True)
-    for fila in filas:
-        ws.append(fila)
-    for col in ws.columns:
-        ancho = max(len(str(c.value)) for c in col if c.value is not None) + 2
-        ws.column_dimensions[col[0].column_letter].width = min(max(ancho, 12), 60)
-    return ws
-
-
 @router.get("/reporte.xlsx")
 def descargar_reporte(
     db: Session = Depends(get_db),
@@ -186,17 +174,17 @@ def descargar_reporte(
     resumen.column_dimensions["A"].width = 45
     resumen.column_dimensions["B"].width = 18
 
-    _hoja_tabla(wb, "Consultas más frecuentes", ["Consulta", "Veces"],
+    hoja_con_tabla(wb, "Consultas más frecuentes", ["Consulta", "Veces"],
                 [(t["consulta"], t["veces"]) for t in datos["top_consultas"]])
-    _hoja_tabla(wb, "Búsquedas sin resultado", ["Consulta", "Veces"],
+    hoja_con_tabla(wb, "Búsquedas sin resultado", ["Consulta", "Veces"],
                 [(t["consulta"], t["veces"]) for t in datos["top_consultas_sin_resultado"]])
-    _hoja_tabla(wb, "Por sede", ["Sede", "Veces"],
+    hoja_con_tabla(wb, "Por sede", ["Sede", "Veces"],
                 [(c["sede"], c["veces"]) for c in datos["consultas_por_sede"]])
-    _hoja_tabla(wb, "Por área", ["Área", "Veces"],
+    hoja_con_tabla(wb, "Por área", ["Área", "Veces"],
                 [(c["area"], c["veces"]) for c in datos["consultas_por_area"]])
-    _hoja_tabla(wb, "Por tipo", ["Tipo", "Veces"],
+    hoja_con_tabla(wb, "Por tipo", ["Tipo", "Veces"],
                 [(c["tipo"], c["veces"]) for c in datos["consultas_por_tipo"]])
-    _hoja_tabla(wb, "Pendientes por área", ["Área", "Cantidad", "Antigüedad promedio (días)"],
+    hoja_con_tabla(wb, "Pendientes por área", ["Área", "Cantidad", "Antigüedad promedio (días)"],
                 [(p["area"], p["cantidad"], p["antiguedad_promedio_dias"]) for p in datos["pendientes_por_area"]])
 
     buffer = io.BytesIO()

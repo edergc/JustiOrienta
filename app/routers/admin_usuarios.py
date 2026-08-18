@@ -46,6 +46,6 @@ def actualizar_usuario(
     detalle = f"rol={payload.rol.value}, área={payload.area or '-'}, activo={payload.activo}"
     if payload.nueva_password:
         detalle += ", contraseña restablecida"
-    objetivo = crud.usuarios.actualizar(db, objetivo, payload)
+    objetivo = crud.usuarios.actualizar(db, objetivo, payload, es_autoedicion=(objetivo.id == usuario.id))
     crud.auditoria.registrar(db, usuario.dni, "usuario", objetivo.id, "UPDATE", detalle)
     return objetivo
