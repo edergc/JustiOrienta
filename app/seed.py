@@ -28,6 +28,7 @@ def main():
             password_hash=hash_password(ADMIN_PASSWORD_INICIAL),
             rol=models.Rol.admin,
             activo=True,
+            debe_cambiar_password=True,
         )
         db.add(admin)
         db.commit()

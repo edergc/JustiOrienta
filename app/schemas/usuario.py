@@ -34,6 +34,7 @@ class UsuarioOut(BaseModel):
     activo: bool
     ultimo_acceso: Optional[datetime] = None
     bloqueado_hasta: Optional[datetime] = None
+    debe_cambiar_password: bool = False
 
 
 class UsuarioCreate(BaseModel):

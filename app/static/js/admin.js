@@ -95,6 +95,14 @@ function mostrarApp() {
   document.getElementById("vista-app").style.display = "block";
   document.getElementById("who").textContent = `${USUARIO.nombre} · ${USUARIO.rol}${USUARIO.area ? " · " + USUARIO.area : ""}`;
 
+  if (USUARIO.debe_cambiar_password) {
+    // Nadie usa el resto del panel con una contraseña que eligió otra
+    // persona -- el backend rechaza cualquier otro endpoint con 403 mientras
+    // esto siga así, así que ni vale la pena pedir los datos de las pestañas.
+    abrirModalPassword(true);
+    return;
+  }
+
   document.querySelector('[data-tab="tab-sedes"]').style.display = esAdmin() ? "" : "none";
   document.querySelector('[data-tab="tab-usuarios"]').style.display = esAdmin() ? "" : "none";
   document.querySelector('[data-tab="tab-auditoria"]').style.display = puedeLeerAuditoria() ? "" : "none";
@@ -180,19 +188,43 @@ document.getElementById("btn-descargar-reporte").addEventListener("click", () =>
   );
 });
 
+document.getElementById("btn-exportar-catalogo").addEventListener("click", () => {
+  const fecha = new Date().toISOString().slice(0, 10);
+  descargarArchivo(
+    "/admin/dependencias/exportar.xlsx",
+    `catalogo_justicia_orienta_${fecha}.xlsx`,
+    "No se pudo exportar el catálogo."
+  );
+});
+
 // ── Mi contraseña ──
+// obligatorio=true cuando debe_cambiar_password viene en true desde el
+// backend (cuenta nueva o restablecida por admin) -- mientras dura, no se
+// puede cancelar ni cerrar con Escape: es justo lo que el servidor también
+// exige (403 en cualquier otro endpoint), así que dejar "cancelar" visible
+// solo confundiría sin lograr nada.
+let passwordObligatorio = false;
+
+function abrirModalPassword(obligatorio = false) {
+  passwordObligatorio = obligatorio;
+  document.getElementById("form-password").reset();
+  document.getElementById("form-password-error").innerHTML = "";
+  document.getElementById("modal-password-titulo").textContent = obligatorio
+    ? "Debes elegir una nueva contraseña para continuar"
+    : "Cambiar mi contraseña";
+  document.getElementById("modal-password-motivo").style.display = obligatorio ? "block" : "none";
+  document.getElementById("btn-password-cancelar").style.display = obligatorio ? "none" : "";
+  document.getElementById("modal-password").style.display = "flex";
+  document.getElementById("p-actual").focus();
+}
 function cerrarModalPassword() {
+  if (passwordObligatorio) return;
   document.getElementById("modal-password").style.display = "none";
   // Devuelve el foco a quien abrió el modal -- sin esto, alguien navegando
   // solo con teclado queda "perdido" en el body tras cerrar.
   document.getElementById("btn-mi-cuenta").focus();
 }
-document.getElementById("btn-mi-cuenta").addEventListener("click", () => {
-  document.getElementById("form-password").reset();
-  document.getElementById("form-password-error").innerHTML = "";
-  document.getElementById("modal-password").style.display = "flex";
-  document.getElementById("p-actual").focus();
-});
+document.getElementById("btn-mi-cuenta").addEventListener("click", () => abrirModalPassword(false));
 document.getElementById("btn-password-cancelar").addEventListener("click", cerrarModalPassword);
 document.getElementById("form-password").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -204,8 +236,13 @@ document.getElementById("form-password").addEventListener("submit", async (e) =>
         password_nueva: document.getElementById("p-nueva").value,
       }),
     });
-    cerrarModalPassword();
+    USUARIO.debe_cambiar_password = false;
+    const eraObligatorio = passwordObligatorio;
+    passwordObligatorio = false;
+    document.getElementById("btn-password-cancelar").style.display = "";
+    document.getElementById("modal-password").style.display = "none";
     mostrarToast("Contraseña actualizada.");
+    if (eraObligatorio) mostrarApp(); // recién ahora carga las pestañas y sus datos
   } catch (err) {
     document.getElementById("form-password-error").innerHTML = `<p class="error-msg">${err.message}</p>`;
   }
@@ -219,7 +256,12 @@ document.getElementById("modal-password").addEventListener("keydown", (e) => {
     return;
   }
   if (e.key !== "Tab") return;
-  const enfocables = [...document.querySelectorAll("#modal-password button, #modal-password input")];
+  // offsetParent === null excluye el botón "Cancelar" cuando el cambio es
+  // obligatorio y queda oculto -- si no, el trampolín de Tab intenta
+  // enfocar un elemento invisible y el foco se escapa del modal.
+  const enfocables = [...document.querySelectorAll("#modal-password button, #modal-password input")].filter(
+    (el) => el.offsetParent !== null
+  );
   const primero = enfocables[0];
   const ultimo = enfocables[enfocables.length - 1];
   if (e.shiftKey && document.activeElement === primero) {
@@ -257,10 +299,20 @@ async function cargarStats() {
     [porcentaje(s.porcentaje_via_voz), "% por voz"],
     [porcentaje(s.porcentaje_sobre_accesibilidad), "% sobre accesibilidad"],
   ];
-  for (const [n, l] of items) {
+  // Gestor/validador tienen un área propia -- en vez de obligarlos a leer la
+  // lista agregada de "Pendientes por área" (con las de todas las áreas),
+  // se les resalta de una vez cuántos pendientes tiene SU área, en rojo si
+  // hay algo esperando.
+  if (USUARIO && USUARIO.area) {
+    const propia = s.pendientes_por_area.find((p) => p.area === USUARIO.area);
+    const cantidad = propia ? propia.cantidad : 0;
+    const detalle = propia ? ` (~${propia.antiguedad_promedio_dias} días en promedio)` : "";
+    items.push([cantidad, `Pendientes en tu área${detalle}`, cantidad > 0]);
+  }
+  for (const [n, l, alerta] of items) {
     const d = document.createElement("div");
     d.className = "stat";
-    d.innerHTML = `<div class="n">${n}</div><div class="l">${l}</div>`;
+    d.innerHTML = `<div class="n"${alerta ? ' style="color:var(--danger)"' : ""}>${n}</div><div class="l">${l}</div>`;
     box.appendChild(d);
   }
 

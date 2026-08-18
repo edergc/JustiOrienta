@@ -46,5 +46,13 @@ class Usuario(Base):
     intentos_fallidos = Column(Integer, nullable=False, default=0)
     bloqueado_hasta = Column(DateTime, nullable=True)
 
+    # True cuando la contraseña la eligió alguien más por esta persona (al
+    # crear la cuenta, o al restablecerla) -- el panel exige cambiarla antes
+    # de dejar usar el resto del sistema. Se apaga en cuanto la propia persona
+    # la cambia (PUT /auth/mi-password). Sin esto, "cámbiala de inmediato"
+    # quedaba solo como una sugerencia en el README, no algo que el sistema
+    # exigiera.
+    debe_cambiar_password = Column(Boolean, nullable=False, default=False)
+
     def __repr__(self):
         return f"<Usuario {self.dni} ({self.rol})>"

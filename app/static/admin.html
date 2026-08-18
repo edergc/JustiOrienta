@@ -39,6 +39,10 @@
   <div id="modal-password" class="modal-backdrop" style="display:none;">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-password-titulo">
       <h3 id="modal-password-titulo">Cambiar mi contraseña</h3>
+      <p id="modal-password-motivo" class="hint" style="display:none; margin-top:-0.4rem;">
+        Tu contraseña actual la eligió otra persona (cuenta nueva, o restablecida por un(a) administrador(a)) --
+        elige una propia antes de continuar.
+      </p>
       <form id="form-password">
         <div class="field"><label for="p-actual">Contraseña actual</label><input id="p-actual" type="password" required /></div>
         <div class="field"><label for="p-nueva">Contraseña nueva (mínimo 6 caracteres)</label><input id="p-nueva" type="password" required minlength="6" /></div>
@@ -106,6 +110,7 @@
       <div class="admin-grid">
         <div class="panel">
           <h3>Dependencias</h3>
+          <button class="btn secondary" id="btn-exportar-catalogo" type="button" style="margin-bottom:0.8rem;">⬇ Exportar catálogo (Excel)</button>
           <div style="display:flex; gap:0.8rem; flex-wrap:wrap; margin-bottom:0.8rem;">
             <div class="field" style="max-width:14rem;">
               <label for="filtro-estado">Filtrar por estado</label>

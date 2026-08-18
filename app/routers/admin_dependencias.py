@@ -1,13 +1,18 @@
 """CRUD de dependencias + flujo de publicación (revisión -> aprobación) +
 servicios anidados. Mount point: /api/v1/admin (ver app/main.py)."""
+import io
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import StreamingResponse
+from openpyxl import Workbook
+from openpyxl.styles import Font
 from sqlalchemy.orm import Session
 
 from app import crud, schemas, security
 from app.database import get_db
 from app.models import Rol
+from app.models.base import ahora_utc
 
 router = APIRouter()
 
@@ -53,6 +58,66 @@ def listar_dependencias(
     return schemas.DependenciaListaOut(
         items=[schemas.DependenciaOut.model_validate(d) for d in deps],
         total=total, skip=skip, limite=limite,
+    )
+
+
+_ENCABEZADOS_EXPORTACION = [
+    "ID interno", "Tipo", "Categoría", "Nombre oficial", "Alias",
+    "Sede", "Edificio", "Piso", "Oficina", "Horario",
+    "Servicios", "Requisitos", "Teléfono", "Correo",
+    "Rampa", "Ascensor", "Baño accesible", "Ruta accesible",
+    "Estado", "Responsable de validar", "Área", "Instrucciones internas",
+]
+
+
+def _si_no(v: bool) -> str:
+    return "Sí" if v else "No"
+
+
+@router.get("/dependencias/exportar.xlsx")
+def exportar_catalogo(
+    db: Session = Depends(get_db),
+    usuario=Depends(security.get_usuario_actual),
+):
+    """Todo lo cargado (no solo lo publicado), para respaldo, edición offline,
+    o portarlo a otra instalación -- el complemento natural de
+    `python -m app.import_excel`, que ya sabe leer estas mismas 19 primeras
+    columnas en este mismo orden posicional (las columnas de más, como "Área"
+    e "Instrucciones internas", las ignora sin problema al reimportar).
+    Mismo alcance por área que la gestión del catálogo: nadie exporta
+    contenido de un área que no podría ver en /admin/dependencias."""
+    if usuario.rol == Rol.consulta:
+        raise HTTPException(403, "El rol de consulta no tiene acceso a la gestión del catálogo")
+    area = None if usuario.rol == Rol.admin else usuario.area
+    deps = crud.dependencias.listar(db, area=area, limite=1_000_000)
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Catálogo"
+    ws.append(_ENCABEZADOS_EXPORTACION)
+    for celda in ws[1]:
+        celda.font = Font(bold=True)
+    for dep in deps:
+        ws.append([
+            dep.id, dep.tipo, dep.categoria or "", dep.nombre, ", ".join(a.alias for a in dep.alias),
+            dep.sede.nombre if dep.sede else "", dep.edificio.nombre if dep.edificio else "",
+            dep.piso or "", dep.oficina or "", dep.horario or "",
+            dep.servicios or "", dep.requisitos or "", dep.telefono or "", dep.correo or "",
+            _si_no(dep.rampa), _si_no(dep.ascensor), _si_no(dep.banio_accesible), _si_no(dep.ruta_accesible),
+            dep.estado, dep.responsable_validar or "", dep.area or "", dep.instrucciones_internas or "",
+        ])
+    for col in ws.columns:
+        ancho = max((len(str(c.value)) for c in col if c.value is not None), default=10) + 2
+        ws.column_dimensions[col[0].column_letter].width = min(max(ancho, 10), 50)
+
+    buffer = io.BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+    nombre_archivo = f"catalogo_justicia_orienta_{ahora_utc().strftime('%Y%m%d')}.xlsx"
+    return StreamingResponse(
+        buffer,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="{nombre_archivo}"'},
     )
 
 

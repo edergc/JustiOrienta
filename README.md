@@ -52,7 +52,10 @@ Luego abre:
 
 - **http://127.0.0.1:8743/** — el micrositio público (lo que ve el ciudadano).
 - **http://127.0.0.1:8743/admin** — el panel de administración (lo que usa cada área para mantener su información).
-  - Usuario inicial: DNI `12345678` / contraseña impresa por `app.seed` — **cámbiala de inmediato**. El
+  - Usuario inicial: DNI `12345678` / contraseña impresa por `app.seed` -- el panel **exige cambiarla**
+    apenas inicias sesión, no es solo una sugerencia: `app.seed` y cualquier cuenta creada o restablecida
+    desde `/admin` → Usuarios queda marcada para elegir una contraseña propia antes de poder usar el resto
+    del sistema (el backend rechaza cualquier otro endpoint con 403 mientras eso no pase). El
     acceso es por DNI (8 dígitos), no por correo -- es el dato que toda persona en Perú tiene con
     certeza, a diferencia de una cuenta de correo institucional que no todas las áreas tienen asignada.
     Justamente porque el DNI es un dato público (no un secreto), el login se bloquea 15 minutos después de
@@ -279,11 +282,18 @@ incompatible, puede convivir `/api/v2` sin romper lo existente).
 - **Pendientes de aprobar, por área**: cuántas dependencias siguen en "revisión" y cuántos días de
   antigüedad promedio llevan sin que nadie las apruebe, agrupado por área -- ayuda a ver qué área no
   está validando a tiempo. Solo agrega cantidades y promedios; nunca nombra la dependencia puntual (el
-  rol "consulta" ve este resumen y no debe terminar viendo contenido todavía no publicado).
+  rol "consulta" ve este resumen y no debe terminar viendo contenido todavía no publicado). Gestor/validador
+  además ven de inmediato, resaltado en rojo si hay algo, cuántos pendientes tiene **su propia área** --
+  sin tener que leer la lista agregada de las demás.
 - **Reporte descargable en Excel** (`GET /api/v1/admin/metricas/reporte.xlsx`, botón "Descargar reporte"
   visible para admin/auditor/consulta): la misma foto de indicadores del panel, en un `.xlsx` con una
   hoja de resumen y una hoja por cada desglose -- para llevar a una reunión sin depender de que quien lo
   necesita tenga acceso al sistema en ese momento. Generado con `openpyxl`, sin ningún servicio externo.
+- **Exportar el catálogo completo a Excel** (`GET /api/v1/admin/dependencias/exportar.xlsx`, botón
+  "Exportar catálogo" en la pestaña Dependencias): TODO lo cargado, no solo lo publicado -- para respaldo,
+  edición offline, o portarlo a otra instalación. Mismo alcance por área que el resto de la gestión del
+  catálogo, y en las mismas 19 primeras columnas y orden que espera `python -m app.import_excel`, así que
+  el archivo exportado se puede corregir y volver a importar tal cual.
 - Confirmaciones visuales (un aviso breve arriba a la derecha) después de cada guardado exitoso.
 
 ## El sitio público (`/`)

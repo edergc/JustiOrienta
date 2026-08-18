@@ -29,6 +29,10 @@ def crear(db: Session, data: schemas.UsuarioCreate) -> models.Usuario:
         password_hash=security.hash_password(data.password),
         rol=data.rol,
         area=data.area,
+        # La contraseña la eligió admin, no la propia persona -- se exige
+        # cambiarla antes de dejar usar el resto del sistema (ver
+        # security.get_usuario_actual).
+        debe_cambiar_password=True,
     )
     db.add(usuario)
     db.commit()
@@ -43,6 +47,7 @@ def actualizar(db: Session, usuario: models.Usuario, data: schemas.UsuarioUpdate
     usuario.activo = data.activo
     if data.nueva_password:
         usuario.password_hash = security.hash_password(data.nueva_password)
+        usuario.debe_cambiar_password = True  # de nuevo, alguien más eligió esta contraseña
     # Un(a) admin guardando cambios en la cuenta es, de por sí, la revisión
     # humana que un bloqueo automático espera -- se levanta aquí para no dejar
     # a alguien esperando los MINUTOS_BLOQUEO después de que admin ya intervino.
@@ -55,6 +60,7 @@ def actualizar(db: Session, usuario: models.Usuario, data: schemas.UsuarioUpdate
 
 def cambiar_password(db: Session, usuario: models.Usuario, password_nueva: str) -> None:
     usuario.password_hash = security.hash_password(password_nueva)
+    usuario.debe_cambiar_password = False  # ahora sí la eligió la propia persona
     db.commit()
 
 

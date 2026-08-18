@@ -3,7 +3,7 @@ libres (passlib, python-jose) -- sin servicios de terceros ni costo."""
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -18,6 +18,12 @@ ALGORITHM = "HS256"
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
+
+# Únicas rutas que alguien con debe_cambiar_password=True puede seguir usando
+# -- ver el propio cambio de contraseña, y consultar quién es (lo necesita el
+# panel para saber que tiene que abrir el modal obligatorio). Todo lo demás
+# queda bloqueado hasta que la persona elija su propia contraseña.
+_RUTAS_PERMITIDAS_CON_PASSWORD_PENDIENTE = {"/api/v1/auth/mi-password", "/api/v1/auth/yo"}
 
 
 def hash_password(password: str) -> str:
@@ -35,7 +41,7 @@ def crear_token(dni: str) -> str:
 
 
 def get_usuario_actual(
-    token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)
+    request: Request, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)
 ) -> models.Usuario:
     credenciales_invalidas = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -53,6 +59,10 @@ def get_usuario_actual(
     usuario = db.query(models.Usuario).filter(models.Usuario.dni == dni).first()
     if usuario is None or not usuario.activo:
         raise credenciales_invalidas
+
+    if usuario.debe_cambiar_password and request.url.path not in _RUTAS_PERMITIDAS_CON_PASSWORD_PENDIENTE:
+        raise HTTPException(status_code=403, detail="Debes cambiar tu contraseña antes de continuar")
+
     return usuario
 
 
