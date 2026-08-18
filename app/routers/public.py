@@ -1,12 +1,15 @@
+from datetime import datetime
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import Response
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app import crud, nlp, schemas
 from app.config import settings
 from app.database import get_db
+from app.reportes_pdf import generar_directorio_pdf
 
 router = APIRouter()
 
@@ -93,6 +96,35 @@ def listar_sedes_publico(db: Session = Depends(get_db)):
     """Listado público de sedes -- lo usa el saludo contextual cuando alguien
     llega desde un QR de una sede específica (?sede=<id>)."""
     return crud.sedes.listar(db, incluir_inactivas=False)
+
+
+@router.get("/directorio.pdf")
+def directorio_pdf(
+    sede_id: Optional[int] = Query(None, description="Limita el directorio a una sola sede"),
+    db: Session = Depends(get_db),
+):
+    """Directorio público imprimible -- para pegar en un mostrador o llevarse
+    sin conexión, sin depender de que el sitio con JavaScript esté disponible
+    en ese momento. Solo incluye lo publicado (estado='activo'), igual que la
+    búsqueda pública; nunca contenido en revisión."""
+    sede_nombre = None
+    if sede_id is not None:
+        sede = crud.sedes.obtener(db, sede_id)
+        if not sede:
+            raise HTTPException(404, "La sede indicada no existe")
+        sede_nombre = sede.nombre
+
+    deps = crud.dependencias.listar_activas(db, sede_id=sede_id)
+    pdf_bytes = generar_directorio_pdf(deps, sede_nombre)
+    nombre_archivo = f"directorio_justicia_orienta_{datetime.now().strftime('%Y%m%d')}.pdf"
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        # inline (no "attachment"): abre en el visor de PDF del navegador,
+        # desde donde imprimir es un clic -- igual que el botón "QR" del panel
+        # abre una pestaña nueva en vez de forzar la descarga.
+        headers={"Content-Disposition": f'inline; filename="{nombre_archivo}"'},
+    )
 
 
 @router.get("/salud")

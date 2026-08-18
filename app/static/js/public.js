@@ -155,6 +155,15 @@ function renderFeedback(consultaId) {
 // Contexto conocido de la sesión: llega por ?sede= o ?dependencia= en la URL.
 let sedeContextoId = null;
 
+// El enlace de descarga sigue el mismo contexto de sede que el saludo: si la
+// persona llegó por el QR de una sede o de una dependencia, el PDF que se
+// lleva es el de esa sede, no el directorio completo de las 25.
+function actualizarEnlaceDirectorio() {
+  const enlace = document.getElementById("link-directorio-pdf");
+  if (!enlace) return;
+  enlace.href = sedeContextoId ? `${API}/directorio.pdf?sede_id=${sedeContextoId}` : `${API}/directorio.pdf`;
+}
+
 // El indicador de "modo accesible" es de la sesión (contraste/texto/tema),
 // no de la búsqueda puntual -- se calcula al momento de cada consulta.
 function modoAccesibleActivo() {
@@ -286,6 +295,7 @@ document.getElementById("buscar").addEventListener("input", (e) => {
       const dep = await (await fetch(`${API}/dependencias/${depId}`)).json();
       if (dep && dep.sede) {
         sedeContextoId = dep.sede.id;
+        actualizarEnlaceDirectorio();
         banner.textContent = `Estás consultando información de "${dep.nombre}", en ${dep.sede.nombre}.`;
         banner.classList.add("visible");
         const cont = document.getElementById("resultados");
@@ -304,6 +314,7 @@ document.getElementById("buscar").addEventListener("input", (e) => {
     const sede = sedes.find((s) => String(s.id) === sedeId);
     if (!sede) return;
     sedeContextoId = sede.id;
+    actualizarEnlaceDirectorio();
     const nombre = /^sede\s/i.test(sede.nombre) ? sede.nombre : `sede ${sede.nombre}`;
     banner.textContent = `Estás consultando información de la ${nombre}. ¿Qué necesitas encontrar?`;
     banner.classList.add("visible");

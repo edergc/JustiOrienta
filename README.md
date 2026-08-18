@@ -287,6 +287,12 @@ incompatible, puede convivir `/api/v2` sin romper lo existente).
   `/admin` → estadísticas (`porcentaje_satisfaccion`).
 - Todo lo demás del diseño original se mantiene: alto contraste, texto ampliable, tema oscuro, lectura
   en voz alta de cada resultado, y el mensaje de respaldo cuando el sistema no tiene certeza.
+- **Directorio descargable en PDF** (`GET /api/v1/directorio.pdf`, enlace "Descargar directorio (PDF)"
+  en el pie de página): el mismo catálogo publicado, listo para imprimir y pegar en un mostrador o
+  llevarse sin conexión -- para cuando la pantalla no está disponible o no hay internet en ese momento.
+  Si la persona llegó por el QR de una sede, el enlace descarga solo esa sede (`?sede_id=<id>`) en vez
+  del directorio completo. Generado 100% local con `fpdf2`, sin ningún servicio externo, y con las
+  mismas reglas que la búsqueda: solo lo ya aprobado (`estado=activo`), nunca contenido en revisión.
 
 ## Principios que no se negocian
 

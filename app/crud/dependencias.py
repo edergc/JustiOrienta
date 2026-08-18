@@ -52,6 +52,18 @@ def obtener_activa(db: Session, dep_id: int) -> Optional[models.Dependencia]:
     ).first()
 
 
+def listar_activas(db: Session, sede_id: Optional[int] = None) -> list[models.Dependencia]:
+    """Todo lo publicado -- usado por el directorio público en PDF (ver
+    app/reportes_pdf.py). Se ordena en Python por (sede, nombre) para no
+    necesitar un JOIN explícito además del joinedload que ya carga sede."""
+    q = _cargar(db.query(models.Dependencia)).filter(models.Dependencia.estado == "activo")
+    if sede_id is not None:
+        q = q.filter(models.Dependencia.sede_id == sede_id)
+    deps = q.all()
+    deps.sort(key=lambda d: ((d.sede.nombre if d.sede else ""), d.nombre))
+    return deps
+
+
 def _sincronizar_alias(db: Session, dependencia: models.Dependencia, alias_csv: str) -> None:
     nuevos = [a.strip() for a in (alias_csv or "").split(",") if a.strip()]
     dependencia.alias.clear()

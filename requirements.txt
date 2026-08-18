@@ -10,6 +10,7 @@ python-multipart
 openpyxl
 qrcode
 pdfplumber
+fpdf2
 
 # Pruebas automatizadas
 pytest
