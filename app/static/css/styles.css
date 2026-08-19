@@ -128,6 +128,9 @@ main.wide { max-width: 68rem; }
 .badge.activo { background: var(--accent2-tint); color: var(--accent2-strong); }
 .badge.revision { background: var(--accent-tint); color: var(--accent-strong); }
 .badge.inactivo { background: var(--surface-soft); color: var(--ink-soft); border: 1px solid var(--line); }
+.badge.create, .badge.aprobar, .badge.reactivar { background: var(--accent2-tint); color: var(--accent2-strong); }
+.badge.update { background: var(--accent-tint); color: var(--accent-strong); }
+.badge.delete, .badge.rechazar { background: var(--danger-tint); color: var(--danger); }
 
 .meta { font-size: 0.92rem; color: var(--ink-soft); margin: 0.5rem 0 0; }
 .meta strong { color: var(--ink); font-weight: 600; }
@@ -157,12 +160,32 @@ footer.site { text-align: center; padding: 2rem 1.5rem 3rem; color: var(--ink-so
 /* ── admin ── */
 body:has(#vista-app, #vista-login) { background: var(--surface-soft); }
 
+.login-shell {
+  max-width: 54rem; margin: 4.5rem auto; display: flex; min-height: 30rem;
+  border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-lg);
+}
+.login-marca {
+  flex: 1 1 40%; padding: 3rem 2.5rem; color: #fff; display: flex; flex-direction: column;
+  justify-content: center; gap: 0.5rem;
+  background: linear-gradient(150deg, var(--accent2-strong), var(--accent2) 70%);
+}
+.login-marca .site-mark { margin: 0 0 0.6rem; width: 3rem; height: 3rem; }
+.login-marca h1 { font-family: var(--font-display); font-size: 1.9rem; margin: 0; }
+.login-marca p { margin: 0.2rem 0 1.4rem; opacity: 0.9; }
+.login-marca-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; font-size: 0.9rem; }
+.login-marca-lista li { padding-left: 1.6rem; position: relative; opacity: 0.95; }
+.login-marca-lista li::before { content: "✓"; position: absolute; left: 0; font-weight: 700; }
 .login-box {
-  max-width: 24rem; margin: 4.5rem auto; background: var(--surface); border: 1px solid var(--line);
-  border-radius: var(--radius-lg); padding: 1.8rem; display: grid; gap: 0.9rem;
-  box-shadow: var(--shadow-lg);
+  flex: 1 1 60%; max-width: 26rem; margin: 0; background: var(--surface);
+  padding: 3rem 2.5rem; display: grid; gap: 0.9rem; align-content: center;
 }
 .login-box h2 { font-family: var(--font-display); margin: 0; font-size: 1.5rem; }
+@media (max-width: 760px) {
+  .login-shell { flex-direction: column; margin: 0; border-radius: 0; box-shadow: none; min-height: 0; }
+  .login-marca { padding: 2.2rem 1.5rem; }
+  .login-marca-lista { display: none; }
+  .login-box { max-width: none; padding: 2rem 1.5rem; }
+}
 .field { display: grid; gap: 0.35rem; }
 .field label { font-size: 0.85rem; font-weight: 600; }
 .field input, .field select, .field textarea {
@@ -175,6 +198,12 @@ body:has(#vista-app, #vista-login) { background: var(--surface-soft); }
   border-color: var(--accent2); box-shadow: 0 0 0 3px var(--accent2-tint);
 }
 .field textarea { min-height: 4.5rem; resize: vertical; }
+.campo-etiqueta { font-size: 0.85rem; font-weight: 600; }
+.checkbox-grupo { display: flex; flex-wrap: wrap; gap: 0.5rem 1.2rem; }
+.checkbox-grupo label { display: flex; align-items: center; gap: 0.4rem; font-weight: 500; font-size: 0.92rem; }
+.checkbox-grupo input { width: auto; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem 1.2rem; }
+@media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } }
 
 .btn {
   font: inherit; font-weight: 700; cursor: pointer; border: none; border-radius: var(--radius-sm);
@@ -214,6 +243,12 @@ table.admin td.actions button { font-size: 0.78rem; padding: 0.35rem 0.65rem; }
   padding: 1.35rem; box-shadow: var(--shadow-sm);
 }
 .panel h3 { margin-top: 0; font-family: var(--font-display); font-size: 1.15rem; }
+.panel-cabecera {
+  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;
+  gap: 0.6rem; margin-bottom: 0.9rem;
+}
+.panel-cabecera h3 { margin-bottom: 0; }
+.panel-cabecera-acciones { display: flex; gap: 0.6rem; flex-wrap: wrap; }
 .stat-row { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
 .stat {
   flex: 1; min-width: 9rem; background: var(--surface); border: 1px solid var(--line);
@@ -260,8 +295,10 @@ table.admin td.actions button { font-size: 0.78rem; padding: 0.35rem 0.65rem; }
 .modal {
   background: var(--surface); border-radius: var(--radius-lg); padding: 1.5rem; max-width: 26rem; width: 100%;
   border: 1px solid var(--line); box-shadow: var(--shadow-lg);
+  max-height: 90vh; overflow-y: auto;
 }
 .modal h3 { margin-top: 0; font-family: var(--font-display); }
+.modal.ancho { max-width: 46rem; }
 
 /* ── paginación ── */
 .paginacion {

@@ -26,6 +26,46 @@ function escaparHtml(valor) {
   }[c]));
 }
 
+// ── Modales genéricos (crear/editar dependencia, sede, usuario) ──
+// Mismo patrón de accesibilidad que ya usaba el modal de contraseña (Escape
+// cierra, Tab no se escapa, clic en el fondo oscurecido también cierra),
+// reutilizable para no triplicar la misma lógica en los tres formularios.
+const _focoPrevioModal = {};
+function abrirModal(modalId, elementoAFocar) {
+  _focoPrevioModal[modalId] = document.activeElement;
+  const modal = document.getElementById(modalId);
+  modal.style.display = "flex";
+  (elementoAFocar || modal.querySelector("input, select, textarea")).focus();
+}
+function cerrarModal(modalId, focoAlternativo) {
+  document.getElementById(modalId).style.display = "none";
+  const previo = _focoPrevioModal[modalId];
+  if (previo && document.body.contains(previo)) previo.focus();
+  else if (focoAlternativo) focoAlternativo.focus();
+}
+function configurarCierreModal(modalId, alCerrar) {
+  const modal = document.getElementById(modalId);
+  modal.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") { alCerrar(); return; }
+    if (e.key !== "Tab") return;
+    const enfocables = [...modal.querySelectorAll("button, input, select, textarea")].filter(
+      (el) => el.offsetParent !== null && !el.disabled
+    );
+    const primero = enfocables[0];
+    const ultimo = enfocables[enfocables.length - 1];
+    if (e.shiftKey && document.activeElement === primero) {
+      e.preventDefault();
+      ultimo.focus();
+    } else if (!e.shiftKey && document.activeElement === ultimo) {
+      e.preventDefault();
+      primero.focus();
+    }
+  });
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) alCerrar();
+  });
+}
+
 let toastTimer;
 function mostrarToast(mensaje) {
   const el = document.getElementById("toast");
@@ -459,9 +499,19 @@ function cargarSedeEnFormulario(id) {
   document.getElementById("s-estacionamiento").checked = !!s.estacionamiento_accesible;
   document.getElementById("s-asistencia").checked = !!s.personal_asistencia;
   document.getElementById("s-estado").value = s.estado || "activo";
+  abrirModal("modal-sede", document.getElementById("s-nombre"));
 }
 
-document.getElementById("btn-sede-cancelar").addEventListener("click", limpiarFormularioSede);
+document.getElementById("btn-nueva-sede").addEventListener("click", () => {
+  limpiarFormularioSede();
+  abrirModal("modal-sede", document.getElementById("s-nombre"));
+});
+function cerrarModalSede() {
+  limpiarFormularioSede();
+  cerrarModal("modal-sede", document.getElementById("btn-nueva-sede"));
+}
+document.getElementById("btn-sede-cancelar").addEventListener("click", cerrarModalSede);
+configurarCierreModal("modal-sede", cerrarModalSede);
 
 document.getElementById("form-sede").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -483,6 +533,7 @@ document.getElementById("form-sede").addEventListener("submit", async (e) => {
     if (id) await api(`/admin/sedes/${id}`, { method: "PUT", body: JSON.stringify(payload) });
     else await api("/admin/sedes", { method: "POST", body: JSON.stringify(payload) });
     limpiarFormularioSede();
+    cerrarModal("modal-sede", document.getElementById("btn-nueva-sede"));
     await cargarSedes();
     mostrarToast("Sede guardada.");
   } catch (err) {
@@ -550,7 +601,6 @@ function limpiarFormularioUsuario() {
   document.querySelector('#campo-u-password label').textContent = "Contraseña inicial *";
   document.getElementById("campo-u-activo").style.display = "none";
   document.getElementById("btn-usuario-guardar").textContent = "Crear usuario";
-  document.getElementById("btn-usuario-cancelar").style.display = "none";
 }
 
 function cargarUsuarioEnFormulario(id) {
@@ -572,12 +622,20 @@ function cargarUsuarioEnFormulario(id) {
   document.querySelector('#campo-u-password label').textContent = "Nueva contraseña (opcional)";
   document.getElementById("campo-u-activo").style.display = "";
   document.getElementById("btn-usuario-guardar").textContent = "Guardar cambios";
-  document.getElementById("btn-usuario-cancelar").style.display = "";
 
-  window.scrollTo({ top: document.getElementById("form-usuario").offsetTop - 20, behavior: "smooth" });
+  abrirModal("modal-usuario", document.getElementById("u-nombre"));
 }
 
-document.getElementById("btn-usuario-cancelar").addEventListener("click", limpiarFormularioUsuario);
+document.getElementById("btn-nuevo-usuario").addEventListener("click", () => {
+  limpiarFormularioUsuario();
+  abrirModal("modal-usuario", document.getElementById("u-nombre"));
+});
+function cerrarModalUsuario() {
+  limpiarFormularioUsuario();
+  cerrarModal("modal-usuario", document.getElementById("btn-nuevo-usuario"));
+}
+document.getElementById("btn-usuario-cancelar").addEventListener("click", cerrarModalUsuario);
+configurarCierreModal("modal-usuario", cerrarModalUsuario);
 
 document.getElementById("form-usuario").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -603,6 +661,7 @@ document.getElementById("form-usuario").addEventListener("submit", async (e) => 
       await api("/admin/usuarios", { method: "POST", body: JSON.stringify(payload) });
     }
     limpiarFormularioUsuario();
+    cerrarModal("modal-usuario", document.getElementById("btn-nuevo-usuario"));
     await cargarUsuarios();
     mostrarToast("Usuario guardado.");
   } catch (err) {
@@ -771,10 +830,19 @@ async function cargarEnFormulario(id) {
   document.getElementById("panel-servicios").style.display = "block";
   await cargarServicios(d.id);
 
-  window.scrollTo({ top: document.getElementById("form-dep").offsetTop - 20, behavior: "smooth" });
+  abrirModal("modal-dependencia", document.getElementById("f-nombre"));
 }
 
-document.getElementById("btn-cancelar").addEventListener("click", limpiarFormulario);
+document.getElementById("btn-nueva-dependencia").addEventListener("click", () => {
+  limpiarFormulario();
+  abrirModal("modal-dependencia", document.getElementById("f-nombre"));
+});
+function cerrarModalDependencia() {
+  limpiarFormulario();
+  cerrarModal("modal-dependencia", document.getElementById("btn-nueva-dependencia"));
+}
+document.getElementById("btn-cancelar").addEventListener("click", cerrarModalDependencia);
+configurarCierreModal("modal-dependencia", cerrarModalDependencia);
 
 document.getElementById("btn-aprobar").addEventListener("click", async () => {
   const id = document.getElementById("f-id").value;
@@ -782,6 +850,7 @@ document.getElementById("btn-aprobar").addEventListener("click", async () => {
   try {
     await api(`/admin/dependencias/${id}/aprobar`, { method: "POST" });
     limpiarFormulario();
+    cerrarModal("modal-dependencia", document.getElementById("btn-nueva-dependencia"));
     await Promise.all([cargarDependencias(), cargarStats()]);
     mostrarToast("Publicado. Ya es visible en el sitio público.");
   } catch (err) {
@@ -796,6 +865,7 @@ document.getElementById("btn-rechazar").addEventListener("click", async () => {
   try {
     await api(`/admin/dependencias/${id}/rechazar?comentario=${encodeURIComponent(comentario)}`, { method: "POST" });
     limpiarFormulario();
+    cerrarModal("modal-dependencia", document.getElementById("btn-nueva-dependencia"));
     await Promise.all([cargarDependencias(), cargarStats()]);
     mostrarToast("Devuelto a revisión.");
   } catch (err) {
@@ -836,6 +906,7 @@ document.getElementById("form-dep").addEventListener("submit", async (e) => {
       await api("/admin/dependencias", { method: "POST", body: JSON.stringify(payload) });
     }
     limpiarFormulario();
+    cerrarModal("modal-dependencia", document.getElementById("btn-nueva-dependencia"));
     await Promise.all([cargarDependencias(), cargarStats(), cargarAuditoria()]);
     mostrarToast("Dependencia guardada.");
   } catch (err) {
@@ -913,7 +984,12 @@ async function cargarAuditoria() {
   for (const r of registros) {
     const tr = document.createElement("tr");
     const fecha = new Date(r.fecha).toLocaleString("es-PE");
-    tr.innerHTML = `<td>${fecha}</td><td>${r.usuario_dni || "—"}</td><td>${r.entidad || "—"}</td><td>${r.accion}</td><td>${r.detalle || ""}</td>`;
+    // El detalle puede contener texto libre que alguien más escribió (nombre
+    // de una dependencia, motivo de un rechazo...) -- escaparHtml() evita que
+    // se ejecute como HTML/JS en la sesión de quien lea la auditoría.
+    tr.innerHTML = `<td>${fecha}</td><td>${escaparHtml(r.usuario_dni) || "—"}</td><td>${escaparHtml(r.entidad) || "—"}</td>` +
+      `<td><span class="badge ${r.accion.toLowerCase()}">${escaparHtml(r.accion)}</span></td>` +
+      `<td>${escaparHtml(r.detalle)}</td>`;
     tbody.appendChild(tr);
   }
   await cargarDuplicados();
