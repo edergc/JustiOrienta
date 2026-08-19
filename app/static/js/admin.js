@@ -150,14 +150,11 @@ function mostrarApp() {
   document.getElementById("perfil-area-fila").style.display = USUARIO.area ? "" : "none";
   document.getElementById("perfil-area").textContent = USUARIO.area || "";
 
-  if (USUARIO.debe_cambiar_password) {
-    // Nadie usa el resto del panel con una contraseña que eligió otra
-    // persona -- el backend rechaza cualquier otro endpoint con 403 mientras
-    // esto siga así, así que ni vale la pena pedir los datos de las pestañas.
-    abrirModalPassword(true);
-    return;
-  }
-
+  // La visibilidad por rol se aplica ANTES de mirar debe_cambiar_password:
+  // si no, alguien con una cuenta nueva veía (atenuadas detrás del modal
+  // obligatorio, pero visibles) las pestañas de gestión que su rol nunca
+  // debería mostrar -- por ejemplo, "consulta" alcanzaba a ver "Dependencias"
+  // y "+ Nueva dependencia" un instante antes de elegir su contraseña.
   document.querySelector('[data-tab="tab-sedes"]').style.display = esAdmin() ? "" : "none";
   document.querySelector('[data-tab="tab-usuarios"]').style.display = esAdmin() ? "" : "none";
   document.querySelector('[data-tab="tab-auditoria"]').style.display = puedeLeerAuditoria() ? "" : "none";
@@ -176,6 +173,14 @@ function mostrarApp() {
   document.getElementById("panel-solo-consulta").style.display = esSoloConsulta() ? "block" : "none";
   if (!esSoloConsulta()) {
     document.getElementById("tab-dependencias").style.display = "block";
+  }
+
+  if (USUARIO.debe_cambiar_password) {
+    // Nadie usa el resto del panel con una contraseña que eligió otra
+    // persona -- el backend rechaza cualquier otro endpoint con 403 mientras
+    // esto siga así, así que ni vale la pena pedir los datos de las pestañas.
+    abrirModalPassword(true);
+    return;
   }
 
   poblarOpcionesEstado();
