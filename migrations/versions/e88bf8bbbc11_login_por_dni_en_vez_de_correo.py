@@ -41,7 +41,13 @@ def upgrade() -> None:
     # Cualquier otra cuenta (de prueba) que no sea la admin conocida recibe un
     # DNI de relleno único -- nunca uno real, este piloto no tenía esos datos
     # -- solo para poder aplicar la restricción NOT NULL + UNIQUE que sigue.
-    op.execute("UPDATE usuarios SET dni = printf('%08d', id) WHERE dni IS NULL")
+    # printf() es de SQLite; en PostgreSQL el equivalente portable es lpad()
+    # -- sin esta rama, "alembic upgrade head" fallaba de entrada en cualquier
+    # base Postgres nueva, con "función printf no existe".
+    if op.get_bind().dialect.name == "postgresql":
+        op.execute("UPDATE usuarios SET dni = lpad(id::text, 8, '0') WHERE dni IS NULL")
+    else:
+        op.execute("UPDATE usuarios SET dni = printf('%08d', id) WHERE dni IS NULL")
     with op.batch_alter_table('usuarios', schema=None) as batch_op:
         batch_op.drop_index('ix_usuarios_email')
         batch_op.drop_column('email')

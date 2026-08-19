@@ -9,7 +9,7 @@ class Dependencia(Base, TimestampMixin):
 
     id = Column(Integer, primary_key=True, index=True)
     tipo = Column(String(30), nullable=False, index=True)  # jurisdiccional | administrativa | servicio
-    categoria = Column(String(100))
+    categoria = Column(String(200))
     nombre = Column(String(200), nullable=False)
     nombre_normalizado = Column(String(200), index=True)
 
@@ -21,7 +21,7 @@ class Dependencia(Base, TimestampMixin):
     horario = Column(String(300))
     servicios = Column(Text)  # resumen breve; el detalle estructurado vive en Servicio
     requisitos = Column(Text)
-    telefono = Column(String(40))
+    telefono = Column(String(150))
     correo = Column(String(150))
 
     # Accesibilidad específica de esta dependencia (puede diferir de la sede:

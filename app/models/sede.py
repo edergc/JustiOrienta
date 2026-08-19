@@ -15,7 +15,7 @@ class Sede(Base, TimestampMixin):
     latitud = Column(Float, nullable=True)
     longitud = Column(Float, nullable=True)
     horario_atencion = Column(String(300))
-    telefono = Column(String(40))
+    telefono = Column(String(150))
     correo = Column(String(150))
 
     # Accesibilidad general de la sede (una dependencia puntual puede además

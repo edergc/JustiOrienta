@@ -145,17 +145,25 @@ general.
 
 ### Producción vs. desarrollo
 
-Por defecto la app usa SQLite (`justicia_orienta.db`, cero instalación). Para producción, define la
-variable de entorno `DATABASE_URL` apuntando a PostgreSQL y corre las migraciones — no hay que tocar
-código:
+Por defecto la app usa SQLite (`justicia_orienta.db`, cero instalación). Para producción, instala
+`psycopg2-binary` (la única línea que queda comentada en `requirements.txt`) y define la variable de
+entorno `DATABASE_URL` apuntando a PostgreSQL y corre las migraciones — no hay que tocar código:
 
 ```
 DATABASE_URL=postgresql+psycopg2://usuario:clave@host:5432/justicia_orienta
 ```
 
 ```bash
+pip install psycopg2-binary
 python -m alembic upgrade head
 ```
+
+Migración a PostgreSQL 16 verificada de punta a punta: esquema completo, el directorio oficial real (25
+sedes, 539 dependencias) cargado con `python -m app.cargar_directorio_pj`, y el flujo completo (crear →
+revisar → aprobar → aparece en el sitio público, el PDF, el Excel exportado y la auditoría) probado contra
+esa base. Dos ajustes que hicieron falta y ya están aplicados: dos migraciones tenían `printf()` (función
+de SQLite, no existe en Postgres) y dos columnas (`telefono`, `categoria`) eran más angostas de lo que
+permite el dato real -- SQLite nunca hizo cumplir ese límite, Postgres sí.
 
 Copia `.env.example` a `.env` y ajusta los valores (incluida `JUSTICIA_ORIENTA_SECRET`, que firma las
 sesiones — cámbiala antes de cualquier uso real).
