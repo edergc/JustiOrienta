@@ -17,5 +17,5 @@ beautifulsoup4
 pytest
 httpx
 
-# Para producción con PostgreSQL (opcional, cero costo, código abierto):
-# psycopg2-binary
+# Para producción con PostgreSQL (cero costo, código abierto):
+psycopg2-binary
