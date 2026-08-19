@@ -111,6 +111,35 @@ def resumen_metricas(
     )
     todos_los_dias = [d for dias in dias_por_area.values() for d in dias]
 
+    # Completitud de datos por área, solo sobre lo YA publicado -- "pendientes
+    # por área" ya cubre lo que falta aprobar; esto cubre lo que falta
+    # TERMINAR de llenar en lo que el público ya está viendo (horario,
+    # teléfono, algún dato de accesibilidad confirmado). No nombra
+    # dependencias puntuales, mismo criterio que "pendientes por área".
+    activas = db.query(models.Dependencia).filter(models.Dependencia.estado == "activo").all()
+    datos_por_area = defaultdict(lambda: {"total": 0, "completos": 0})
+    for dep in activas:
+        grupo = datos_por_area[dep.area or "Sin área"]
+        grupo["total"] += 1
+        campos = (bool(dep.horario), bool(dep.telefono), bool(dep.rampa or dep.ascensor or dep.banio_accesible))
+        grupo["completos"] += sum(campos)
+    completitud_por_area = sorted(
+        (
+            {
+                "area": area,
+                "activas": datos["total"],
+                "porcentaje_completo": round((datos["completos"] / (datos["total"] * 3)) * 100, 1),
+            }
+            for area, datos in datos_por_area.items()
+        ),
+        key=lambda x: x["porcentaje_completo"],
+    )
+    total_activas = len(activas)
+    total_completos = sum(datos["completos"] for datos in datos_por_area.values())
+    porcentaje_completitud_global = (
+        round((total_completos / (total_activas * 3)) * 100, 1) if total_activas else None
+    )
+
     return {
         "total_consultas": total,
         "consultas_resueltas": encontradas,
@@ -131,6 +160,10 @@ def resumen_metricas(
         "pendientes_total": len(pendientes),
         "pendientes_antiguedad_promedio_dias": round(sum(todos_los_dias) / len(todos_los_dias), 1) if todos_los_dias else None,
         "pendientes_por_area": pendientes_por_area,
+        # ── Completitud de datos ya publicados (horario, teléfono, algún
+        # dato de accesibilidad confirmado), por área ──
+        "porcentaje_completitud_global": porcentaje_completitud_global,
+        "completitud_por_area": completitud_por_area,
     }
 
 
@@ -165,6 +198,7 @@ def descargar_reporte(
         ("% sobre accesibilidad", datos["porcentaje_sobre_accesibilidad"]),
         ("Dependencias pendientes de aprobar", datos["pendientes_total"]),
         ("Antigüedad promedio de lo pendiente (días)", datos["pendientes_antiguedad_promedio_dias"]),
+        ("% completitud de datos ya publicados", datos["porcentaje_completitud_global"]),
     ]
     resumen.append(["Indicador", "Valor"])
     for celda in resumen[4]:
@@ -186,6 +220,8 @@ def descargar_reporte(
                 [(c["tipo"], c["veces"]) for c in datos["consultas_por_tipo"]])
     hoja_con_tabla(wb, "Pendientes por área", ["Área", "Cantidad", "Antigüedad promedio (días)"],
                 [(p["area"], p["cantidad"], p["antiguedad_promedio_dias"]) for p in datos["pendientes_por_area"]])
+    hoja_con_tabla(wb, "Completitud por área", ["Área", "Dependencias activas", "% completo"],
+                [(c["area"], c["activas"], c["porcentaje_completo"]) for c in datos["completitud_por_area"]])
 
     buffer = io.BytesIO()
     wb.save(buffer)

@@ -142,7 +142,7 @@ def test_validador_no_puede_aprobar_fuera_de_su_area(db, sede, validador_usuario
     assert r.status_code == 403
 
 
-def test_solo_admin_y_auditor_leen_auditoria(admin_usuario, gestor_usuario):
+def test_gestor_no_lee_auditoria_pero_admin_si(admin_usuario, gestor_usuario):
     atoken = _login("10000001", "clave123")
     gtoken = _login("10000002", "clave123")
 

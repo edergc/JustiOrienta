@@ -29,10 +29,24 @@ def test_consulta_puede_descargar_el_reporte(consulta_usuario):
     assert r.content[:2] == b"PK"  # firma de archivo zip/xlsx
 
 
-def test_consulta_no_puede_ver_la_auditoria_detallada(consulta_usuario):
+def test_consulta_puede_ver_la_auditoria_detallada(consulta_usuario):
+    """A pedido explícito: quien toma decisiones también supervisa quién
+    cambió qué, no solo indicadores agregados -- ver README/security.py."""
     token = _login("10000004", "clave123")
     r = client.get("/api/v1/admin/auditoria", headers=_auth(token))
-    assert r.status_code == 403
+    assert r.status_code == 200
+
+
+def test_consulta_puede_ver_duplicados(consulta_usuario):
+    token = _login("10000004", "clave123")
+    r = client.get("/api/v1/admin/dependencias/duplicados", headers=_auth(token))
+    assert r.status_code == 200
+
+
+def test_gestor_no_puede_ver_auditoria_ni_duplicados(gestor_usuario):
+    token = _login("10000002", "clave123")
+    assert client.get("/api/v1/admin/auditoria", headers=_auth(token)).status_code == 403
+    assert client.get("/api/v1/admin/dependencias/duplicados", headers=_auth(token)).status_code == 403
 
 
 def test_gestor_no_puede_descargar_el_reporte(gestor_usuario):

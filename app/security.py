@@ -73,15 +73,20 @@ def requiere_admin(usuario: models.Usuario = Depends(get_usuario_actual)) -> mod
 
 
 def requiere_lectura_auditoria(usuario: models.Usuario = Depends(get_usuario_actual)) -> models.Usuario:
-    if usuario.rol not in (Rol.admin, Rol.auditor):
-        raise HTTPException(status_code=403, detail="Requiere rol de administrador o auditor")
+    """Admin y auditor por diseño original; 'consulta' se sumó después a
+    pedido explícito -- alguien que toma decisiones también quiere supervisar
+    quién cambió qué, no solo ver indicadores agregados. Mismo endpoint
+    también protege /admin/dependencias/duplicados (detector de posibles
+    duplicados): es la misma clase de herramienta de supervisión."""
+    if usuario.rol not in (Rol.admin, Rol.auditor, Rol.consulta):
+        raise HTTPException(status_code=403, detail="Requiere rol de administrador, auditor o consulta")
     return usuario
 
 
 def requiere_lectura_reportes(usuario: models.Usuario = Depends(get_usuario_actual)) -> models.Usuario:
-    """Igual que requiere_lectura_auditoria pero también admite el rol
-    'consulta' -- puede ver indicadores/reportes, pero no el detalle de quién
-    cambió qué (eso sigue siendo solo admin/auditor)."""
+    """Mismos roles que requiere_lectura_auditoria hoy -- se mantiene como
+    predicado aparte porque protege un endpoint distinto (el reporte en
+    Excel) y podría volver a divergir más adelante."""
     if usuario.rol not in (Rol.admin, Rol.auditor, Rol.consulta):
         raise HTTPException(status_code=403, detail="Requiere rol de administrador, auditor o consulta")
     return usuario

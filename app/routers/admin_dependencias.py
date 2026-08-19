@@ -71,10 +71,10 @@ def duplicados_del_catalogo(
     """Posibles duplicados: mismo nombre (normalizado) repetido dentro de la
     misma sede, sin importar el área -- justo el patrón que ya se documentó
     y corrigió a mano una vez en 'De dónde salen los datos reales' del
-    README. Es una herramienta de auditoría de calidad de datos, no de
-    gestión del catálogo: mismo alcance que /admin/auditoria (admin/auditor),
-    no el de gestor/validador -- el objetivo es ver duplicados ENTRE áreas,
-    algo que la vista por área nunca mostraría."""
+    README. Es una herramienta de auditoría/supervisión de calidad de datos,
+    no de gestión del catálogo: mismo alcance que /admin/auditoria
+    (admin/auditor/consulta), no el de gestor/validador -- el objetivo es ver
+    duplicados ENTRE áreas, algo que la vista por área nunca mostraría."""
     return detectar_duplicados(db)
 
 

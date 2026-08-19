@@ -95,7 +95,9 @@ def test_gestor_no_puede_ver_duplicados(gestor_usuario):
     assert r.status_code == 403
 
 
-def test_consulta_no_puede_ver_duplicados(consulta_usuario):
+def test_consulta_puede_ver_duplicados(consulta_usuario):
+    """A pedido explícito: es una herramienta de supervisión de calidad de
+    datos, mismo alcance que /admin/auditoria (ver security.py)."""
     token = _login("10000004", "clave123")
     r = client.get("/api/v1/admin/dependencias/duplicados", headers=_auth(token))
-    assert r.status_code == 403
+    assert r.status_code == 200

@@ -129,7 +129,9 @@ async function descargarArchivo(path, nombreSugerido, mensajeError) {
 }
 
 function esAdmin() { return USUARIO && USUARIO.rol === "admin"; }
-function puedeLeerAuditoria() { return USUARIO && (USUARIO.rol === "admin" || USUARIO.rol === "auditor"); }
+function puedeLeerAuditoria() {
+  return USUARIO && (USUARIO.rol === "admin" || USUARIO.rol === "auditor" || USUARIO.rol === "consulta");
+}
 function puedeVerReportes() {
   return USUARIO && (USUARIO.rol === "admin" || USUARIO.rol === "auditor" || USUARIO.rol === "consulta");
 }
@@ -155,25 +157,32 @@ function mostrarApp() {
   // obligatorio, pero visibles) las pestañas de gestión que su rol nunca
   // debería mostrar -- por ejemplo, "consulta" alcanzaba a ver "Dependencias"
   // y "+ Nueva dependencia" un instante antes de elegir su contraseña.
+  //
+  // "consulta" no gestiona el catálogo (nunca ve "Dependencias"), pero sí
+  // supervisa: lee auditoría y el detector de duplicados en solo lectura,
+  // mismo alcance que auditor para esa única pestaña.
+  document.querySelector('[data-tab="tab-dependencias"]').style.display = esSoloConsulta() ? "none" : "";
   document.querySelector('[data-tab="tab-sedes"]').style.display = esAdmin() ? "" : "none";
   document.querySelector('[data-tab="tab-usuarios"]').style.display = esAdmin() ? "" : "none";
   document.querySelector('[data-tab="tab-auditoria"]').style.display = puedeLeerAuditoria() ? "" : "none";
   document.getElementById("fila-reporte").style.display = puedeVerReportes() ? "" : "none";
 
-  // Siempre arrancar en "Dependencias": evita que quede activa una pestaña
-  // que la sesión anterior dejó abierta y que este rol ya no puede ver.
   document.querySelectorAll(".tab-btn").forEach((b) => b.setAttribute("aria-pressed", "false"));
   document.querySelectorAll(".tab-panel").forEach((p) => (p.style.display = "none"));
-  document.querySelector('[data-tab="tab-dependencias"]').setAttribute("aria-pressed", "true");
 
-  // El rol "consulta" no gestiona el catálogo -- solo ve los indicadores de
-  // arriba y descarga el reporte. Mostrarle las pestañas de edición (aunque
-  // los botones fallaran con 403 al usarlos) sería confuso, no útil.
-  document.getElementById("nav-tabs").style.display = esSoloConsulta() ? "none" : "";
-  document.getElementById("panel-solo-consulta").style.display = esSoloConsulta() ? "block" : "none";
-  if (!esSoloConsulta()) {
-    document.getElementById("tab-dependencias").style.display = "block";
+  // Arranca en "Dependencias" para quien gestiona catálogo, o en "Auditoría"
+  // para "consulta" (su única pestaña) -- nunca deja activa una pestaña que
+  // la sesión anterior dejó abierta y que este rol ya no puede ver.
+  const tabInicial = esSoloConsulta() ? "tab-auditoria" : "tab-dependencias";
+  const btnInicial = document.querySelector(`[data-tab="${tabInicial}"]`);
+  if (btnInicial.style.display !== "none") {
+    btnInicial.setAttribute("aria-pressed", "true");
+    document.getElementById(tabInicial).style.display = "block";
   }
+
+  document.getElementById("panel-solo-consulta").style.display = esSoloConsulta() ? "block" : "none";
+  const hayPestañaVisible = [...document.querySelectorAll(".tab-btn")].some((b) => b.style.display !== "none");
+  document.getElementById("nav-tabs").style.display = hayPestañaVisible ? "" : "none";
 
   if (USUARIO.debe_cambiar_password) {
     // Nadie usa el resto del panel con una contraseña que eligió otra
@@ -415,40 +424,51 @@ async function cargarStats() {
     box.appendChild(d);
   }
 
+  // t.consulta es el texto que alguien escribió en el buscador PÚBLICO, sin
+  // ninguna cuenta ni restricción -- escaparHtml() es obligatorio acá, no
+  // opcional: sin esto, cualquier persona anónima podía teclear HTML/JS en
+  // el buscador y ejecutarlo en la sesión de quien viera este panel.
   const listaTop = document.getElementById("lista-top-consultas");
   listaTop.innerHTML = s.top_consultas.length
-    ? s.top_consultas.map((t) => `<li>${t.consulta} <span class="hint">(${t.veces})</span></li>`).join("")
+    ? s.top_consultas.map((t) => `<li>${escaparHtml(t.consulta)} <span class="hint">(${t.veces})</span></li>`).join("")
     : '<li class="hint" style="list-style:none;">Todavía no hay datos.</li>';
 
   const listaVacia = '<li class="hint" style="list-style:none;">Todavía no hay datos.</li>';
 
   const listaSede = document.getElementById("lista-consultas-sede");
   listaSede.innerHTML = s.consultas_por_sede.length
-    ? s.consultas_por_sede.map((c) => `<li>${c.sede} <span class="hint">(${c.veces})</span></li>`).join("")
+    ? s.consultas_por_sede.map((c) => `<li>${escaparHtml(c.sede)} <span class="hint">(${c.veces})</span></li>`).join("")
     : listaVacia;
 
   const listaArea = document.getElementById("lista-consultas-area");
   listaArea.innerHTML = s.consultas_por_area.length
-    ? s.consultas_por_area.map((c) => `<li>${c.area} <span class="hint">(${c.veces})</span></li>`).join("")
+    ? s.consultas_por_area.map((c) => `<li>${escaparHtml(c.area)} <span class="hint">(${c.veces})</span></li>`).join("")
     : listaVacia;
 
   const TIPO_LABEL = { jurisdiccional: "Jurisdiccional", administrativa: "Administrativa", servicio: "Servicio" };
   const listaTipo = document.getElementById("lista-consultas-tipo");
   listaTipo.innerHTML = s.consultas_por_tipo.length
-    ? s.consultas_por_tipo.map((c) => `<li>${TIPO_LABEL[c.tipo] || c.tipo} <span class="hint">(${c.veces})</span></li>`).join("")
+    ? s.consultas_por_tipo.map((c) => `<li>${escaparHtml(TIPO_LABEL[c.tipo] || c.tipo)} <span class="hint">(${c.veces})</span></li>`).join("")
     : listaVacia;
 
   const listaSinResultado = document.getElementById("lista-top-sin-resultado");
   listaSinResultado.innerHTML = s.top_consultas_sin_resultado.length
-    ? s.top_consultas_sin_resultado.map((t) => `<li>${t.consulta} <span class="hint">(${t.veces})</span></li>`).join("")
+    ? s.top_consultas_sin_resultado.map((t) => `<li>${escaparHtml(t.consulta)} <span class="hint">(${t.veces})</span></li>`).join("")
     : '<li class="hint" style="list-style:none;">Sin búsquedas sin resultado todavía -- buena señal.</li>';
 
   const listaPendientes = document.getElementById("lista-pendientes-area");
   listaPendientes.innerHTML = s.pendientes_por_area.length
     ? s.pendientes_por_area
-        .map((p) => `<li>${p.area} <span class="hint">(${p.cantidad}, ${p.antiguedad_promedio_dias} días en promedio)</span></li>`)
+        .map((p) => `<li>${escaparHtml(p.area)} <span class="hint">(${p.cantidad}, ${p.antiguedad_promedio_dias} días en promedio)</span></li>`)
         .join("")
     : '<li class="hint" style="list-style:none;">No hay nada pendiente de aprobar en este momento.</li>';
+
+  const listaCompletitud = document.getElementById("lista-completitud-area");
+  listaCompletitud.innerHTML = s.completitud_por_area.length
+    ? s.completitud_por_area
+        .map((c) => `<li>${escaparHtml(c.area)} <span class="hint">(${c.activas} activas, ${c.porcentaje_completo}% completo)</span></li>`)
+        .join("")
+    : '<li class="hint" style="list-style:none;">Todavía no hay dependencias publicadas.</li>';
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1027,12 +1047,14 @@ async function cargarDuplicados() {
 }
 
 async function cargarTodo() {
-  // El rol "consulta" no ve ninguna de las pestañas de gestión del catálogo
-  // (ver mostrarApp) y el backend ahora rechaza /admin/dependencias para ese
-  // rol -- pedir estos datos igual sería un viaje de red desperdiciado, y en
-  // el caso de dependencias, un error 403 innecesario en la consola.
+  // El rol "consulta" no ve las pestañas de gestión del catálogo (ver
+  // mostrarApp) y el backend rechaza /admin/dependencias, /admin/sedes de
+  // escritura y /admin/usuarios para ese rol -- pedir esos datos igual sería
+  // un viaje de red desperdiciado, y en el caso de dependencias, un error
+  // 403 innecesario en la consola. Sí puede leer auditoría y duplicados
+  // (cargarAuditoria ya hace ambos), por eso se pide aparte.
   if (esSoloConsulta()) {
-    await cargarStats();
+    await Promise.all([cargarStats(), cargarAuditoria()]);
     return;
   }
   await cargarSedes();

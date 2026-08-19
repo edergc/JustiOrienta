@@ -115,7 +115,7 @@ Cinco roles. Cada uno mapea directamente a la gobernanza descrita en la ficha de
 | **gestor** | Crear/editar dependencias y servicios **solo de su propia área**. Nunca publica directamente: todo lo que guarda queda (o vuelve a) en estado `revision`. |
 | **validador** | Lo mismo que gestor, más la capacidad de **aprobar** (`revision` → `activo`) o **devolver a revisión** contenido de su propia área. |
 | **auditor** | Solo lectura de `/admin/auditoria` (el detalle de quién cambió qué) y de los indicadores. No puede crear ni editar nada. |
-| **consulta** | Pensado para quien toma decisiones a partir de las estadísticas, no del día a día operativo: al entrar ve directo el panel de indicadores y el botón para descargar el reporte en Excel -- sin las pestañas de gestión del catálogo, y sin acceso al detalle de auditoría (eso sigue siendo solo admin/auditor). |
+| **consulta** | Pensado para quien toma decisiones y supervisa, no para el día a día operativo: al entrar ve directo el panel de indicadores, el botón para descargar el reporte en Excel, y la pestaña "Auditoría" (quién cambió qué, y el detector de posibles duplicados) en solo lectura -- sin las pestañas de gestión del catálogo (crear/editar dependencias, sedes, usuarios), eso sigue siendo de cada área desde su propio rol. |
 
 Ningún rol distinto de admin puede publicarse a sí mismo con solo guardar el formulario: aunque el
 payload incluya `estado: "activo"`, el servidor lo regresa a `revision` si quien edita no tiene permiso
@@ -281,10 +281,13 @@ incompatible, puede convivir `/api/v2` sin romper lo existente).
   el catálogo -- la señal más directa de qué falta cargar, pensada para quien decide qué priorizar.
 - **Pendientes de aprobar, por área**: cuántas dependencias siguen en "revisión" y cuántos días de
   antigüedad promedio llevan sin que nadie las apruebe, agrupado por área -- ayuda a ver qué área no
-  está validando a tiempo. Solo agrega cantidades y promedios; nunca nombra la dependencia puntual (el
-  rol "consulta" ve este resumen y no debe terminar viendo contenido todavía no publicado). Gestor/validador
-  además ven de inmediato, resaltado en rojo si hay algo, cuántos pendientes tiene **su propia área** --
-  sin tener que leer la lista agregada de las demás.
+  está validando a tiempo. Solo agrega cantidades y promedios; nunca nombra la dependencia puntual. Gestor/
+  validador además ven de inmediato, resaltado en rojo si hay algo, cuántos pendientes tiene **su propia
+  área** -- sin tener que leer la lista agregada de las demás.
+- **Completitud de datos, por área**: de lo YA publicado (no de lo pendiente), qué porcentaje tiene
+  horario, teléfono y algún dato de accesibilidad confirmado -- ayuda a distinguir "publicado" de
+  "publicado y realmente útil para quien busca". Tampoco nombra la dependencia puntual, mismo criterio
+  que "Pendientes por área".
 - **Reporte descargable en Excel** (`GET /api/v1/admin/metricas/reporte.xlsx`, botón "Descargar reporte"
   visible para admin/auditor/consulta): la misma foto de indicadores del panel, en un `.xlsx` con una
   hoja de resumen y una hoja por cada desglose -- para llevar a una reunión sin depender de que quien lo
@@ -295,7 +298,7 @@ incompatible, puede convivir `/api/v2` sin romper lo existente).
   catálogo, y en las mismas 19 primeras columnas y orden que espera `python -m app.import_excel`, así que
   el archivo exportado se puede corregir y volver a importar tal cual.
 - **Detector de posibles duplicados** (`GET /api/v1/admin/dependencias/duplicados`, pestaña Auditoría,
-  solo admin/auditor): agrupa dependencias con el mismo nombre repetido dentro de la misma sede, sin
+  admin/auditor/consulta): agrupa dependencias con el mismo nombre repetido dentro de la misma sede, sin
   importar el área -- exactamente el patrón ya documentado más abajo ("Mesa de Partes" para oficinas
   distintas). Exige nombre normalizado *idéntico*, nunca "parecido": los juzgados de este catálogo se
   distinguen justo por un número ("10.º Juzgado Civil" vs "11.º Juzgado Civil"), así que tolerar errores
