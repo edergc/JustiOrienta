@@ -143,30 +143,36 @@ Sedes y edificios ya no son texto libre repetido en cada fila: son entidades pro
 tener uno o más **servicios** estructurados (requisitos, canal, horario propios) además de su resumen
 general.
 
-### Producción vs. desarrollo
+### Base de datos: PostgreSQL
 
-Por defecto la app usa SQLite (`justicia_orienta.db`, cero instalación). Para producción, instala
-`psycopg2-binary` (la única línea que queda comentada en `requirements.txt`) y define la variable de
-entorno `DATABASE_URL` apuntando a PostgreSQL y corre las migraciones — no hay que tocar código:
+Este proyecto corre sobre **PostgreSQL** — no SQLite. La app soporta ambos motores sin tocar código (vía
+`DATABASE_URL`), pero el entorno real de este repositorio ya está configurado y probado sobre Postgres, con
+el esquema completo, el directorio oficial real cargado (25 sedes, 539 dependencias vía
+`python -m app.cargar_directorio_pj`) y el flujo completo (crear → revisar → aprobar → aparece en el sitio
+público, el PDF, el Excel exportado y la auditoría) verificado contra esa base:
 
 ```
 DATABASE_URL=postgresql+psycopg2://usuario:clave@host:5432/justicia_orienta
 ```
 
 ```bash
-pip install psycopg2-binary
+pip install -r requirements.txt   # incluye psycopg2-binary
 python -m alembic upgrade head
+python -m app.seed                # crea el usuario administrador inicial
 ```
 
-Migración a PostgreSQL 16 verificada de punta a punta: esquema completo, el directorio oficial real (25
-sedes, 539 dependencias) cargado con `python -m app.cargar_directorio_pj`, y el flujo completo (crear →
-revisar → aprobar → aparece en el sitio público, el PDF, el Excel exportado y la auditoría) probado contra
-esa base. Dos ajustes que hicieron falta y ya están aplicados: dos migraciones tenían `printf()` (función
-de SQLite, no existe en Postgres) y dos columnas (`telefono`, `categoria`) eran más angostas de lo que
-permite el dato real -- SQLite nunca hizo cumplir ese límite, Postgres sí.
-
 Copia `.env.example` a `.env` y ajusta los valores (incluida `JUSTICIA_ORIENTA_SECRET`, que firma las
-sesiones — cámbiala antes de cualquier uso real).
+sesiones — cámbiala antes de cualquier uso real). Ese `.env` nunca se sube al repositorio (está en
+`.gitignore`) — cada máquina que corra el proyecto necesita el suyo con sus propias credenciales.
+
+Dos ajustes de compatibilidad que hicieron falta al migrar y ya están aplicados: dos migraciones tenían
+`printf()` (función de SQLite, no existe en Postgres) y dos columnas (`telefono`, `categoria`) eran más
+angostas de lo que permite el dato real -- SQLite nunca hizo cumplir ese límite, Postgres sí.
+
+`app/config.py` conserva SQLite (`justicia_orienta.db`) como valor por defecto en el código *solo* como
+resguardo de cero-instalación para quien clone el repo sin Postgres a mano (por ejemplo, para evaluarlo
+rápido) -- nunca se usa mientras exista un `.env` con `DATABASE_URL` apuntando a Postgres, que es el caso de
+este entorno.
 
 Si cambias los modelos en `app/models/`, genera la migración correspondiente:
 
