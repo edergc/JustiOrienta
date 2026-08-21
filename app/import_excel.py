@@ -25,10 +25,10 @@ COLUMNAS = [
     "servicios", "requisitos", "telefono", "correo",
     "rampa", "ascensor", "banio_accesible", "ruta_accesible",
     "estado", "responsable_validar",
-    # Agregada al final (no en medio) para no correr la posición de las
+    # Agregadas al final (no en medio) para no correr la posición de las
     # columnas ya existentes en plantillas Excel que el personal ya tenga
     # descargadas y a medio llenar.
-    "titular",
+    "titular", "instrucciones_internas",
 ]
 
 SI_NO = {"sí": True, "si": True, "no": False, "no aplica": False, "": False}
@@ -122,6 +122,7 @@ def importar(ruta_excel: str) -> None:
                 "area": _texto(valores.get("categoria")) or _texto(valores.get("tipo")),
                 "responsable_validar": _texto(valores.get("responsable_validar")) or None,
                 "titular": _texto(valores.get("titular")) or None,
+                "instrucciones_internas": _texto(valores.get("instrucciones_internas")) or None,
             }
             alias_csv = _texto(valores.get("alias"))
 

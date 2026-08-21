@@ -12,3 +12,9 @@ services:
         value: produccion
       - key: JUSTICIA_ORIENTA_SECRET
         generateValue: true
+      # Cadena de conexión a Postgres (Neon.tech u otro) -- deliberadamente
+      # sin valor aquí: se pega a mano en el dashboard de Render para que la
+      # contraseña de la base nunca quede en el repositorio. Formato:
+      # postgresql+psycopg2://usuario:clave@host/basededatos?sslmode=require
+      - key: DATABASE_URL
+        sync: false
