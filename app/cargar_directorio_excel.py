@@ -20,6 +20,7 @@ from pathlib import Path
 
 from openpyxl import load_workbook
 
+from app import crud
 from app.cargar_directorio_pj import YA_DESAMBIGUADAS, cargar, formatear_nombre_sede, limpiar
 from app.database import SessionLocal
 
@@ -96,5 +97,11 @@ if __name__ == "__main__":
     try:
         creadas = cargar(db, sedes, filas)
         print(f"Dependencias nuevas creadas: {creadas}")
+        crud.auditoria.registrar(
+            db, "sistema", "dependencia", None, "IMPORTAR_DIRECTORIO",
+            f"Carga masiva desde {ruta.name}: {creadas} dependencias nuevas "
+            f"(de {len(filas)} filas leídas en {len(sedes)} sedes). Solo se crea lo que no existía; "
+            f"nada se sobrescribió.",
+        )
     finally:
         db.close()

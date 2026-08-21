@@ -169,8 +169,9 @@ async def importar_titulares(
     resumen = aplicar_titulares(db, organos, sede or None)
     crud.auditoria.registrar(
         db, usuario.dni, "dependencia", None, "IMPORTAR_TITULARES",
-        f"Actualizadas: {resumen['actualizadas']}, ya tenían: {resumen['ya_tenian']}, "
-        f"sin emparejar: {len(resumen['sin_emparejar'])}" + (f" (sede: {sede})" if sede else " (todas las sedes)"),
+        f"Subió {archivo.filename} desde el panel: {resumen['actualizadas']} actualizadas, "
+        f"{resumen['ya_tenian']} ya tenían titular, {len(resumen['sin_emparejar'])} sin emparejar"
+        + (f" (sede: {sede})" if sede else " (todas las sedes)") + ".",
     )
     return resumen
 

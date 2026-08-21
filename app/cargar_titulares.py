@@ -34,7 +34,7 @@ from pathlib import Path
 from openpyxl import load_workbook
 from sqlalchemy.orm import Session
 
-from app import models
+from app import crud, models
 from app.cargar_directorio_pj import formatear_nombre_sede, limpiar
 from app.database import SessionLocal
 from app.models import normalizar
@@ -222,6 +222,12 @@ if __name__ == "__main__":
     db = SessionLocal()
     try:
         resumen = aplicar(db, organos, args.sede)
+        crud.auditoria.registrar(
+            db, "sistema", "dependencia", None, "IMPORTAR_TITULARES",
+            f"Carga masiva desde {ruta.name} (vía terminal): {resumen['actualizadas']} actualizadas, "
+            f"{resumen['ya_tenian']} ya tenían titular, {len(resumen['sin_emparejar'])} sin emparejar"
+            + (f" (sede: {args.sede})" if args.sede else " (todas las sedes)") + ".",
+        )
     finally:
         db.close()
 
