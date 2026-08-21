@@ -46,11 +46,16 @@ function leerTexto(texto) {
 }
 
 function leerEnVozAlta(dep) {
+  const enOtraSede = sedeContextoId && dep.sede && dep.sede.id !== sedeContextoId;
   const partes = [
     `${dep.nombre}.`,
+    dep.titular ? `A cargo de ${dep.titular}.` : "",
     dep.sede ? `Se encuentra en ${dep.sede.nombre}` : "",
     dep.piso ? `, piso ${dep.piso}` : "",
     dep.oficina && dep.oficina !== "—" ? `, oficina ${dep.oficina}.` : ".",
+    dep.telefono ? `Teléfono o anexo: ${dep.telefono}.` : "",
+    enOtraSede ? `Ojo: esto está en otra sede distinta a donde te encuentras ahora.` : "",
+    enOtraSede && dep.sede.direccion ? `Dirección: ${dep.sede.direccion}.` : "",
     dep.horario ? `Horario: ${dep.horario}.` : "",
     dep.ruta_accesible ? "Cuenta con ruta accesible." : "",
     dep.instrucciones_internas ? `Cómo llegar dentro del edificio: ${dep.instrucciones_internas}` : "",
@@ -64,6 +69,7 @@ function tarjeta(dep) {
   const nombreSede = dep.sede ? dep.sede.nombre : null;
   const direccion = (dep.sede && dep.sede.direccion) || [nombreSede, "Cercado de Lima"].filter(Boolean).join(", ");
   const osmQuery = encodeURIComponent(direccion || nombreSede || dep.nombre);
+  const enOtraSede = Boolean(sedeContextoId && dep.sede && dep.sede.id !== sedeContextoId);
 
   const servicios = (dep.servicios_detalle || [])
     .map((s) => `<li><strong>${s.nombre}</strong>${s.requisitos ? " — " + s.requisitos : ""}</li>`)
@@ -75,6 +81,13 @@ function tarjeta(dep) {
       <span class="badge ${dep.tipo}">${badgeLabel(dep.tipo)}</span>
     </div>
     <p class="meta"><strong>${nombreSede || "Sede no registrada"}</strong>${dep.piso ? " — Piso " + dep.piso : ""}${dep.oficina ? ", oficina " + dep.oficina : ""}</p>
+    ${dep.titular ? `<p class="meta"><strong>A cargo:</strong> ${dep.titular}</p>` : ""}
+    ${dep.telefono ? `<p class="meta"><strong>Teléfono / anexo:</strong> ${dep.telefono}</p>` : ""}
+    ${enOtraSede ? `
+      <div class="otra-sede">
+        Esto está en otra sede, no en la que estás ahora.
+        <span>${nombreSede}${direccion ? " — " + direccion : ""}</span>
+      </div>` : ""}
     ${dep.horario ? `<p class="meta">Horario: ${dep.horario}</p>` : ""}
     ${dep.servicios ? `<p class="meta">${dep.servicios}</p>` : ""}
     ${servicios ? `<ul class="meta" style="padding-left:1.1rem; margin-top:0.4rem;">${servicios}</ul>` : ""}
@@ -86,7 +99,7 @@ function tarjeta(dep) {
     </div>
     <div class="card-actions">
       <button class="primary" type="button" data-leer>🔊 Escuchar</button>
-      <a href="https://www.openstreetmap.org/search?query=${osmQuery}" target="_blank" rel="noopener">Cómo llegar (OpenStreetMap)</a>
+      <a href="https://www.openstreetmap.org/search?query=${osmQuery}" target="_blank" rel="noopener">${enOtraSede ? "Cómo llegar hasta esa sede" : "Cómo llegar"} (OpenStreetMap)</a>
     </div>
   `;
   el.querySelector("[data-leer]").addEventListener("click", () => leerEnVozAlta(dep));

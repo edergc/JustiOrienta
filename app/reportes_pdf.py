@@ -114,10 +114,12 @@ def generar_directorio_pdf(dependencias: list[models.Dependencia], sede_nombre: 
 
         pdf.set_font("helvetica", "", 9)
         pdf.set_text_color(70, 70, 70)
+        if dep.titular:
+            pdf.multi_cell(_ANCHO_UTIL, 5, f"A cargo: {_texto_seguro(dep.titular)}")
         if dep.horario:
             pdf.multi_cell(_ANCHO_UTIL, 5, f"Horario: {_texto_seguro(dep.horario)}")
         if dep.telefono:
-            pdf.multi_cell(_ANCHO_UTIL, 5, f"Teléfono: {_texto_seguro(dep.telefono)}")
+            pdf.multi_cell(_ANCHO_UTIL, 5, f"Teléfono / anexo: {_texto_seguro(dep.telefono)}")
         pdf.multi_cell(_ANCHO_UTIL, 5, f"Accesibilidad: {_accesibilidad_texto(dep)}")
         pdf.ln(2)
 

@@ -841,6 +841,7 @@ async function cargarEnFormulario(id) {
   document.getElementById("f-requisitos").value = d.requisitos || "";
   document.getElementById("f-telefono").value = d.telefono || "";
   document.getElementById("f-correo").value = d.correo || "";
+  document.getElementById("f-titular").value = d.titular || "";
   document.getElementById("f-rampa").checked = !!d.rampa;
   document.getElementById("f-ascensor").checked = !!d.ascensor;
   document.getElementById("f-banio").checked = !!d.banio_accesible;
@@ -916,6 +917,7 @@ document.getElementById("form-dep").addEventListener("submit", async (e) => {
     requisitos: document.getElementById("f-requisitos").value || null,
     telefono: document.getElementById("f-telefono").value || null,
     correo: document.getElementById("f-correo").value || null,
+    titular: document.getElementById("f-titular").value || null,
     rampa: document.getElementById("f-rampa").checked,
     ascensor: document.getElementById("f-ascensor").checked,
     banio_accesible: document.getElementById("f-banio").checked,

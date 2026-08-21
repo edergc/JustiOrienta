@@ -39,6 +39,13 @@ class Dependencia(Base, TimestampMixin):
     area = Column(String(150), index=True)  # límite de permisos para gestor/validador
     responsable_validar = Column(String(200))
 
+    # Persona a cargo hoy (juez/a, vocal, jefe/a, coordinador/a) -- no viene en
+    # el directorio oficial en PDF (ver cargar_directorio_pj.py), así que
+    # queda vacía tras la carga automática y cada área la completa a mano
+    # desde el panel o la plantilla Excel. Texto libre porque el cargo varía
+    # según el tipo de dependencia (jueza/vocal/jefe/coordinador).
+    titular = Column(String(200))
+
     sede = relationship("Sede", back_populates="dependencias")
     edificio = relationship("Edificio", back_populates="dependencias")
     alias = relationship("Alias", back_populates="dependencia", cascade="all, delete-orphan")

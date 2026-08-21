@@ -83,7 +83,8 @@ _ENCABEZADOS_EXPORTACION = [
     "Sede", "Edificio", "Piso", "Oficina", "Horario",
     "Servicios", "Requisitos", "Teléfono", "Correo",
     "Rampa", "Ascensor", "Baño accesible", "Ruta accesible",
-    "Estado", "Responsable de validar", "Área", "Instrucciones internas",
+    "Estado", "Responsable de validar", "Titular / responsable a cargo",
+    "Área", "Instrucciones internas",
 ]
 
 
@@ -106,7 +107,7 @@ def exportar_catalogo(
 ):
     """Todo lo cargado (no solo lo publicado), para respaldo, edición offline,
     o portarlo a otra instalación -- el complemento natural de
-    `python -m app.import_excel`, que ya sabe leer estas mismas 19 primeras
+    `python -m app.import_excel`, que ya sabe leer estas mismas 20 primeras
     columnas en este mismo orden posicional (las columnas de más, como "Área"
     e "Instrucciones internas", las ignora sin problema al reimportar).
     Mismo alcance por área que la gestión del catálogo: nadie exporta
@@ -129,7 +130,8 @@ def exportar_catalogo(
             dep.piso or "", dep.oficina or "", dep.horario or "",
             dep.servicios or "", dep.requisitos or "", dep.telefono or "", dep.correo or "",
             _si_no(dep.rampa), _si_no(dep.ascensor), _si_no(dep.banio_accesible), _si_no(dep.ruta_accesible),
-            dep.estado, dep.responsable_validar or "", dep.area or "", dep.instrucciones_internas or "",
+            dep.estado, dep.responsable_validar or "", dep.titular or "",
+            dep.area or "", dep.instrucciones_internas or "",
         ])
     autoajustar_columnas(ws)
 

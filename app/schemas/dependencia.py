@@ -29,6 +29,7 @@ class DependenciaBase(BaseModel):
     estado: Literal["revision", "activo", "inactivo"] = "revision"
     area: Optional[str] = None
     responsable_validar: Optional[str] = None
+    titular: Optional[str] = None
 
 
 class DependenciaCreate(DependenciaBase):

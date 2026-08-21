@@ -139,6 +139,11 @@ main.wide { max-width: 68rem; }
   font-size: 0.74rem; background: var(--accent2-tint); color: var(--accent2-strong);
   padding: 0.18rem 0.5rem; border-radius: 6px;
 }
+.otra-sede {
+  background: var(--accent-tint); color: var(--accent-strong); font-weight: 600;
+  border-radius: 8px; padding: 0.55rem 0.75rem; margin-top: 0.6rem; font-size: 0.88rem;
+}
+.otra-sede span { display: block; font-weight: 400; margin-top: 0.15rem; color: var(--ink-soft); }
 .card-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.85rem; }
 .card-actions button, .card-actions a {
   font: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer;
