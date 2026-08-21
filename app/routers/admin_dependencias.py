@@ -3,13 +3,15 @@ servicios anidados. Mount point: /api/v1/admin (ver app/main.py)."""
 import io
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
 from openpyxl import Workbook
 from openpyxl.styles import Font
 from sqlalchemy.orm import Session
 
 from app import crud, schemas, security
+from app.cargar_titulares import aplicar as aplicar_titulares
+from app.cargar_titulares import extraer_organos
 from app.database import get_db
 from app.deteccion_duplicados import detectar_duplicados
 from app.excel_utils import autoajustar_columnas
@@ -144,6 +146,33 @@ def exportar_catalogo(
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={"Content-Disposition": f'attachment; filename="{nombre_archivo}"'},
     )
+
+
+@router.post("/dependencias/importar-titulares")
+async def importar_titulares(
+    archivo: UploadFile = File(...),
+    sede: Optional[str] = Form(None),
+    db: Session = Depends(get_db),
+    usuario=Depends(security.requiere_admin),
+):
+    """Sube el reporte oficial de "Conformación" (jueces/vocales/jefaturas
+    reales -- ver app/cargar_titulares.py) y llena Dependencia.titular para
+    lo que ya existe en el catálogo. Nunca crea dependencias nuevas ni
+    sobrescribe un titular ya cargado -- solo admin, porque toca registros
+    de cualquier área, no solo la propia."""
+    contenido = await archivo.read()
+    try:
+        organos = extraer_organos(io.BytesIO(contenido))
+    except Exception:
+        raise HTTPException(400, "No se pudo leer el archivo. ¿Es un Excel válido con el formato de Conformación?")
+
+    resumen = aplicar_titulares(db, organos, sede or None)
+    crud.auditoria.registrar(
+        db, usuario.dni, "dependencia", None, "IMPORTAR_TITULARES",
+        f"Actualizadas: {resumen['actualizadas']}, ya tenían: {resumen['ya_tenian']}, "
+        f"sin emparejar: {len(resumen['sin_emparejar'])}" + (f" (sede: {sede})" if sede else " (todas las sedes)"),
+    )
+    return resumen
 
 
 @router.post("/dependencias", response_model=schemas.DependenciaOut)

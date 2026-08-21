@@ -176,6 +176,31 @@
         <div id="paginacion-dep" class="paginacion"></div>
       </div>
 
+      <div class="panel" id="panel-titulares" style="display:none; margin-top:1rem;">
+        <div class="panel-cabecera">
+          <h3>Actualizar titulares desde Conformación</h3>
+        </div>
+        <p class="hint" style="margin:0 0 0.8rem;">
+          Sube el reporte oficial de "Conformación" (Excel con hojas SALAS, JUZGADOS, PAZ LETRADO, TRANSITORIOS,
+          ODECMA) para llenar el titular de las dependencias que ya existen en el catálogo. Nunca crea dependencias
+          nuevas ni sobrescribe un titular ya cargado a mano.
+        </p>
+        <form id="form-titulares" style="display:flex; gap:0.8rem; flex-wrap:wrap; align-items:flex-end;">
+          <div class="field" style="min-width:14rem;">
+            <label for="t-sede">Sede a actualizar</label>
+            <select id="t-sede">
+              <option value="">Todas las sedes que traiga el archivo</option>
+            </select>
+          </div>
+          <div class="field" style="min-width:16rem;">
+            <label for="t-archivo">Archivo Excel de Conformación *</label>
+            <input id="t-archivo" type="file" accept=".xlsx" required />
+          </div>
+          <button class="btn" type="submit" id="btn-titulares-enviar">Actualizar titulares</button>
+        </form>
+        <div id="resultado-titulares" style="margin-top:0.9rem;"></div>
+      </div>
+
       <div id="modal-dependencia" class="modal-backdrop" style="display:none;">
         <div class="modal ancho" role="dialog" aria-modal="true" aria-labelledby="form-titulo">
           <h3 id="form-titulo">Nueva dependencia</h3>

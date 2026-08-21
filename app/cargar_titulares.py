@@ -124,8 +124,10 @@ def _extraer_bloque(ws, columna: int, fila_inicio: int = 3) -> list[dict]:
     return organos
 
 
-def extraer_organos(ruta_xlsx: str) -> list[dict]:
-    wb = load_workbook(ruta_xlsx, data_only=True)
+def extraer_organos(origen) -> list[dict]:
+    """origen: ruta (str/Path) o archivo en memoria (BytesIO) -- openpyxl
+    acepta ambos indistintamente."""
+    wb = load_workbook(origen, data_only=True)
     organos = []
     for nombre_hoja in wb.sheetnames:
         ws = wb[nombre_hoja]
@@ -148,7 +150,10 @@ def _formatear_titular(jueces: list[tuple[str, str]]) -> str:
     return "; ".join(partes)
 
 
-def aplicar(db: Session, organos: list[dict], sede_filtro: str | None) -> None:
+def aplicar(db: Session, organos: list[dict], sede_filtro: str | None) -> dict:
+    """Aplica los titulares detectados y devuelve un resumen -- lo usa tanto
+    el comando de línea (que lo imprime) como el endpoint del panel admin
+    (que lo devuelve como JSON)."""
     sedes_por_nombre = {normalizar(s.nombre): s for s in db.query(models.Sede).all()}
     sede_norm_filtro = normalizar(sede_filtro) if sede_filtro else None
 
@@ -193,11 +198,7 @@ def aplicar(db: Session, organos: list[dict], sede_filtro: str | None) -> None:
         actualizadas += 1
 
     db.commit()
-    print(f"Dependencias actualizadas con titular: {actualizadas}")
-    print(f"Ya tenían titular (no se tocaron): {ya_tenian}")
-    print(f"Sin emparejar en el catálogo ({len(sin_emparejar)}):")
-    for linea in sin_emparejar:
-        print(f"  - {linea}")
+    return {"actualizadas": actualizadas, "ya_tenian": ya_tenian, "sin_emparejar": sin_emparejar}
 
 
 def _xlsx_por_defecto() -> Path:
@@ -220,6 +221,12 @@ if __name__ == "__main__":
 
     db = SessionLocal()
     try:
-        aplicar(db, organos, args.sede)
+        resumen = aplicar(db, organos, args.sede)
     finally:
         db.close()
+
+    print(f"Dependencias actualizadas con titular: {resumen['actualizadas']}")
+    print(f"Ya tenían titular (no se tocaron): {resumen['ya_tenian']}")
+    print(f"Sin emparejar en el catálogo ({len(resumen['sin_emparejar'])}):")
+    for linea in resumen["sin_emparejar"]:
+        print(f"  - {linea}")

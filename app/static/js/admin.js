@@ -166,6 +166,7 @@ function mostrarApp() {
   document.querySelector('[data-tab="tab-usuarios"]').style.display = esAdmin() ? "" : "none";
   document.querySelector('[data-tab="tab-auditoria"]').style.display = puedeLeerAuditoria() ? "" : "none";
   document.getElementById("fila-reporte").style.display = puedeVerReportes() ? "" : "none";
+  document.getElementById("panel-titulares").style.display = esAdmin() ? "" : "none";
 
   document.querySelectorAll(".tab-btn").forEach((b) => b.setAttribute("aria-pressed", "false"));
   document.querySelectorAll(".tab-panel").forEach((p) => (p.style.display = "none"));
@@ -303,6 +304,51 @@ document.getElementById("btn-exportar-catalogo").addEventListener("click", () =>
     `catalogo_justicia_orienta_${fecha}.xlsx`,
     "No se pudo exportar el catálogo."
   );
+});
+
+// ── Actualizar titulares desde el reporte de Conformación ──
+document.getElementById("form-titulares").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const archivo = document.getElementById("t-archivo").files[0];
+  const sede = document.getElementById("t-sede").value;
+  const caja = document.getElementById("resultado-titulares");
+  if (!archivo) return;
+
+  const boton = document.getElementById("btn-titulares-enviar");
+  boton.disabled = true;
+  boton.textContent = "Procesando…";
+  caja.innerHTML = "";
+
+  const datos = new FormData();
+  datos.append("archivo", archivo);
+  if (sede) datos.append("sede", sede);
+
+  try {
+    const resumen = await api("/admin/dependencias/importar-titulares", {
+      method: "POST",
+      body: datos,
+      jsonBody: false,
+    });
+    const pendientes = resumen.sin_emparejar || [];
+    caja.innerHTML = `
+      <p><strong>${resumen.actualizadas}</strong> dependencias actualizadas con titular.
+      ${resumen.ya_tenian} ya tenían titular (no se tocaron).
+      ${pendientes.length} sin emparejar en el catálogo.</p>
+      ${pendientes.length ? `
+        <details>
+          <summary>Ver las ${pendientes.length} sin emparejar</summary>
+          <ul style="margin-top:0.5rem;">${pendientes.map((p) => `<li>${escaparHtml(p)}</li>`).join("")}</ul>
+        </details>` : ""}
+    `;
+    document.getElementById("form-titulares").reset();
+    document.getElementById("t-sede").value = sede;
+    mostrarToast("Titulares actualizados.");
+  } catch (err) {
+    caja.innerHTML = `<p class="error-msg">${escaparHtml(err.message)}</p>`;
+  } finally {
+    boton.disabled = false;
+    boton.textContent = "Actualizar titulares";
+  }
 });
 
 // ── Mi contraseña ──
@@ -498,6 +544,13 @@ async function cargarSedes() {
   const selSede = document.getElementById("f-sede");
   const actual = selSede.value;
   selSede.innerHTML = CACHE_SEDES.map((s) => `<option value="${s.id}">${s.nombre}</option>`).join("");
+
+  const selSedeTitulares = document.getElementById("t-sede");
+  const actualTitulares = selSedeTitulares.value;
+  selSedeTitulares.innerHTML =
+    '<option value="">Todas las sedes que traiga el archivo</option>' +
+    CACHE_SEDES.map((s) => `<option value="${escaparHtml(s.nombre)}">${escaparHtml(s.nombre)}</option>`).join("");
+  selSedeTitulares.value = actualTitulares;
   if (actual) selSede.value = actual;
 }
 
