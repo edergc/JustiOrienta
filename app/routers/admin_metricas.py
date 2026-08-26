@@ -145,6 +145,12 @@ def resumen_metricas(
         "consultas_resueltas": encontradas,
         "consultas_sin_resultado": sin_resultado,
         "porcentaje_resueltas": round((encontradas / total) * 100, 1) if total else None,
+        # % de ciudadanos que encontraron lo que buscaban en su primera consulta
+        # (sin necesitar reformular ni ser derivados). Misma fórmula que
+        # "porcentaje_resueltas" hoy -- se expone aparte porque es la métrica
+        # que el proyecto usa como meta institucional (ver Plan Maestro,
+        # sección "Métricas de Éxito": meta declarada >80%).
+        "primera_orientacion_correcta": round((encontradas / total) * 100, 1) if total else None,
         "respuestas_satisfaccion": con_respuesta,
         "porcentaje_satisfaccion": round((satisfechas / con_respuesta) * 100, 1) if con_respuesta else None,
         "top_consultas": [{"consulta": t, "veces": n} for t, n in top],
@@ -191,6 +197,7 @@ def descargar_reporte(
         ("Resueltas", datos["consultas_resueltas"]),
         ("Sin resultado", datos["consultas_sin_resultado"]),
         ("% de acierto", datos["porcentaje_resueltas"]),
+        ("% primera orientación correcta", datos["primera_orientacion_correcta"]),
         ("Respuestas de satisfacción", datos["respuestas_satisfaccion"]),
         ("% de satisfacción (de quienes respondieron)", datos["porcentaje_satisfaccion"]),
         ("% en modo accesible", datos["porcentaje_modo_accesible"]),

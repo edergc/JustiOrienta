@@ -21,7 +21,7 @@ EJEMPLOS.forEach((ej) => {
   chipsBox.appendChild(b);
 });
 
-document.querySelectorAll(".tile-btn").forEach((b) => {
+document.querySelectorAll(".tile-btn[data-ej]").forEach((b) => {
   b.addEventListener("click", () => {
     document.getElementById("buscar").value = b.dataset.ej;
     actualizarBotonLimpiar();
@@ -133,6 +133,135 @@ function tarjetaAccesibilidadSede(sede) {
   return el;
 }
 
+// Vuelve a la pantalla de opciones desde cualquier resultado (búsqueda,
+// tile, "Estoy aquí" o "Necesito ayuda") -- sin esto, la única forma de
+// volver era notar el botón "✕" junto al buscador, que ni siquiera aparece
+// cuando se llegó por "Estoy aquí" o "Necesito ayuda" (no tocan ese campo).
+function volverAlInicio() {
+  const campo = document.getElementById("buscar");
+  campo.value = "";
+  actualizarBotonLimpiar();
+  document.getElementById("panel-estoy-aqui").style.display = "none";
+  document.getElementById("resultados").innerHTML = "";
+  document.getElementById("feedback-caja").innerHTML = "";
+  document.getElementById("estado-vacio").style.display = "block";
+}
+
+function botonVolver() {
+  const p = document.createElement("p");
+  p.style.marginBottom = "0.8rem";
+  p.innerHTML = `<button type="button" class="btn secondary" id="btn-volver-opciones">← Volver a las opciones</button>`;
+  p.querySelector("button").addEventListener("click", volverAlInicio);
+  return p;
+}
+
+function tarjetaFichaSede(sede, total) {
+  const el = document.createElement("article");
+  el.className = "card";
+  el.innerHTML = `
+    <div class="card-top">
+      <h2>${sede.nombre}</h2>
+      <span class="badge servicio">Sede</span>
+    </div>
+    ${sede.direccion ? `<p class="meta"><strong>Dirección:</strong> ${sede.direccion}</p>` : ""}
+    ${sede.horario_atencion ? `<p class="meta"><strong>Horario:</strong> ${sede.horario_atencion}</p>` : ""}
+    ${sede.telefono ? `<p class="meta"><strong>Teléfono:</strong> ${sede.telefono}</p>` : ""}
+    <p class="meta">${total} dependencia${total === 1 ? "" : "s"} publicada${total === 1 ? "" : "s"} en esta sede.</p>
+  `;
+  return el;
+}
+
+// ── "Estoy aquí": el ciudadano elige su sede y ve todo lo publicado en ella,
+// sin tener que escribir ni hablar una búsqueda ──
+async function cargarSedesParaSelector() {
+  const sel = document.getElementById("select-sede");
+  if (!sel) return;
+  try {
+    const sedes = await (await fetch(`${API}/sedes`)).json();
+    sel.innerHTML = sedes.map((s) => `<option value="${s.id}">${s.nombre}</option>`).join("");
+    if (sedeContextoId) sel.value = String(sedeContextoId);
+  } catch {
+    sel.innerHTML = '<option value="">No se pudo cargar la lista de sedes</option>';
+  }
+}
+
+async function mostrarDependenciasDeSede(sedeId) {
+  const cont = document.getElementById("resultados");
+  const feedback = document.getElementById("feedback-caja");
+  document.getElementById("estado-vacio").style.display = "none";
+  feedback.innerHTML = "";
+  cont.innerHTML = "";
+  cont.appendChild(botonVolver());
+  const cargando = document.createElement("p");
+  cargando.className = "hint";
+  cargando.textContent = "Buscando…";
+  cont.appendChild(cargando);
+  try {
+    const [sedes, deps] = await Promise.all([
+      fetch(`${API}/sedes`).then((r) => r.json()),
+      fetch(`${API}/sedes/${sedeId}/dependencias`).then((r) => r.json()),
+    ]);
+    const sede = sedes.find((s) => String(s.id) === String(sedeId));
+    cargando.remove();
+    if (sede) cont.appendChild(tarjetaFichaSede(sede, deps.length));
+    if (!deps.length) {
+      const aviso = document.createElement("div");
+      aviso.className = "fallback";
+      aviso.setAttribute("role", "status");
+      aviso.textContent = "Todavía no hay dependencias publicadas para esta sede en el sistema. Prueba con el buscador de arriba o acércate al módulo de orientación.";
+      cont.appendChild(aviso);
+      return;
+    }
+    deps.forEach((dep) => cont.appendChild(tarjeta(dep)));
+  } catch {
+    cargando.remove();
+    const aviso = document.createElement("div");
+    aviso.className = "fallback";
+    aviso.innerHTML = "<strong>No pudimos conectar con el servidor.</strong> Intenta nuevamente en unos segundos.";
+    cont.appendChild(aviso);
+  }
+}
+
+document.getElementById("tile-estoy-aqui").addEventListener("click", () => {
+  const panel = document.getElementById("panel-estoy-aqui");
+  panel.style.display = panel.style.display === "none" ? "block" : "none";
+});
+document.getElementById("btn-ver-sede").addEventListener("click", () => {
+  const sel = document.getElementById("select-sede");
+  if (sel.value) mostrarDependenciasDeSede(sel.value);
+});
+
+// ── "Necesito ayuda": salida siempre disponible a orientación humana, sin
+// depender de que el catálogo tenga cargada y publicada la información del
+// MAU de cada sede todavía ──
+function mostrarNecesitoAyuda() {
+  const cont = document.getElementById("resultados");
+  const feedback = document.getElementById("feedback-caja");
+  document.getElementById("estado-vacio").style.display = "none";
+  document.getElementById("panel-estoy-aqui").style.display = "none";
+  feedback.innerHTML = "";
+  cont.innerHTML = "";
+  cont.appendChild(botonVolver());
+  cont.insertAdjacentHTML("beforeend", `
+    <article class="card">
+      <div class="card-top">
+        <h2>Necesito ayuda</h2>
+        <span class="badge servicio">Orientación humana</span>
+      </div>
+      <p class="meta">Si prefieres que una persona te oriente directamente:</p>
+      <ul class="meta" style="padding-left:1.1rem;">
+        <li>Acércate al <strong>Módulo de Atención al Usuario (MAU)</strong>, ubicado en el ingreso de tu sede.</li>
+        <li>O escribe al canal institucional de atención al ciudadano de la Corte.</li>
+        <li>También puedes usar el buscador de arriba, o el botón "Estoy aquí" si ya sabes en qué sede estás.</li>
+      </ul>
+      <div class="card-actions">
+        <a href="/api/v1/directorio.pdf" target="_blank" rel="noopener">Descargar directorio completo (PDF)</a>
+      </div>
+    </article>
+  `);
+}
+document.getElementById("tile-necesito-ayuda").addEventListener("click", mostrarNecesitoAyuda);
+
 // ── Retroalimentación ──
 function renderFeedback(consultaId) {
   const box = document.getElementById("feedback-caja");
@@ -212,16 +341,16 @@ async function buscarYRenderizar(q, opciones = {}) {
     const res = await fetch(`${API}/buscar?${params.toString()}`);
     const data = await res.json();
     cont.innerHTML = "";
+    cont.appendChild(botonVolver());
     if (data.sede_accesibilidad) {
       cont.appendChild(tarjetaAccesibilidadSede(data.sede_accesibilidad));
     }
     if (data.fallback || data.resultados.length === 0) {
       if (!data.sede_accesibilidad) {
-        cont.innerHTML = `
+        cont.insertAdjacentHTML("beforeend", `
           <div class="fallback" role="status">
-            <strong>No podemos identificar con seguridad lo que buscas.</strong>
-            ${data.mensaje || "Acércate al módulo de orientación en el ingreso o escribe al canal institucional de atención."}
-          </div>`;
+            <strong>${data.mensaje || "No podemos identificar con seguridad lo que buscas. Acércate al módulo de orientación en el ingreso o escribe al canal institucional de atención."}</strong>
+          </div>`);
       }
       renderFeedback(data.consulta_id);
       return;
@@ -229,7 +358,9 @@ async function buscarYRenderizar(q, opciones = {}) {
     data.resultados.forEach((dep) => cont.appendChild(tarjeta(dep)));
     renderFeedback(data.consulta_id);
   } catch (e) {
-    cont.innerHTML = `<div class="fallback"><strong>No pudimos conectar con el servidor.</strong> Intenta nuevamente en unos segundos.</div>`;
+    cont.innerHTML = "";
+    cont.appendChild(botonVolver());
+    cont.insertAdjacentHTML("beforeend", `<div class="fallback"><strong>No pudimos conectar con el servidor.</strong> Intenta nuevamente en unos segundos.</div>`);
   }
 }
 
@@ -395,3 +526,5 @@ document.getElementById("btn-tema").addEventListener("click", (e) => {
   localStorage.setItem("jo_tema", nuevo);
   e.target.setAttribute("aria-pressed", String(!oscuroAhora));
 });
+
+cargarSedesParaSelector();

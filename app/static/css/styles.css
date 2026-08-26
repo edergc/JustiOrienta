@@ -85,7 +85,7 @@ main.wide { max-width: 68rem; }
 .search-wrap { margin-bottom: 1.6rem; }
 .search-wrap label { display: block; font-weight: 700; margin-bottom: 0.5rem; font-size: 1.1rem; }
 .search-row { display: flex; gap: 0.6rem; }
-.search-row input {
+.search-row input, .search-row select {
   flex: 1; font: inherit; font-size: 1.05rem; padding: 0.75rem 1rem;
   border: 2px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink);
 }
@@ -131,6 +131,13 @@ main.wide { max-width: 68rem; }
 .badge.create, .badge.aprobar, .badge.reactivar { background: var(--accent2-tint); color: var(--accent2-strong); }
 .badge.update { background: var(--accent-tint); color: var(--accent-strong); }
 .badge.delete, .badge.rechazar { background: var(--danger-tint); color: var(--danger); }
+
+/* Semáforo de vigencia: verde ≤90 días, ámbar 91-180, rojo más de 180 --
+   mismos umbrales documentados en el Plan Maestro. */
+.semaforo { display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 50%; vertical-align: middle; }
+.semaforo.verde { background: var(--accent2); }
+.semaforo.ambar { background: var(--accent); }
+.semaforo.rojo { background: var(--danger); }
 
 .meta { font-size: 0.92rem; color: var(--ink-soft); margin: 0.5rem 0 0; }
 .meta strong { color: var(--ink); font-weight: 600; }

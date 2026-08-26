@@ -26,8 +26,15 @@ FRASES_IGNORADAS = [
 ]
 
 # ── Números en palabras -> dígitos (para "once civil" == "11 civil") ──
+# "un"/"una"/"uno" quedan fuera a propósito: en español son, casi siempre, el
+# artículo indefinido ("una demanda", "un escrito", "un expediente"), no un
+# número de juzgado -- convertirlos a "1" hacía que CUALQUIER consulta con
+# esas palabras (que es casi cualquier trámite en lenguaje natural) devolviera
+# como resultado los juzgados "1°" de cada especialidad, sin relación real con
+# lo preguntado. Quien de verdad busca el juzgado número uno ya lo encuentra
+# por el ordinal ("primero", ver ORDINALES) o escribiendo el dígito "1".
 CARDINALES = {
-    "cero": 0, "uno": 1, "una": 1, "un": 1, "dos": 2, "tres": 3, "cuatro": 4,
+    "cero": 0, "dos": 2, "tres": 3, "cuatro": 4,
     "cinco": 5, "seis": 6, "siete": 7, "ocho": 8, "nueve": 9, "diez": 10,
     "once": 11, "doce": 12, "trece": 13, "catorce": 14, "quince": 15,
     "dieciseis": 16, "diecisiete": 17, "dieciocho": 18, "diecinueve": 19,

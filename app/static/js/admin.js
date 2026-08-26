@@ -444,6 +444,7 @@ async function cargarStats() {
   box.innerHTML = "";
   const porcentaje = (v) => (v !== null && v !== undefined ? v + "%" : "—");
   const items = [
+    [porcentaje(s.primera_orientacion_correcta), "Primera orientación correcta (meta: >80%)"],
     [s.total_consultas, "Consultas totales"],
     [s.consultas_resueltas, "Resueltas"],
     [s.consultas_sin_resultado, "Sin resultado"],
@@ -755,6 +756,18 @@ function estadoBadge(estado) {
   return `<span class="badge ${estado}">${etiquetas[estado] || estado}</span>`;
 }
 
+// Semáforo de vigencia: verde ≤90 días desde la última actualización,
+// ámbar 91-180, rojo más de 180 -- mismos umbrales del Plan Maestro
+// (sección "Diseño Técnico: Semáforo de Vigencia"). No necesita ningún dato
+// nuevo: actualizado_en ya viene en cada dependencia desde el primer día.
+function semaforoVigencia(actualizadoEn) {
+  if (!actualizadoEn) return { clase: "rojo", texto: "Sin fecha registrada" };
+  const dias = Math.floor((Date.now() - new Date(actualizadoEn).getTime()) / 86400000);
+  if (dias <= 90) return { clase: "verde", texto: `Actualizado hace ${dias} día${dias === 1 ? "" : "s"}` };
+  if (dias <= 180) return { clase: "ambar", texto: `Sin revisar hace ${dias} días` };
+  return { clase: "rojo", texto: `Sin revisar hace ${dias} días` };
+}
+
 function poblarOpcionesEstado() {
   const sel = document.getElementById("f-estado");
   const opciones = [
@@ -788,15 +801,17 @@ async function cargarDependencias() {
   const tbody = document.querySelector("#tabla-dependencias tbody");
   tbody.innerHTML = CACHE_DEPS.length
     ? ""
-    : '<tr><td colspan="5" class="hint" style="padding:1rem;">Sin resultados.</td></tr>';
+    : '<tr><td colspan="6" class="hint" style="padding:1rem;">Sin resultados.</td></tr>';
   for (const d of CACHE_DEPS) {
     const tr = document.createElement("tr");
     const nombreSede = d.sede ? d.sede.nombre : "—";
+    const sem = semaforoVigencia(d.actualizado_en);
     tr.innerHTML = `
       <td>${d.nombre}</td>
       <td>${d.tipo}</td>
       <td>${nombreSede}${d.piso ? " · piso " + d.piso : ""}</td>
       <td>${estadoBadge(d.estado)}</td>
+      <td><span class="semaforo ${sem.clase}" title="${sem.texto}"></span> <span class="hint">${sem.texto}</span></td>
       <td class="actions">
         <button class="btn secondary" data-editar="${d.id}">Editar</button>
         <button class="btn secondary" data-qr="${d.id}">QR</button>

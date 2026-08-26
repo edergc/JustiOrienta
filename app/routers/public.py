@@ -98,6 +98,19 @@ def listar_sedes_publico(db: Session = Depends(get_db)):
     return crud.sedes.listar(db, incluir_inactivas=False)
 
 
+@router.get("/sedes/{sede_id}/dependencias", response_model=list[schemas.DependenciaOut])
+def dependencias_de_sede(sede_id: int, db: Session = Depends(get_db)):
+    """"Estoy aquí": todas las dependencias publicadas de una sede en una sola
+    vista, para quien ya sabe en qué sede está y solo quiere ver qué hay --
+    sin necesidad de escribir o hablar una búsqueda. Reutiliza exactamente el
+    mismo filtro (solo estado='activo') que ya usa el directorio en PDF."""
+    sede = crud.sedes.obtener(db, sede_id)
+    if not sede:
+        raise HTTPException(404, "La sede indicada no existe")
+    deps = crud.dependencias.listar_activas(db, sede_id=sede_id)
+    return [schemas.DependenciaOut.model_validate(d) for d in deps]
+
+
 @router.get("/directorio.pdf")
 def directorio_pdf(
     sede_id: Optional[int] = Query(None, description="Limita el directorio a una sola sede"),
