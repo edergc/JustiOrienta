@@ -1,5 +1,18 @@
 const API = "/api/v1";
 
+// Modo offline esencial: deja disponible la app y lo ultimo ya visto
+// (sedes, dependencias de una sede) sin conexion. No requiere backend
+// nuevo ni cambia el buscador en linea -- ver app/static/sw.js.
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch(() => {
+      // Sin service worker el sitio sigue funcionando igual con conexion,
+      // solo pierde el respaldo offline -- no es un error que deba
+      // interrumpir nada.
+    });
+  });
+}
+
 const EJEMPLOS = [
   "1 juzgado constitucional",
   "recursos humanos",
