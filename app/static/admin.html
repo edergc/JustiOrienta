@@ -145,6 +145,7 @@
       <button type="button" class="tab-btn" data-tab="tab-sedes" aria-pressed="false">Sedes</button>
       <button type="button" class="tab-btn" data-tab="tab-usuarios" aria-pressed="false">Usuarios</button>
       <button type="button" class="tab-btn" data-tab="tab-auditoria" aria-pressed="false">Auditoría</button>
+      <button type="button" class="tab-btn" data-tab="tab-mapa" aria-pressed="false">Mapa interno</button>
     </nav>
 
     <!-- ═══ DEPENDENCIAS ═══ -->
@@ -449,6 +450,80 @@
           encontrado con "Mesa de Partes" al cargar el directorio oficial (ver README).
         </p>
         <div id="lista-duplicados"></div>
+      </div>
+    </section>
+
+    <section id="tab-mapa" class="tab-panel" style="display:none;">
+      <div class="panel">
+        <div class="panel-cabecera">
+          <h3>Mapa interno (wayfinding)</h3>
+          <div class="panel-cabecera-acciones">
+            <button class="btn" id="btn-nuevo-nodo" type="button">+ Nuevo nodo</button>
+            <button class="btn secondary" id="btn-nueva-conexion" type="button">+ Nueva conexión</button>
+          </div>
+        </div>
+        <p class="hint" style="margin:0 0 0.8rem;">
+          Puntos reconocibles de una sede (nodos) y cómo se conectan entre sí (conexiones) -- así el
+          sistema arma la ruta paso a paso desde donde el ciudadano dice que está hasta la dependencia
+          buscada. No requiere plano ni coordenadas: basta con la secuencia de puntos y una instrucción
+          corta por tramo.
+        </p>
+        <div class="filtros" style="display:flex; gap:0.8rem; flex-wrap:wrap; margin-bottom:1rem;">
+          <div class="field" style="min-width:14rem;"><label for="mapa-sede">Sede</label><select id="mapa-sede"></select></div>
+          <div class="field" style="min-width:10rem;"><label for="mapa-piso">Piso</label><input id="mapa-piso" placeholder="Vacío = todos" /></div>
+        </div>
+        <h4 style="margin:0 0 0.5rem;">Nodos</h4>
+        <div class="table-wrap">
+          <table class="admin" id="tabla-nodos">
+            <thead><tr><th>Nombre</th><th>Piso</th><th>¿Punto de partida?</th><th>Dependencia vinculada</th><th>Acciones</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <h4 style="margin:1.2rem 0 0.5rem;">Conexiones</h4>
+        <div class="table-wrap">
+          <table class="admin" id="tabla-conexiones">
+            <thead><tr><th>Nodo A</th><th>Nodo B</th><th>Distancia</th><th>Instrucción A→B</th><th>Instrucción B→A</th><th>Acciones</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="modal-nodo" class="modal-backdrop" style="display:none;">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="nodo-titulo">
+          <h3 id="nodo-titulo">Nuevo nodo</h3>
+          <form id="form-nodo">
+            <input type="hidden" id="n-id" />
+            <div class="field"><label for="n-sede">Sede *</label><select id="n-sede" required></select></div>
+            <div class="field"><label for="n-piso">Piso</label><input id="n-piso" placeholder="Ej: 1" /></div>
+            <div class="field"><label for="n-nombre">Nombre *</label><input id="n-nombre" required placeholder="Ej: Ingreso principal, Ascensor A" /></div>
+            <div class="field"><label><input type="checkbox" id="n-punto-partida" checked /> Aparece en "¿Dónde estás?" (es un punto reconocible)</label></div>
+            <div class="field"><label for="n-dependencia">Dependencia vinculada (opcional)</label><select id="n-dependencia"><option value="">— Ninguna —</option></select></div>
+            <div id="nodo-error"></div>
+            <div style="display:flex; gap:0.6rem; margin-top:0.9rem;">
+              <button class="btn" type="submit">Guardar</button>
+              <button class="btn secondary" type="button" id="btn-nodo-cancelar">Cancelar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div id="modal-conexion" class="modal-backdrop" style="display:none;">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="conexion-titulo">
+          <h3 id="conexion-titulo">Nueva conexión</h3>
+          <form id="form-conexion">
+            <input type="hidden" id="c-id" />
+            <div class="field"><label for="c-nodo-a">Nodo A *</label><select id="c-nodo-a" required></select></div>
+            <div class="field"><label for="c-nodo-b">Nodo B *</label><select id="c-nodo-b" required></select></div>
+            <div class="field"><label for="c-distancia">Distancia (pasos aprox.)</label><input id="c-distancia" type="number" value="1" min="1" /></div>
+            <div class="field"><label for="c-instr-ab">Instrucción caminando de A hacia B</label><textarea id="c-instr-ab" placeholder="Ej: Sube la escalera hasta el piso 3"></textarea></div>
+            <div class="field"><label for="c-instr-ba">Instrucción caminando de B hacia A</label><textarea id="c-instr-ba" placeholder="Ej: Baja la escalera hasta el piso 1"></textarea></div>
+            <div id="conexion-error"></div>
+            <div style="display:flex; gap:0.6rem; margin-top:0.9rem;">
+              <button class="btn" type="submit">Guardar</button>
+              <button class="btn secondary" type="button" id="btn-conexion-cancelar">Cancelar</button>
+            </div>
+          </form>
+        </div>
       </div>
     </section>
   </main>

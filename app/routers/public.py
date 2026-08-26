@@ -111,6 +111,36 @@ def dependencias_de_sede(sede_id: int, db: Session = Depends(get_db)):
     return [schemas.DependenciaOut.model_validate(d) for d in deps]
 
 
+@router.get("/sedes/{sede_id}/puntos-partida", response_model=list[schemas.NodoOut])
+def puntos_partida(sede_id: int, piso: Optional[str] = None, db: Session = Depends(get_db)):
+    """"¿Dónde estás?": los puntos reconocibles que el ciudadano puede
+    elegir como su ubicación actual dentro de la sede (mapa interno,
+    wayfinding auto-declarado -- ver app/models/nodo_ubicacion.py)."""
+    nodos = crud.mapa.listar_nodos(db, sede_id, piso)
+    return [n for n in nodos if n.es_punto_partida]
+
+
+@router.get("/ruta", response_model=schemas.RutaOut)
+def ruta_interna(
+    origen_id: int = Query(..., description="Id del nodo donde el ciudadano dijo que está"),
+    dependencia_id: int = Query(..., description="Id de la dependencia a la que quiere llegar"),
+    db: Session = Depends(get_db),
+):
+    """Ruta más corta, paso a paso, desde donde el ciudadano dijo que está
+    hasta la dependencia buscada. 404 si la dependencia todavía no tiene un
+    nodo asociado, o si no hay un camino cargado entre ambos puntos -- el
+    mapa interno se carga sede por sede, así que esto es normal mientras no
+    se haya cargado esa sede todavía, no un error del sistema."""
+    ruta = crud.mapa.calcular_ruta(db, origen_id, dependencia_id)
+    if not ruta:
+        raise HTTPException(
+            404,
+            "Todavía no hay una ruta interna cargada entre esos dos puntos. "
+            "Pregunta en el módulo de orientación o sigue la indicación de piso y oficina.",
+        )
+    return ruta
+
+
 @router.get("/directorio.pdf")
 def directorio_pdf(
     sede_id: Optional[int] = Query(None, description="Limita el directorio a una sola sede"),

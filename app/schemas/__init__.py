@@ -9,6 +9,9 @@ from app.schemas.usuario import UsuarioOut, UsuarioCreate, UsuarioUpdate, Cambia
 from app.schemas.auditoria import AuditoriaOut
 from app.schemas.busqueda import BusquedaRespuesta, SatisfaccionIn
 from app.schemas.cobertura import SolicitudCoberturaCreate, SolicitudCoberturaUpdate, SolicitudCoberturaOut
+from app.schemas.mapa import (
+    NodoCreate, NodoUpdate, NodoOut, ConexionCreate, ConexionUpdate, ConexionOut, RutaOut, PasoRuta,
+)
 
 __all__ = [
     "SedeBase", "SedeCreate", "SedeUpdate", "SedeOut",
@@ -20,4 +23,6 @@ __all__ = [
     "AuditoriaOut",
     "BusquedaRespuesta", "SatisfaccionIn",
     "SolicitudCoberturaCreate", "SolicitudCoberturaUpdate", "SolicitudCoberturaOut",
+    "NodoCreate", "NodoUpdate", "NodoOut", "ConexionCreate", "ConexionUpdate", "ConexionOut",
+    "RutaOut", "PasoRuta",
 ]

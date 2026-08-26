@@ -170,6 +170,9 @@ main.wide { max-width: 68rem; }
 .card-actions .primary { background: var(--accent2); color: #fff; border-color: var(--accent2); }
 .card-actions .danger { color: var(--danger); border-color: var(--danger); background: var(--danger-tint); }
 
+.ruta-interna-panel { margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px dashed var(--line); }
+.ruta-interna-panel select { font: inherit; padding: 0.5rem; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); flex: 1; }
+
 .fallback {
   border: 1px dashed var(--line); border-radius: 12px; padding: 1.4rem;
   text-align: center; color: var(--ink-soft); font-size: 0.95rem;

@@ -112,11 +112,83 @@ function tarjeta(dep) {
     </div>
     <div class="card-actions">
       <button class="primary" type="button" data-leer>🔊 Escuchar</button>
+      ${!enOtraSede && dep.sede ? `<button type="button" data-ruta-interna>🧭 ¿Cómo llego desde aquí?</button>` : ""}
       <a href="https://www.openstreetmap.org/search?query=${osmQuery}" target="_blank" rel="noopener">${enOtraSede ? "Cómo llegar hasta esa sede" : "Cómo llegar"} (OpenStreetMap)</a>
     </div>
+    <div class="ruta-interna-panel" style="display:none;"></div>
   `;
   el.querySelector("[data-leer]").addEventListener("click", () => leerEnVozAlta(dep));
+  const btnRuta = el.querySelector("[data-ruta-interna]");
+  if (btnRuta) btnRuta.addEventListener("click", () => alternarRutaInterna(el, dep));
   return el;
+}
+
+// Wayfinding auto-declarado dentro de un edificio (Fase 4, "mapa interno"):
+// el ciudadano elige en cuál de los puntos reconocibles de la sede está
+// parado, y el sistema arma la ruta paso a paso hasta la dependencia. Se
+// consulta bajo demanda (recién al hacer clic), no en cada tarjeta, para no
+// pedir datos que la mayoría de resultados todavía no tiene cargados.
+async function alternarRutaInterna(tarjetaEl, dep) {
+  const panel = tarjetaEl.querySelector(".ruta-interna-panel");
+  if (panel.style.display !== "none") {
+    panel.style.display = "none";
+    return;
+  }
+  panel.style.display = "block";
+  panel.innerHTML = `<p class="hint">Cargando…</p>`;
+  try {
+    const puntos = await (await fetch(`${API}/sedes/${dep.sede.id}/puntos-partida`)).json();
+    if (!puntos.length) {
+      panel.innerHTML = `<p class="hint">Todavía no hay una ruta interna cargada para esta sede.</p>`;
+      return;
+    }
+    panel.innerHTML = `
+      <label style="font-weight:700; font-size:0.9rem;">¿Dónde estás ahora?</label>
+      <div class="search-row" style="margin-top:0.4rem;">
+        <select>${puntos.map((p) => `<option value="${p.id}">${p.nombre}${p.piso ? " (piso " + p.piso + ")" : ""}</option>`).join("")}</select>
+        <button type="button" class="go">Ver ruta</button>
+      </div>
+      <div class="ruta-resultado"></div>
+    `;
+    panel.querySelector("button.go").addEventListener("click", () => calcularYMostrarRuta(panel, dep));
+  } catch {
+    panel.innerHTML = `<p class="hint">No pudimos cargar los puntos de referencia. Intenta de nuevo.</p>`;
+  }
+}
+
+async function calcularYMostrarRuta(panel, dep) {
+  const origenId = panel.querySelector("select").value;
+  const resultado = panel.querySelector(".ruta-resultado");
+  resultado.innerHTML = `<p class="hint">Calculando ruta…</p>`;
+  try {
+    const res = await fetch(`${API}/ruta?origen_id=${origenId}&dependencia_id=${dep.id}`);
+    if (!res.ok) {
+      resultado.innerHTML = `<p class="hint">Esta oficina todavía no tiene una ruta interna cargada. Pregunta en el módulo de orientación.</p>`;
+      return;
+    }
+    const ruta = await res.json();
+    const pasos = ruta.pasos
+      .filter((p) => p.instruccion)
+      .map((p) => `<li>${p.instruccion}</li>`)
+      .join("");
+    const textoCompleto = ruta.pasos
+      .filter((p) => p.instruccion)
+      .map((p) => p.instruccion)
+      .join(". ");
+    resultado.innerHTML = `
+      <ol style="padding-left:1.2rem; margin-top:0.6rem;">${pasos || `<li>Ya estás en el punto más cercano a ${escaparHtmlPublico(ruta.dependencia_nombre)}.</li>`}</ol>
+      <button type="button" class="primary" data-leer-ruta style="margin-top:0.4rem;">🔊 Escuchar ruta</button>
+    `;
+    resultado.querySelector("[data-leer-ruta]").addEventListener("click", () => leerTexto(textoCompleto || `Ya estás cerca de ${ruta.dependencia_nombre}.`));
+  } catch {
+    resultado.innerHTML = `<p class="hint">No pudimos calcular la ruta. Intenta de nuevo.</p>`;
+  }
+}
+
+function escaparHtmlPublico(valor) {
+  return String(valor ?? "").replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  }[c]));
 }
 
 function tarjetaAccesibilidadSede(sede) {

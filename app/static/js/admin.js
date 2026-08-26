@@ -214,6 +214,7 @@ function mostrarApp() {
   document.querySelector('[data-tab="tab-sedes"]').style.display = esAdmin() ? "" : "none";
   document.querySelector('[data-tab="tab-usuarios"]').style.display = esAdmin() ? "" : "none";
   document.querySelector('[data-tab="tab-auditoria"]').style.display = puedeLeerAuditoria() ? "" : "none";
+  document.querySelector('[data-tab="tab-mapa"]').style.display = esAdmin() ? "" : "none";
   document.getElementById("fila-reporte").style.display = puedeVerReportes() ? "" : "none";
   document.getElementById("panel-titulares").style.display = esAdmin() ? "" : "none";
 
@@ -1273,6 +1274,248 @@ async function cargarDuplicados() {
     .join("");
 }
 
+// ═══════════════════════════════════════════════════════════
+// MAPA INTERNO -- nodos y conexiones (wayfinding auto-declarado, Fase 4)
+// ═══════════════════════════════════════════════════════════
+let CACHE_NODOS = [];
+let CACHE_CONEXIONES = [];
+let _debounceMapaPiso;
+
+async function poblarSelectorSedesMapa() {
+  const sel = document.getElementById("mapa-sede");
+  if (!sel) return;
+  sel.innerHTML = CACHE_SEDES.map((s) => `<option value="${s.id}">${escaparHtml(s.nombre)}</option>`).join("");
+  sel.addEventListener("change", cargarMapa);
+  document.getElementById("mapa-piso").addEventListener("input", () => {
+    clearTimeout(_debounceMapaPiso);
+    _debounceMapaPiso = setTimeout(cargarMapa, 300);
+  });
+  if (CACHE_SEDES.length) await cargarMapa();
+}
+
+async function cargarMapa() {
+  const sedeId = document.getElementById("mapa-sede").value;
+  if (!sedeId) return;
+  const piso = document.getElementById("mapa-piso").value.trim();
+  const params = new URLSearchParams({ sede_id: sedeId });
+  if (piso) params.set("piso", piso);
+  [CACHE_NODOS, CACHE_CONEXIONES] = await Promise.all([
+    api(`/admin/mapa/nodos?${params}`),
+    api(`/admin/mapa/conexiones?sede_id=${sedeId}`),
+  ]);
+  const nodosPorId = Object.fromEntries(CACHE_NODOS.map((n) => [n.id, n]));
+
+  const tbodyN = document.querySelector("#tabla-nodos tbody");
+  tbodyN.innerHTML = CACHE_NODOS.length
+    ? CACHE_NODOS.map((n) => {
+        const dep = n.dependencia_id ? CACHE_DEPS.find((d) => d.id === n.dependencia_id) : null;
+        return `<tr>
+          <td>${escaparHtml(n.nombre)}</td>
+          <td>${escaparHtml(n.piso || "—")}</td>
+          <td>${n.es_punto_partida ? "Sí" : "No"}</td>
+          <td>${dep ? escaparHtml(dep.nombre) : n.dependencia_id ? `Id ${n.dependencia_id}` : "—"}</td>
+          <td class="actions">
+            <button class="btn secondary" data-editar-nodo="${n.id}">Editar</button>
+            <button class="btn secondary" data-eliminar-nodo="${n.id}">Eliminar</button>
+          </td>
+        </tr>`;
+      }).join("")
+    : '<tr><td colspan="5" class="hint" style="padding:1rem;">Sin nodos todavía para esta sede/piso.</td></tr>';
+  tbodyN.querySelectorAll("[data-editar-nodo]").forEach((b) =>
+    b.addEventListener("click", () => abrirNodo(parseInt(b.dataset.editarNodo)))
+  );
+  tbodyN.querySelectorAll("[data-eliminar-nodo]").forEach((b) =>
+    b.addEventListener("click", () => eliminarNodo(parseInt(b.dataset.eliminarNodo)))
+  );
+
+  const tbodyC = document.querySelector("#tabla-conexiones tbody");
+  tbodyC.innerHTML = CACHE_CONEXIONES.length
+    ? CACHE_CONEXIONES.map(
+        (c) => `<tr>
+          <td>${escaparHtml(nodosPorId[c.nodo_a_id]?.nombre || `Id ${c.nodo_a_id}`)}</td>
+          <td>${escaparHtml(nodosPorId[c.nodo_b_id]?.nombre || `Id ${c.nodo_b_id}`)}</td>
+          <td>${c.distancia}</td>
+          <td>${escaparHtml(c.instruccion_a_b || "—")}</td>
+          <td>${escaparHtml(c.instruccion_b_a || "—")}</td>
+          <td class="actions">
+            <button class="btn secondary" data-editar-conexion="${c.id}">Editar</button>
+            <button class="btn secondary" data-eliminar-conexion="${c.id}">Eliminar</button>
+          </td>
+        </tr>`
+      ).join("")
+    : '<tr><td colspan="6" class="hint" style="padding:1rem;">Sin conexiones todavía.</td></tr>';
+  tbodyC.querySelectorAll("[data-editar-conexion]").forEach((b) =>
+    b.addEventListener("click", () => abrirConexion(parseInt(b.dataset.editarConexion)))
+  );
+  tbodyC.querySelectorAll("[data-eliminar-conexion]").forEach((b) =>
+    b.addEventListener("click", () => eliminarConexion(parseInt(b.dataset.eliminarConexion)))
+  );
+}
+
+async function poblarDependenciasDelNodo(sedeId, seleccionadoId) {
+  const sel = document.getElementById("n-dependencia");
+  sel.innerHTML = '<option value="">— Ninguna —</option>';
+  if (!sedeId) return;
+  try {
+    const deps = await (await fetch(`${API}/sedes/${sedeId}/dependencias`)).json();
+    sel.innerHTML += deps.map((d) => `<option value="${d.id}">${escaparHtml(d.nombre)}</option>`).join("");
+    if (seleccionadoId) sel.value = String(seleccionadoId);
+  } catch {
+    // Sin conexión momentánea: se guarda igual, solo sin dependencia vinculada.
+  }
+}
+
+function limpiarFormularioNodo() {
+  document.getElementById("nodo-titulo").textContent = "Nuevo nodo";
+  document.getElementById("n-id").value = "";
+  document.getElementById("form-nodo").reset();
+  document.getElementById("n-sede").innerHTML = CACHE_SEDES.map((s) => `<option value="${s.id}">${escaparHtml(s.nombre)}</option>`).join("");
+  document.getElementById("n-sede").value = document.getElementById("mapa-sede").value || "";
+  document.getElementById("n-piso").value = document.getElementById("mapa-piso").value || "";
+  document.getElementById("n-punto-partida").checked = true;
+  document.getElementById("nodo-error").innerHTML = "";
+  poblarDependenciasDelNodo(document.getElementById("n-sede").value, null);
+}
+
+function abrirNodo(id) {
+  limpiarFormularioNodo();
+  if (id) {
+    const n = CACHE_NODOS.find((x) => x.id === id);
+    if (n) {
+      document.getElementById("nodo-titulo").textContent = `Editar: ${n.nombre}`;
+      document.getElementById("n-id").value = n.id;
+      document.getElementById("n-sede").value = n.sede_id;
+      document.getElementById("n-piso").value = n.piso || "";
+      document.getElementById("n-nombre").value = n.nombre;
+      document.getElementById("n-punto-partida").checked = n.es_punto_partida;
+      poblarDependenciasDelNodo(n.sede_id, n.dependencia_id);
+    }
+  }
+  abrirModal("modal-nodo", document.getElementById("n-nombre"));
+}
+document.getElementById("btn-nuevo-nodo").addEventListener("click", () => abrirNodo(null));
+document.getElementById("n-sede").addEventListener("change", (e) => poblarDependenciasDelNodo(e.target.value, null));
+function cerrarModalNodo() {
+  cerrarModal("modal-nodo", document.getElementById("btn-nuevo-nodo"));
+}
+document.getElementById("btn-nodo-cancelar").addEventListener("click", cerrarModalNodo);
+configurarCierreModal("modal-nodo", cerrarModalNodo);
+
+document.getElementById("form-nodo").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const id = document.getElementById("n-id").value;
+  const payload = {
+    sede_id: parseInt(document.getElementById("n-sede").value),
+    piso: document.getElementById("n-piso").value || null,
+    nombre: document.getElementById("n-nombre").value,
+    es_punto_partida: document.getElementById("n-punto-partida").checked,
+    dependencia_id: document.getElementById("n-dependencia").value
+      ? parseInt(document.getElementById("n-dependencia").value)
+      : null,
+  };
+  try {
+    await api(id ? `/admin/mapa/nodos/${id}` : "/admin/mapa/nodos", {
+      method: id ? "PUT" : "POST",
+      body: JSON.stringify(payload),
+    });
+    cerrarModalNodo();
+    await cargarMapa();
+    mostrarToast("Nodo guardado.");
+  } catch (err) {
+    document.getElementById("nodo-error").innerHTML = `<p class="error-msg">${err.message}</p>`;
+  }
+});
+
+async function eliminarNodo(id) {
+  const n = CACHE_NODOS.find((x) => x.id === id);
+  if (!n || !confirm(`¿Eliminar el nodo "${n.nombre}"? También se borran sus conexiones.`)) return;
+  try {
+    await api(`/admin/mapa/nodos/${id}`, { method: "DELETE" });
+    await cargarMapa();
+    mostrarToast("Nodo eliminado.");
+  } catch (err) {
+    mostrarToast(err.message || "No se pudo eliminar el nodo");
+  }
+}
+
+function limpiarFormularioConexion() {
+  document.getElementById("conexion-titulo").textContent = "Nueva conexión";
+  document.getElementById("c-id").value = "";
+  document.getElementById("form-conexion").reset();
+  const opciones = CACHE_NODOS.map((n) => `<option value="${n.id}">${escaparHtml(n.nombre)}${n.piso ? " (piso " + escaparHtml(n.piso) + ")" : ""}</option>`).join("");
+  document.getElementById("c-nodo-a").innerHTML = opciones;
+  document.getElementById("c-nodo-b").innerHTML = opciones;
+  document.getElementById("c-distancia").value = "1";
+  document.getElementById("conexion-error").innerHTML = "";
+}
+
+function abrirConexion(id) {
+  if (!CACHE_NODOS.length) {
+    mostrarToast("Primero crea al menos dos nodos en esta sede.");
+    return;
+  }
+  limpiarFormularioConexion();
+  if (id) {
+    const c = CACHE_CONEXIONES.find((x) => x.id === id);
+    if (c) {
+      document.getElementById("conexion-titulo").textContent = "Editar conexión";
+      document.getElementById("c-id").value = c.id;
+      document.getElementById("c-nodo-a").value = c.nodo_a_id;
+      document.getElementById("c-nodo-b").value = c.nodo_b_id;
+      document.getElementById("c-distancia").value = c.distancia;
+      document.getElementById("c-instr-ab").value = c.instruccion_a_b || "";
+      document.getElementById("c-instr-ba").value = c.instruccion_b_a || "";
+    }
+  }
+  abrirModal("modal-conexion", document.getElementById("c-nodo-a"));
+}
+document.getElementById("btn-nueva-conexion").addEventListener("click", () => abrirConexion(null));
+function cerrarModalConexion() {
+  cerrarModal("modal-conexion", document.getElementById("btn-nueva-conexion"));
+}
+document.getElementById("btn-conexion-cancelar").addEventListener("click", cerrarModalConexion);
+configurarCierreModal("modal-conexion", cerrarModalConexion);
+
+document.getElementById("form-conexion").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const id = document.getElementById("c-id").value;
+  const nodoA = document.getElementById("c-nodo-a").value;
+  const nodoB = document.getElementById("c-nodo-b").value;
+  if (nodoA === nodoB) {
+    document.getElementById("conexion-error").innerHTML = `<p class="error-msg">Un nodo no puede conectarse consigo mismo.</p>`;
+    return;
+  }
+  const payload = {
+    nodo_a_id: parseInt(nodoA),
+    nodo_b_id: parseInt(nodoB),
+    distancia: parseInt(document.getElementById("c-distancia").value) || 1,
+    instruccion_a_b: document.getElementById("c-instr-ab").value || null,
+    instruccion_b_a: document.getElementById("c-instr-ba").value || null,
+  };
+  try {
+    await api(id ? `/admin/mapa/conexiones/${id}` : "/admin/mapa/conexiones", {
+      method: id ? "PUT" : "POST",
+      body: JSON.stringify(payload),
+    });
+    cerrarModalConexion();
+    await cargarMapa();
+    mostrarToast("Conexión guardada.");
+  } catch (err) {
+    document.getElementById("conexion-error").innerHTML = `<p class="error-msg">${err.message}</p>`;
+  }
+});
+
+async function eliminarConexion(id) {
+  if (!confirm("¿Eliminar esta conexión?")) return;
+  try {
+    await api(`/admin/mapa/conexiones/${id}`, { method: "DELETE" });
+    await cargarMapa();
+    mostrarToast("Conexión eliminada.");
+  } catch (err) {
+    mostrarToast(err.message || "No se pudo eliminar la conexión");
+  }
+}
+
 async function cargarTodo() {
   // El rol "consulta" no ve las pestañas de gestión del catálogo (ver
   // mostrarApp) y el backend rechaza /admin/dependencias, /admin/sedes de
@@ -1290,6 +1533,7 @@ async function cargarTodo() {
   depSkip = 0;
   document.getElementById("filtro-nombre").value = "";
   await Promise.all([cargarStats(), cargarDependencias(), cargarAuditoria(), cargarUsuarios()]);
+  if (esAdmin()) await poblarSelectorSedesMapa();
 }
 
 iniciar();

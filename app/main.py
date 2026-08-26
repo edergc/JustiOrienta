@@ -15,6 +15,7 @@ from app.routers import (
     admin_cobertura,
     admin_dependencias,
     admin_edificios,
+    admin_mapa,
     admin_metricas,
     admin_qr,
     admin_sedes,
@@ -91,6 +92,7 @@ app.include_router(admin_auditoria.router, prefix=f"{API_PREFIX}/admin/auditoria
 app.include_router(admin_metricas.router, prefix=f"{API_PREFIX}/admin/metricas", tags=["admin-métricas"])
 app.include_router(admin_qr.router, prefix=f"{API_PREFIX}/admin/qr", tags=["admin-qr"])
 app.include_router(admin_cobertura.router, prefix=f"{API_PREFIX}/admin/cobertura", tags=["admin-cobertura"])
+app.include_router(admin_mapa.router, prefix=f"{API_PREFIX}/admin/mapa", tags=["admin-mapa"])
 
 app.mount("/css", StaticFiles(directory=STATIC_DIR / "css"), name="css")
 app.mount("/js", StaticFiles(directory=STATIC_DIR / "js"), name="js")

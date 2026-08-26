@@ -11,9 +11,11 @@ from app.models.usuario import Usuario, Rol
 from app.models.auditoria import Auditoria
 from app.models.consulta import ConsultaLog
 from app.models.solicitud_cobertura import SolicitudCobertura
+from app.models.nodo_ubicacion import NodoUbicacion, ConexionNodo
 
 __all__ = [
     "Base", "TimestampMixin", "normalizar",
     "Sede", "Edificio", "Dependencia", "Servicio", "Alias",
     "Usuario", "Rol", "Auditoria", "ConsultaLog", "SolicitudCobertura",
+    "NodoUbicacion", "ConexionNodo",
 ]
