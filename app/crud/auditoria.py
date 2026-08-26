@@ -32,3 +32,17 @@ def listar(db: Session, limite: int = 100) -> list[models.Auditoria]:
         .limit(limite)
         .all()
     )
+
+
+def listar_por_entidad(db: Session, entidad: str, entidad_id: int, limite: int = 50) -> list[models.Auditoria]:
+    """Historial de una sola dependencia/sede/etc. -- la mitad de la
+    "trazabilidad de la orientacion" (Fase 4): quien publico este dato y
+    cuando. La otra mitad (cuantas veces se mostro como respuesta) vive en
+    ConsultaLog; se cruzan ambas en un solo endpoint, no aqui."""
+    return (
+        db.query(models.Auditoria)
+        .filter(models.Auditoria.entidad == entidad, models.Auditoria.entidad_id == entidad_id)
+        .order_by(models.Auditoria.fecha.desc())
+        .limit(limite)
+        .all()
+    )

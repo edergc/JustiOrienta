@@ -65,6 +65,33 @@ def listar_dependencias(
     )
 
 
+@router.get("/dependencias/{dep_id}/historial", response_model=schemas.HistorialDependenciaOut)
+def historial_dependencia(
+    dep_id: int,
+    db: Session = Depends(get_db),
+    usuario=Depends(security.requiere_lectura_auditoria),
+):
+    """Trazabilidad de la orientacion en una sola vista (Fase 4): ante
+    cualquier auditoria, responde "por que el sistema mostro esto" -- quien
+    publico el dato vigente y cuando (auditoria), y cuanto se uso como
+    respuesta a un ciudadano (consultas) -- sin tener que cruzar dos tablas
+    a mano."""
+    dep = crud.dependencias.obtener(db, dep_id)
+    if not dep:
+        raise HTTPException(404, "Dependencia no encontrada")
+    cambios = crud.auditoria.listar_por_entidad(db, "dependencia", dep_id)
+    veces, ultima = crud.busqueda.uso_como_resultado(db, dep_id)
+    return schemas.HistorialDependenciaOut(
+        dependencia_id=dep.id,
+        nombre=dep.nombre,
+        estado=dep.estado,
+        actualizado_en=dep.actualizado_en,
+        cambios=[schemas.AuditoriaOut.model_validate(c) for c in cambios],
+        veces_mostrada_como_respuesta=veces,
+        ultima_vez_mostrada=ultima,
+    )
+
+
 @router.get("/dependencias/duplicados")
 def duplicados_del_catalogo(
     db: Session = Depends(get_db),

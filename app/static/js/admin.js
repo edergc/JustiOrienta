@@ -109,6 +109,41 @@ async function abrirQR(tipo, id) {
   }
 }
 
+// Trazabilidad de la orientacion en una sola vista: quien publico el dato
+// vigente (auditoria) y cuanto se uso como respuesta a un ciudadano
+// (consultas) -- responde "por que el sistema mostro esto" sin cruzar dos
+// tablas a mano.
+async function abrirHistorial(depId) {
+  const cont = document.getElementById("historial-contenido");
+  cont.innerHTML = '<p class="hint">Cargando…</p>';
+  abrirModal("modal-historial", document.getElementById("btn-historial-cerrar"));
+  try {
+    const h = await api(`/admin/dependencias/${depId}/historial`);
+    const fecha = (f) => (f ? new Date(f).toLocaleString("es-PE") : "Nunca");
+    const cambios = h.cambios.length
+      ? h.cambios
+          .map(
+            (c) =>
+              `<li><strong>${escaparHtml(c.accion)}</strong> por ${escaparHtml(c.usuario_dni || "sistema")} -- ${fecha(c.fecha)}<br><span class="hint">${escaparHtml(c.detalle || "")}</span></li>`
+          )
+          .join("")
+      : '<li class="hint" style="list-style:none;">Sin cambios registrados individualmente (posiblemente cargado por script masivo).</li>';
+    cont.innerHTML = `
+      <p class="meta"><strong>${escaparHtml(h.nombre)}</strong> -- ${estadoBadge(h.estado)}</p>
+      <p class="meta">Ultima actualizacion de contenido: ${fecha(h.actualizado_en)}</p>
+      <p class="meta">Mostrada como respuesta a un ciudadano: <strong>${h.veces_mostrada_como_respuesta}</strong> ${h.veces_mostrada_como_respuesta === 1 ? "vez" : "veces"}${h.ultima_vez_mostrada ? " -- la ultima el " + fecha(h.ultima_vez_mostrada) : ""}</p>
+      <p class="meta" style="margin-top:0.8rem;"><strong>Historial de cambios:</strong></p>
+      <ul style="padding-left:1.1rem; max-height:16rem; overflow-y:auto;">${cambios}</ul>
+    `;
+  } catch (err) {
+    cont.innerHTML = `<p class="error-msg">${escaparHtml(err.message || "No se pudo cargar el historial")}</p>`;
+  }
+}
+document.getElementById("btn-historial-cerrar").addEventListener("click", () =>
+  cerrarModal("modal-historial")
+);
+configurarCierreModal("modal-historial", () => cerrarModal("modal-historial"));
+
 // Igual que abrirQR, pero forzando la descarga en vez de abrir una pestaña
 // -- un .xlsx no se puede previsualizar en el navegador, así que necesita
 // un enlace temporal con el atributo download en vez de window.open.
@@ -815,6 +850,7 @@ async function cargarDependencias() {
       <td class="actions">
         <button class="btn secondary" data-editar="${d.id}">Editar</button>
         <button class="btn secondary" data-qr="${d.id}">QR</button>
+        <button class="btn secondary" data-historial="${d.id}">Historial</button>
         <button class="btn secondary" data-desactivar="${d.id}">Desactivar</button>
       </td>`;
     tbody.appendChild(tr);
@@ -824,6 +860,9 @@ async function cargarDependencias() {
   );
   tbody.querySelectorAll("[data-qr]").forEach((b) =>
     b.addEventListener("click", () => abrirQR("dependencia", parseInt(b.dataset.qr)))
+  );
+  tbody.querySelectorAll("[data-historial]").forEach((b) =>
+    b.addEventListener("click", () => abrirHistorial(parseInt(b.dataset.historial)))
   );
   tbody.querySelectorAll("[data-desactivar]").forEach((b) =>
     b.addEventListener("click", () => desactivar(parseInt(b.dataset.desactivar)))

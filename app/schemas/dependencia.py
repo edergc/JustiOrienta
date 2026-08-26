@@ -3,6 +3,7 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
+from app.schemas.auditoria import AuditoriaOut
 from app.schemas.edificio import EdificioOut
 from app.schemas.sede import SedeOut
 from app.schemas.servicio import ServicioOut
@@ -63,3 +64,18 @@ class DependenciaListaOut(BaseModel):
     total: int
     skip: int
     limite: int
+
+
+class HistorialDependenciaOut(BaseModel):
+    """Responde "por que el sistema mostro esto": quien publico el dato
+    vigente (auditoria) y cuanto se uso como respuesta a un ciudadano
+    (consultas) -- las dos mitades de la trazabilidad de la orientacion,
+    en una sola vista en vez de dos tablas separadas."""
+
+    dependencia_id: int
+    nombre: str
+    estado: str
+    actualizado_en: Optional[datetime] = None
+    cambios: list[AuditoriaOut]
+    veces_mostrada_como_respuesta: int
+    ultima_vez_mostrada: Optional[datetime] = None

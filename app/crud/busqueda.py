@@ -1,3 +1,4 @@
+from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
 from app import models, nlp
@@ -112,6 +113,24 @@ def buscar_dependencias(db: Session, query: str, limite: int = 10) -> list[model
 
     puntuadas.sort(key=lambda x: x[0], reverse=True)
     return [dep for _, dep in puntuadas[:limite]]
+
+
+def uso_como_resultado(db: Session, dependencia_id: int):
+    """Cuantas veces esta dependencia fue lo que el sistema mostro como
+    respuesta a un ciudadano, y cuando fue la ultima (veces, fecha_ultima) --
+    la mitad de la trazabilidad de la orientacion que no vive en Auditoria."""
+    total = (
+        db.query(func.count(models.ConsultaLog.id))
+        .filter(models.ConsultaLog.dependencia_resultado_id == dependencia_id)
+        .scalar()
+        or 0
+    )
+    ultima = (
+        db.query(func.max(models.ConsultaLog.fecha))
+        .filter(models.ConsultaLog.dependencia_resultado_id == dependencia_id)
+        .scalar()
+    )
+    return total, ultima
 
 
 def info_accesibilidad_sede(db: Session, sede_id: int) -> "models.Sede | None":
