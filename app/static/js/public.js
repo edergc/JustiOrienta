@@ -248,7 +248,7 @@ function mostrarNecesitoAyuda() {
         <h2>Necesito ayuda</h2>
         <span class="badge servicio">Orientación humana</span>
       </div>
-      <p class="meta">Si prefieres que una persona te oriente directamente:</p>
+      <p class="meta">¿No sabes qué necesitas, o prefieres que una persona te oriente directamente?</p>
       <ul class="meta" style="padding-left:1.1rem;">
         <li>Acércate al <strong>Módulo de Atención al Usuario (MAU)</strong>, ubicado en el ingreso de tu sede.</li>
         <li>O escribe al canal institucional de atención al ciudadano de la Corte.</li>

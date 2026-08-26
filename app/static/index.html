@@ -8,8 +8,8 @@
 </head>
 <body>
 <a class="skip-link" href="#buscar">Saltar a la búsqueda</a>
-<div class="top-banner demo" role="note">
-  PILOTO — la información mostrada proviene del catálogo cargado por cada área; verifica siempre con el módulo de orientación presencial
+<div class="top-banner motto" role="note">
+  "La justicia no debe ser un laberinto. Debe ser un camino claro, accesible y comprensible para todos."
 </div>
 
 <header class="site">
@@ -20,6 +20,7 @@
     <circle cx="24" cy="24" r="2.4" fill="var(--ink)" />
   </svg>
   <h1>Justicia Orienta</h1>
+  <p class="site-subtitle">Corte Superior de Justicia de Lima</p>
   <p>Escribe o di qué necesitas. No hace falta que conozcas juzgados, salas ni oficinas.</p>
 </header>
 
@@ -45,30 +46,19 @@
       </div>
       <p id="voz-estado" class="voice-status" role="status" aria-live="polite"></p>
     </form>
+    <p class="chips-label">Ejemplos:</p>
     <div class="chips" aria-label="Ejemplos de búsqueda" id="chips"></div>
   </div>
 
   <div id="estado-vacio" class="empty-state">
     <div class="tiles">
-      <button class="tile-btn" type="button" data-ej="juzgado civil">
-        <span class="ico" aria-hidden="true">⚖</span>
-        <span><strong>Encontrar un juzgado o sala</strong><span class="d">Ubicación, piso y horario</span></span>
-      </button>
-      <button class="tile-btn" type="button" data-ej="tramite administrativo">
-        <span class="ico" aria-hidden="true">🏢</span>
-        <span><strong>Trámites y áreas administrativas</strong><span class="d">Recursos Humanos, Logística, Informática...</span></span>
-      </button>
-      <button class="tile-btn" type="button" data-ej="no se que necesito">
-        <span class="ico" aria-hidden="true">?</span>
-        <span><strong>No sé qué necesito</strong><span class="d">Te derivamos al módulo de orientación</span></span>
-      </button>
       <button class="tile-btn" type="button" id="tile-estoy-aqui">
         <span class="ico" aria-hidden="true">📍</span>
         <span><strong>Estoy aquí</strong><span class="d">Elige tu sede y mira todo lo que hay en ella</span></span>
       </button>
       <button class="tile-btn" type="button" id="tile-necesito-ayuda">
         <span class="ico" aria-hidden="true">🆘</span>
-        <span><strong>Necesito ayuda</strong><span class="d">Orientación humana: MAU, teléfono, canales oficiales</span></span>
+        <span><strong>Necesito ayuda</strong><span class="d">¿No sabes qué buscar? Orientación humana: MAU, teléfono, canales oficiales</span></span>
       </button>
     </div>
     <div id="panel-estoy-aqui" class="search-wrap" style="display:none; margin-top:1rem;">
@@ -84,11 +74,11 @@
 
   <div id="feedback-caja" aria-live="polite"></div>
 
-  <p class="hint">Datos administrados por cada área de la Corte a través del panel de gestión. Si algo está desactualizado, repórtalo en el módulo de orientación.</p>
+  <p class="aviso-datos">Datos administrados por cada área de la Corte a través del panel de gestión. Si algo está desactualizado, repórtalo en el módulo de orientación.</p>
 </main>
 
 <footer class="site">
-  Justicia Orienta · Piloto · Backend FastAPI + base de datos abierta, sin licencias de pago.
+  Justicia Orienta · Piloto · Coordinación de Informática.
   <br />
   <a class="btn secondary" href="/admin" style="display:inline-block; margin-top:0.6rem; text-decoration:none;">Ingresar al panel de administración</a>
   <a id="link-directorio-pdf" class="btn secondary" href="/api/v1/directorio.pdf" target="_blank" rel="noopener" style="display:inline-block; margin-top:0.6rem; margin-left:0.5rem; text-decoration:none;">Descargar directorio (PDF)</a>

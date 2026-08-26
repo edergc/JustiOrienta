@@ -59,10 +59,19 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 }
 .top-banner.demo { background: var(--danger-tint); color: var(--danger); }
 .top-banner.admin { background: var(--accent2-tint); color: var(--accent2-strong); }
+.top-banner.motto { background: var(--accent2-tint); color: var(--accent2-strong); font-style: italic; }
 
 header.site { padding: 2.2rem 1.5rem 1.4rem; text-align: center; border-bottom: 1px solid var(--line); }
 header.site h1 { font-family: var(--font-display); font-size: clamp(1.7rem,4vw,2.4rem); margin: 0.2rem 0; }
 header.site p { color: var(--ink-soft); max-width: 34rem; margin: 0 auto; }
+header.site p.site-subtitle {
+  color: var(--accent2-strong); font-weight: 700; font-size: 0.95rem; letter-spacing: 0.02em;
+  text-transform: uppercase; margin: 0 auto 0.4rem;
+}
+.aviso-datos {
+  color: var(--accent2-strong); font-weight: 700; font-size: 0.95rem; text-align: center;
+  max-width: 34rem; margin: 1.4rem auto 0;
+}
 header.site a.home { text-decoration: none; color: inherit; }
 
 .toolbar {
@@ -105,7 +114,8 @@ main.wide { max-width: 68rem; }
   .search-row button.mic, .search-row button.go, .search-row button.clear { flex: 1; }
 }
 
-.chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.7rem; }
+.chips-label { font-size: 0.82rem; font-weight: 700; color: var(--ink-soft); margin: 0.7rem 0 0; text-transform: uppercase; letter-spacing: 0.04em; }
+.chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
 .chips button {
   font: inherit; font-size: 0.82rem; background: var(--surface); border: 1px solid var(--line);
   border-radius: 100px; padding: 0.35rem 0.8rem; cursor: pointer; color: var(--ink-soft);
