@@ -8,6 +8,7 @@ from app.schemas.dependencia import (
 from app.schemas.usuario import UsuarioOut, UsuarioCreate, UsuarioUpdate, CambiarPasswordIn, Token
 from app.schemas.auditoria import AuditoriaOut
 from app.schemas.busqueda import BusquedaRespuesta, SatisfaccionIn
+from app.schemas.cobertura import SolicitudCoberturaCreate, SolicitudCoberturaUpdate, SolicitudCoberturaOut
 
 __all__ = [
     "SedeBase", "SedeCreate", "SedeUpdate", "SedeOut",
@@ -18,4 +19,5 @@ __all__ = [
     "UsuarioOut", "UsuarioCreate", "UsuarioUpdate", "CambiarPasswordIn", "Token",
     "AuditoriaOut",
     "BusquedaRespuesta", "SatisfaccionIn",
+    "SolicitudCoberturaCreate", "SolicitudCoberturaUpdate", "SolicitudCoberturaOut",
 ]

@@ -111,6 +111,11 @@
         <ol id="lista-top-sin-resultado" class="meta" style="padding-left:1.2rem; margin:0.5rem 0 0;"></ol>
       </div>
       <div class="card" style="padding:0.9rem 1rem;">
+        <strong>Solicitudes de cobertura</strong>
+        <p class="hint" style="margin:0.2rem 0 0;">Búsquedas sin resultado ya asignadas a un área, con seguimiento -- cierra el ciclo del motor de descubrimiento.</p>
+        <ul id="lista-cobertura" class="meta" style="list-style:none; padding-left:0; margin:0.5rem 0 0;"></ul>
+      </div>
+      <div class="card" style="padding:0.9rem 1rem;">
         <strong>Pendientes de aprobar, por área</strong>
         <p class="hint" style="margin:0.2rem 0 0;">Antigüedad promedio desde el último cambio, sin haber sido aprobado.</p>
         <ol id="lista-pendientes-area" class="meta" style="padding-left:1.2rem; margin:0.5rem 0 0;"></ol>
@@ -174,6 +179,22 @@
           </table>
         </div>
         <div id="paginacion-dep" class="paginacion"></div>
+      </div>
+
+      <div id="modal-cobertura" class="modal-backdrop" style="display:none;">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="cobertura-titulo">
+          <h3 id="cobertura-titulo">Asignar a un área</h3>
+          <form id="form-cobertura">
+            <p class="meta">Búsqueda: <strong id="cobertura-query"></strong></p>
+            <div class="field"><label for="cob-area">Área responsable *</label><input id="cob-area" required /></div>
+            <div class="field"><label for="cob-comentario">Comentario</label><textarea id="cob-comentario"></textarea></div>
+            <div id="cobertura-error"></div>
+            <div style="display:flex; gap:0.6rem; margin-top:0.9rem;">
+              <button class="btn" type="submit">Asignar</button>
+              <button class="btn secondary" type="button" id="btn-cobertura-cancelar">Cancelar</button>
+            </div>
+          </form>
+        </div>
       </div>
 
       <div id="modal-historial" class="modal-backdrop" style="display:none;">
@@ -245,6 +266,14 @@
               <div class="field" style="grid-column:1/-1;">
                 <label for="f-titular">Titular / responsable a cargo</label>
                 <input id="f-titular" placeholder="Ej.: Dra. Ana Pérez López - Jueza titular" />
+              </div>
+              <div class="field">
+                <label for="f-validado-por">Validado por</label>
+                <input id="f-validado-por" placeholder="Nombre de quien confirmó que el dato sigue vigente" />
+              </div>
+              <div class="field">
+                <label for="f-proxima-revision">Próxima revisión</label>
+                <input id="f-proxima-revision" type="date" />
               </div>
               <div class="field" style="grid-column:1/-1;"><label for="f-servicios">Resumen de servicios</label><textarea id="f-servicios"></textarea></div>
               <div class="field" style="grid-column:1/-1;"><label for="f-requisitos">Requisitos</label><textarea id="f-requisitos"></textarea></div>

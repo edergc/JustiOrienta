@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Text, event
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Text, event
 from sqlalchemy.orm import relationship
 
 from app.models.base import Base, TimestampMixin, normalizar
@@ -45,6 +45,14 @@ class Dependencia(Base, TimestampMixin):
     # desde el panel o la plantilla Excel. Texto libre porque el cargo varía
     # según el tipo de dependencia (jueza/vocal/jefe/coordinador).
     titular = Column(String(200))
+
+    # Semáforo ampliado (Fase 4): quién confirmó que este dato sigue vigente
+    # y cuándo toca revisarlo de nuevo -- distinto del cálculo automático
+    # verde/ámbar/rojo por actualizado_en, que no requiere que nadie lo
+    # llene a mano. Ambos son opcionales: el semáforo automático funciona
+    # igual aunque nadie use estos dos campos todavía.
+    validado_por = Column(String(200), nullable=True)
+    proxima_revision = Column(DateTime, nullable=True)
 
     sede = relationship("Sede", back_populates="dependencias")
     edificio = relationship("Edificio", back_populates="dependencias")

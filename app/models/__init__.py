@@ -10,9 +10,10 @@ from app.models.alias import Alias
 from app.models.usuario import Usuario, Rol
 from app.models.auditoria import Auditoria
 from app.models.consulta import ConsultaLog
+from app.models.solicitud_cobertura import SolicitudCobertura
 
 __all__ = [
     "Base", "TimestampMixin", "normalizar",
     "Sede", "Edificio", "Dependencia", "Servicio", "Alias",
-    "Usuario", "Rol", "Auditoria", "ConsultaLog",
+    "Usuario", "Rol", "Auditoria", "ConsultaLog", "SolicitudCobertura",
 ]

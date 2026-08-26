@@ -26,6 +26,20 @@ function escaparHtml(valor) {
   }[c]));
 }
 
+// El backend guarda y serializa datetimes en UTC pero sin indicarlo (sin
+// "Z" ni offset) -- "2026-08-26T21:58:00", no "...Z". `new Date(...)` de
+// JavaScript interpreta un string asi como HORA LOCAL del navegador, no
+// UTC: en Lima (UTC-5) eso corre cada fecha del servidor 5 horas hacia
+// adelante, y algo recien actualizado aparece "en el futuro" (por ejemplo,
+// el semaforo de vigencia mostrando "-1 dias"). Esta funcion fuerza la
+// interpretacion correcta agregando "Z" solo si el string todavia no trae
+// zona horaria.
+function fechaServidor(iso) {
+  if (!iso) return null;
+  const conZona = /Z$|[+-]\d\d:\d\d$/.test(iso);
+  return new Date(conZona ? iso : iso + "Z");
+}
+
 // ── Modales genéricos (crear/editar dependencia, sede, usuario) ──
 // Mismo patrón de accesibilidad que ya usaba el modal de contraseña (Escape
 // cierra, Tab no se escapa, clic en el fondo oscurecido también cierra),
@@ -119,7 +133,7 @@ async function abrirHistorial(depId) {
   abrirModal("modal-historial", document.getElementById("btn-historial-cerrar"));
   try {
     const h = await api(`/admin/dependencias/${depId}/historial`);
-    const fecha = (f) => (f ? new Date(f).toLocaleString("es-PE") : "Nunca");
+    const fecha = (f) => (f ? fechaServidor(f).toLocaleString("es-PE") : "Nunca");
     const cambios = h.cambios.length
       ? h.cambios
           .map(
@@ -535,8 +549,21 @@ async function cargarStats() {
 
   const listaSinResultado = document.getElementById("lista-top-sin-resultado");
   listaSinResultado.innerHTML = s.top_consultas_sin_resultado.length
-    ? s.top_consultas_sin_resultado.map((t) => `<li>${escaparHtml(t.consulta)} <span class="hint">(${t.veces})</span></li>`).join("")
+    ? s.top_consultas_sin_resultado
+        .map(
+          (t) =>
+            `<li>${escaparHtml(t.consulta)} <span class="hint">(${t.veces})</span>` +
+            (esAdmin()
+              ? ` <button type="button" class="btn secondary" style="padding:0.1rem 0.5rem; font-size:0.75rem;" data-asignar="${escaparHtml(t.consulta)}">Asignar a un área</button>`
+              : "") +
+            `</li>`
+        )
+        .join("")
     : '<li class="hint" style="list-style:none;">Sin búsquedas sin resultado todavía -- buena señal.</li>';
+  listaSinResultado.querySelectorAll("[data-asignar]").forEach((b) =>
+    b.addEventListener("click", () => abrirAsignarCobertura(b.dataset.asignar))
+  );
+  await cargarCobertura();
 
   const listaPendientes = document.getElementById("lista-pendientes-area");
   listaPendientes.innerHTML = s.pendientes_por_area.length
@@ -552,6 +579,88 @@ async function cargarStats() {
         .join("")
     : '<li class="hint" style="list-style:none;">Todavía no hay dependencias publicadas.</li>';
 }
+
+// ═══════════════════════════════════════════════════════════
+// SOLICITUDES DE COBERTURA -- cierra el ciclo del motor de
+// descubrimiento: asigna a mano una búsqueda sin resultado a un área.
+// ═══════════════════════════════════════════════════════════
+const ESTADO_COBERTURA_LABEL = { pendiente: "Pendiente", en_progreso: "En progreso", resuelto: "Resuelto" };
+
+async function cargarCobertura() {
+  const box = document.getElementById("lista-cobertura");
+  if (!box) return;
+  try {
+    const solicitudes = await api("/admin/cobertura");
+    box.innerHTML = solicitudes.length
+      ? solicitudes
+          .map(
+            (s) => `
+        <li style="border:1px solid var(--line); border-radius:8px; padding:0.5rem 0.7rem; margin-bottom:0.4rem;">
+          <strong>${escaparHtml(s.query_text)}</strong> <span class="hint">-- ${escaparHtml(s.area || "sin área")}</span>
+          ${
+            esAdmin()
+              ? `<select data-cob-estado="${s.id}" style="margin-left:0.4rem; font-size:0.8rem;">
+                  ${Object.entries(ESTADO_COBERTURA_LABEL)
+                    .map(([v, t]) => `<option value="${v}" ${v === s.estado ? "selected" : ""}>${t}</option>`)
+                    .join("")}
+                </select>`
+              : `<span class="badge ${s.estado === "resuelto" ? "activo" : "revision"}">${ESTADO_COBERTURA_LABEL[s.estado] || s.estado}</span>`
+          }
+          ${s.comentario ? `<div class="hint" style="margin-top:0.2rem;">${escaparHtml(s.comentario)}</div>` : ""}
+        </li>`
+          )
+          .join("")
+      : '<li class="hint" style="list-style:none;">Todavía no hay búsquedas asignadas a un área.</li>';
+    box.querySelectorAll("[data-cob-estado]").forEach((sel) =>
+      sel.addEventListener("change", async () => {
+        try {
+          await api(`/admin/cobertura/${sel.dataset.cobEstado}`, {
+            method: "PUT",
+            body: JSON.stringify({ estado: sel.value }),
+          });
+          mostrarToast("Estado actualizado.");
+        } catch (err) {
+          mostrarToast(err.message || "No se pudo actualizar el estado");
+        }
+      })
+    );
+  } catch {
+    box.innerHTML = '<li class="hint" style="list-style:none;">No se pudo cargar.</li>';
+  }
+}
+
+function abrirAsignarCobertura(queryText) {
+  document.getElementById("cobertura-query").textContent = queryText;
+  document.getElementById("form-cobertura").dataset.query = queryText;
+  document.getElementById("cob-area").value = "";
+  document.getElementById("cob-comentario").value = "";
+  document.getElementById("cobertura-error").innerHTML = "";
+  abrirModal("modal-cobertura", document.getElementById("cob-area"));
+}
+function cerrarModalCobertura() {
+  cerrarModal("modal-cobertura");
+}
+document.getElementById("btn-cobertura-cancelar").addEventListener("click", cerrarModalCobertura);
+configurarCierreModal("modal-cobertura", cerrarModalCobertura);
+document.getElementById("form-cobertura").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const queryText = e.target.dataset.query;
+  try {
+    await api("/admin/cobertura", {
+      method: "POST",
+      body: JSON.stringify({
+        query_text: queryText,
+        area: document.getElementById("cob-area").value,
+        comentario: document.getElementById("cob-comentario").value || null,
+      }),
+    });
+    cerrarModalCobertura();
+    await cargarCobertura();
+    mostrarToast("Búsqueda asignada al área.");
+  } catch (err) {
+    document.getElementById("cobertura-error").innerHTML = `<p class="error-msg">${err.message}</p>`;
+  }
+});
 
 // ═══════════════════════════════════════════════════════════
 // SEDES
@@ -683,13 +792,13 @@ async function cargarUsuarios() {
   tbody.innerHTML = "";
   for (const u of CACHE_USUARIOS) {
     const tr = document.createElement("tr");
-    const ultimo = u.ultimo_acceso ? new Date(u.ultimo_acceso).toLocaleString("es-PE") : "Nunca";
+    const ultimo = u.ultimo_acceso ? fechaServidor(u.ultimo_acceso).toLocaleString("es-PE") : "Nunca";
     // Bloqueo automático tras intentos fallidos (ver app/crud/usuarios.py):
     // se muestra aparte de Activo/Inactivo porque es temporal y se levanta
     // solo con guardar la ficha desde "Editar", no con un interruptor propio.
-    const bloqueado = u.bloqueado_hasta && new Date(u.bloqueado_hasta) > new Date();
+    const bloqueado = u.bloqueado_hasta && fechaServidor(u.bloqueado_hasta) > new Date();
     const badgeBloqueo = bloqueado
-      ? ` <span class="badge inactivo" title="Se levanta al guardar la ficha, o solo(a) al pasar la hora indicada">Bloqueada hasta ${new Date(u.bloqueado_hasta).toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" })}</span>`
+      ? ` <span class="badge inactivo" title="Se levanta al guardar la ficha, o solo(a) al pasar la hora indicada">Bloqueada hasta ${fechaServidor(u.bloqueado_hasta).toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" })}</span>`
       : "";
     tr.innerHTML = `
       <td>${u.nombre}</td><td>${u.dni}</td><td>${u.rol}</td><td>${u.area || "—"}</td>
@@ -795,12 +904,17 @@ function estadoBadge(estado) {
 // ámbar 91-180, rojo más de 180 -- mismos umbrales del Plan Maestro
 // (sección "Diseño Técnico: Semáforo de Vigencia"). No necesita ningún dato
 // nuevo: actualizado_en ya viene en cada dependencia desde el primer día.
-function semaforoVigencia(actualizadoEn) {
-  if (!actualizadoEn) return { clase: "rojo", texto: "Sin fecha registrada" };
-  const dias = Math.floor((Date.now() - new Date(actualizadoEn).getTime()) / 86400000);
-  if (dias <= 90) return { clase: "verde", texto: `Actualizado hace ${dias} día${dias === 1 ? "" : "s"}` };
-  if (dias <= 180) return { clase: "ambar", texto: `Sin revisar hace ${dias} días` };
-  return { clase: "rojo", texto: `Sin revisar hace ${dias} días` };
+function semaforoVigencia(actualizadoEn, validadoPor) {
+  let base;
+  if (!actualizadoEn) base = { clase: "rojo", texto: "Sin fecha registrada" };
+  else {
+    const dias = Math.floor((Date.now() - fechaServidor(actualizadoEn).getTime()) / 86400000);
+    if (dias <= 90) base = { clase: "verde", texto: `Actualizado hace ${dias} día${dias === 1 ? "" : "s"}` };
+    else if (dias <= 180) base = { clase: "ambar", texto: `Sin revisar hace ${dias} días` };
+    else base = { clase: "rojo", texto: `Sin revisar hace ${dias} días` };
+  }
+  if (validadoPor) base.texto += ` · Validado por ${validadoPor}`;
+  return base;
 }
 
 function poblarOpcionesEstado() {
@@ -840,7 +954,7 @@ async function cargarDependencias() {
   for (const d of CACHE_DEPS) {
     const tr = document.createElement("tr");
     const nombreSede = d.sede ? d.sede.nombre : "—";
-    const sem = semaforoVigencia(d.actualizado_en);
+    const sem = semaforoVigencia(d.actualizado_en, d.validado_por);
     tr.innerHTML = `
       <td>${d.nombre}</td>
       <td>${d.tipo}</td>
@@ -949,6 +1063,8 @@ async function cargarEnFormulario(id) {
   document.getElementById("f-telefono").value = d.telefono || "";
   document.getElementById("f-correo").value = d.correo || "";
   document.getElementById("f-titular").value = d.titular || "";
+  document.getElementById("f-validado-por").value = d.validado_por || "";
+  document.getElementById("f-proxima-revision").value = d.proxima_revision ? d.proxima_revision.slice(0, 10) : "";
   document.getElementById("f-rampa").checked = !!d.rampa;
   document.getElementById("f-ascensor").checked = !!d.ascensor;
   document.getElementById("f-banio").checked = !!d.banio_accesible;
@@ -1025,6 +1141,8 @@ document.getElementById("form-dep").addEventListener("submit", async (e) => {
     telefono: document.getElementById("f-telefono").value || null,
     correo: document.getElementById("f-correo").value || null,
     titular: document.getElementById("f-titular").value || null,
+    validado_por: document.getElementById("f-validado-por").value || null,
+    proxima_revision: document.getElementById("f-proxima-revision").value || null,
     rampa: document.getElementById("f-rampa").checked,
     ascensor: document.getElementById("f-ascensor").checked,
     banio_accesible: document.getElementById("f-banio").checked,
@@ -1117,7 +1235,7 @@ async function cargarAuditoria() {
   tbody.innerHTML = "";
   for (const r of registros) {
     const tr = document.createElement("tr");
-    const fecha = new Date(r.fecha).toLocaleString("es-PE");
+    const fecha = fechaServidor(r.fecha).toLocaleString("es-PE");
     // El detalle puede contener texto libre que alguien más escribió (nombre
     // de una dependencia, motivo de un rechazo...) -- escaparHtml() evita que
     // se ejecute como HTML/JS en la sesión de quien lea la auditoría.

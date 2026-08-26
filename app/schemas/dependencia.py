@@ -31,6 +31,8 @@ class DependenciaBase(BaseModel):
     area: Optional[str] = None
     responsable_validar: Optional[str] = None
     titular: Optional[str] = None
+    validado_por: Optional[str] = None
+    proxima_revision: Optional[datetime] = None
 
 
 class DependenciaCreate(DependenciaBase):

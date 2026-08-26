@@ -12,6 +12,7 @@ from fastapi.staticfiles import StaticFiles
 from app.config import settings
 from app.routers import (
     admin_auditoria,
+    admin_cobertura,
     admin_dependencias,
     admin_edificios,
     admin_metricas,
@@ -89,9 +90,24 @@ app.include_router(admin_usuarios.router, prefix=f"{API_PREFIX}/admin/usuarios",
 app.include_router(admin_auditoria.router, prefix=f"{API_PREFIX}/admin/auditoria", tags=["admin-auditoria"])
 app.include_router(admin_metricas.router, prefix=f"{API_PREFIX}/admin/metricas", tags=["admin-métricas"])
 app.include_router(admin_qr.router, prefix=f"{API_PREFIX}/admin/qr", tags=["admin-qr"])
+app.include_router(admin_cobertura.router, prefix=f"{API_PREFIX}/admin/cobertura", tags=["admin-cobertura"])
 
 app.mount("/css", StaticFiles(directory=STATIC_DIR / "css"), name="css")
 app.mount("/js", StaticFiles(directory=STATIC_DIR / "js"), name="js")
+app.mount("/icons", StaticFiles(directory=STATIC_DIR / "icons"), name="icons")
+
+
+@app.get("/manifest.json", include_in_schema=False)
+def manifest():
+    return FileResponse(STATIC_DIR / "manifest.json")
+
+
+@app.get("/sw.js", include_in_schema=False)
+def service_worker():
+    # Servido en la raíz (no bajo /js) a propósito: el alcance ("scope") de
+    # un service worker es, por defecto, la carpeta desde la que se sirve
+    # -- si viviera en /js/sw.js solo podría controlar /js/, no toda la app.
+    return FileResponse(STATIC_DIR / "sw.js", media_type="application/javascript")
 
 
 @app.get("/", include_in_schema=False)
