@@ -112,6 +112,13 @@ CONEXIONES = [
      "El depósito y la salida vehicular están hacia la fachada."),
 ]
 
+# clave de nodo -> nombre exacto de la dependencia ya cargada en el catálogo
+# (confirmado por búsqueda real: es la única "Mesa de Partes" en el piso 1).
+# Nunca sobrescribe un vínculo que ya se haya puesto a mano desde el panel.
+VINCULOS = {
+    "recepcion_a": "Mesa de Partes (Ubicación de Expedientes y Recepción de Solicitudes)",
+}
+
 
 def aplicar(db) -> dict:
     sede = db.query(models.Sede).filter(models.Sede.nombre == SEDE_NOMBRE).first()
@@ -175,12 +182,31 @@ def aplicar(db) -> dict:
         )
         creados_conexion += 1
 
+    vinculados = 0
+    sin_encontrar = []
+    for clave, nombre_dependencia in VINCULOS.items():
+        nodo = db.query(models.NodoUbicacion).filter(models.NodoUbicacion.id == ids[clave]).first()
+        if nodo.dependencia_id is not None:
+            continue  # ya vinculado (a mano o en una corrida previa) -- no se pisa
+        dep = (
+            db.query(models.Dependencia)
+            .filter(models.Dependencia.sede_id == sede.id, models.Dependencia.nombre == nombre_dependencia)
+            .first()
+        )
+        if not dep:
+            sin_encontrar.append(nombre_dependencia)
+            continue
+        nodo.dependencia_id = dep.id
+        vinculados += 1
+
     db.commit()
     return {
         "nodos_creados": creados_nodo,
         "nodos_reusados": reusados_nodo,
         "conexiones_creadas": creados_conexion,
         "conexiones_reusadas": reusadas_conexion,
+        "vinculados": vinculados,
+        "sin_encontrar": sin_encontrar,
     }
 
 
@@ -192,3 +218,8 @@ if __name__ == "__main__":
         db.close()
     print(f"Nodos creados: {resumen['nodos_creados']} (ya existían: {resumen['nodos_reusados']})")
     print(f"Conexiones creadas: {resumen['conexiones_creadas']} (ya existían: {resumen['conexiones_reusadas']})")
+    print(f"Nodos vinculados a una dependencia: {resumen['vinculados']}")
+    if resumen["sin_encontrar"]:
+        print("Dependencias no encontradas para vincular (revisar el nombre exacto):")
+        for nombre in resumen["sin_encontrar"]:
+            print(f"  - {nombre}")
