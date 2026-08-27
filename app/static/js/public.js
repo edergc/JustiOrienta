@@ -202,36 +202,64 @@ function renderMapaSVG(pasos) {
   `;
 }
 
-// ── Diagrama genérico "planta típica" (pisos 4 al 20) ──
-// No hay datos de qué oficina exacta ocupa cada piso, así que este esquema
-// no representa un piso real en particular -- solo el patrón que sí está
-// documentado y se repite en esos pisos (hall de ascensores central rodeado
-// por un anillo de oficinas, con una sala de reuniones en cada extremo).
-// Sirve para que el ciudadano ubique el tipo de piso al que llega, no la
-// puerta exacta -- mismo espíritu que el aviso de texto que reemplaza.
+// ── Diagrama "planta típica" (pisos 4 al 20) ──
+// Esquema propio (formas dibujadas a mano, no una copia del plano de
+// terceros) que respeta el patrón real documentado: planta en abanico con
+// un hall de ascensores central y dos alas simétricas de oficinas a lo
+// largo de un corredor curvo, con una sala de apoyo junto al hall y una
+// sala de reuniones al final de cada ala -- el plano documenta dos
+// variantes de esa sala de apoyo (pisos 4 al 11: sala de comunicaciones;
+// pisos 12 al 20: sala de cómputo + archivo), así que este esquema también
+// las distingue. No hay dato de qué oficina exacta ocupa cada punto del
+// corredor, así que esas etiquetas son genéricas -- sirve para ubicar el
+// tipo de piso al que se llega, no la puerta exacta.
 const PISO_TIPICO_MIN = 4;
 const PISO_TIPICO_MAX = 20;
+const PISO_TIPICO_CORTE_RANGO = 11; // último piso del rango "4 al 11" -- de ahí en adelante, "12 al 20"
 
-const OFICINAS_TIPICAS = [
-  [16, 34], [13, 44], [14, 54], [19, 63],
-  [84, 34], [87, 44], [86, 54], [81, 63],
-];
-const SALAS_REUNION_TIPICAS = [[27, 71], [73, 71]];
+const ALA_IZQUIERDA_TIPICA = [[38, 26], [23, 30], [15, 40], [12, 52], [15, 63], [23, 72]];
+const ALA_DERECHA_TIPICA = ALA_IZQUIERDA_TIPICA.map(([x, y]) => [100 - x, y]);
+
+function _etiquetasAlaTipica(esRangoBajo) {
+  // El primer punto de cada ala (el más cercano al hall) es la sala de
+  // apoyo documentada para ese rango de pisos; el último es siempre la
+  // sala de reuniones del extremo del ala.
+  return esRangoBajo
+    ? ["Sala de comunicaciones", "Oficina", "Oficina", "Oficina", "Oficina", "Sala de reuniones"]
+    : ["Sala de cómputo", "Archivo", "Oficina", "Oficina", "Oficina", "Sala de reuniones"];
+}
+
+function _corredorTipicoPath(puntos) {
+  const [inicio, ...resto] = puntos;
+  return `M${inicio[0]},${inicio[1]} ` + resto.map(([x, y]) => `L${x},${y}`).join(" ");
+}
 
 function renderMapaGenericoSVG(piso, nombreDestino) {
-  const oficinas = OFICINAS_TIPICAS.map(([x, y]) => `<circle class="mapa-oficina-tipica" cx="${x}" cy="${y}" r="2.2" />`).join("");
-  const salas = SALAS_REUNION_TIPICAS
-    .map(([x, y]) => `<g><title>Sala de reuniones</title><circle class="mapa-sala-tipica" cx="${x}" cy="${y}" r="3" /></g>`)
-    .join("");
+  const pisoNum = parseInt(piso, 10);
+  const esRangoBajo = pisoNum <= PISO_TIPICO_CORTE_RANGO;
+  const etiquetas = _etiquetasAlaTipica(esRangoBajo);
+
+  const dibujarAla = (puntos) =>
+    puntos
+      .map(([x, y], i) => {
+        const esExtremo = i === 0 || i === puntos.length - 1;
+        const clase = esExtremo ? "mapa-sala-tipica" : "mapa-oficina-tipica";
+        return `<g><title>${escaparHtmlPublico(etiquetas[i])}</title><rect class="${clase}" x="${x - 3.6}" y="${y - 2.6}" width="7.2" height="5.2" rx="1" /></g>`;
+      })
+      .join("");
+
   return `
     <div class="mapa-ruta-contenedor">
       <svg class="mapa-ruta-svg" viewBox="0 0 100 92" role="img" aria-label="Esquema típico del piso ${escaparHtmlPublico(piso)}" preserveAspectRatio="xMidYMid meet">
-        <ellipse class="mapa-edificio" cx="50" cy="48" rx="44" ry="40" />
-        ${oficinas}
-        ${salas}
-        <g><title>Hall de ascensores -- llegaste aquí</title><circle class="mapa-pin origen" cx="50" cy="22" r="3.2" /></g>
-        <text class="mapa-pin-etiqueta" x="50" y="15" text-anchor="middle">Hall de ascensores</text>
-        <text class="mapa-rotulo-piso" x="50" y="86" text-anchor="middle">Piso ${escaparHtmlPublico(piso)} -- distribución típica</text>
+        <path class="mapa-edificio" d="M50,9 C30,9 16,24 11,44 C7,61 16,77 35,87 C45,91 55,91 65,87
+          C84,77 93,61 89,44 C84,24 70,9 50,9 Z" />
+        <path class="mapa-corredor" d="${_corredorTipicoPath(ALA_IZQUIERDA_TIPICA)}" />
+        <path class="mapa-corredor" d="${_corredorTipicoPath(ALA_DERECHA_TIPICA)}" />
+        ${dibujarAla(ALA_IZQUIERDA_TIPICA)}
+        ${dibujarAla(ALA_DERECHA_TIPICA)}
+        <g><title>Hall de ascensores -- llegaste aquí</title><circle class="mapa-pin origen" cx="50" cy="17" r="3.2" /></g>
+        <text class="mapa-pin-etiqueta" x="50" y="10" text-anchor="middle">Hall de ascensores</text>
+        <text class="mapa-rotulo-piso" x="50" y="90" text-anchor="middle">Piso ${escaparHtmlPublico(piso)} -- distribución típica (pisos ${esRangoBajo ? "4 al 11" : "12 al 20"})</text>
       </svg>
       <p class="hint mapa-tipica-aviso">Pregunta en este piso por "${escaparHtmlPublico(nombreDestino)}".</p>
     </div>
