@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
-from app import correo, crud, schemas, security
+from app import correo, crud, rate_limit, schemas, security
 from app.config import settings
 from app.database import get_db
 from app.models.base import ahora_utc
@@ -68,22 +68,31 @@ def cambiar_mi_password(
     return {"ok": True}
 
 
-@router.post("/olvide-password")
-def olvide_password(payload: schemas.OlvidePasswordIn, db: Session = Depends(get_db)):
-    usuario = crud.usuarios.obtener_por_dni(db, payload.dni)
-    if not usuario:
-        raise HTTPException(status_code=404, detail="No encontramos una cuenta con ese DNI.")
-    if not usuario.email:
-        raise HTTPException(
-            status_code=409,
-            detail="Esa cuenta no tiene un correo registrado. Pide a un(a) administrador(a) que te lo "
-            "agregue, o que te restablezca la contraseña directamente desde el panel.",
-        )
+MENSAJE_OLVIDE_PASSWORD = (
+    "Si existe una cuenta con ese DNI y tiene un correo registrado, te enviamos un enlace a ese correo."
+)
 
-    token = crud.usuarios.generar_solicitud_reset(db, usuario)
-    enlace = f"{settings.url_publica}/admin?reset={token}"
-    correo.enviar_correo_restablecer(usuario.email, usuario.nombre, enlace, crud.usuarios.MINUTOS_VIGENCIA_RESET)
-    return {"ok": True, "mensaje": "Te enviamos un enlace a tu correo registrado."}
+
+@router.post("/olvide-password")
+def olvide_password(payload: schemas.OlvidePasswordIn, request: Request, db: Session = Depends(get_db)):
+    # Límite por DNI (evita bombardear de correos una cuenta ajena) y por IP
+    # (evita probar DNIs uno por uno) -- ver app/rate_limit.py.
+    ip = request.client.host if request.client else "sin-ip"
+    if not rate_limit.permitido(f"olvide-dni:{payload.dni}", maximo=3, ventana_segundos=900):
+        raise HTTPException(status_code=429, detail="Demasiados intentos para este DNI. Espera unos minutos.")
+    if not rate_limit.permitido(f"olvide-ip:{ip}", maximo=10, ventana_segundos=900):
+        raise HTTPException(status_code=429, detail="Demasiados intentos. Espera unos minutos.")
+
+    usuario = crud.usuarios.obtener_por_dni(db, payload.dni)
+    if usuario and usuario.email:
+        token = crud.usuarios.generar_solicitud_reset(db, usuario)
+        enlace = f"{settings.url_publica}/admin?reset={token}"
+        correo.enviar_correo_restablecer(usuario.email, usuario.nombre, enlace, crud.usuarios.MINUTOS_VIGENCIA_RESET)
+
+    # Misma respuesta exista o no la cuenta, y tenga o no correo registrado
+    # -- así nadie puede usar este endpoint para averiguar qué DNIs tienen
+    # cuenta en el panel de administración.
+    return {"ok": True, "mensaje": MENSAJE_OLVIDE_PASSWORD}
 
 
 @router.post("/restablecer-password")
