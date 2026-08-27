@@ -4,7 +4,8 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Justicia Orienta — Panel de administración</title>
-<link rel="stylesheet" href="/css/styles.css" />
+<link rel="stylesheet" href="/css/styles.css?v=5" />
+<link rel="stylesheet" href="/css/login-foto.css?v=1" />
 </head>
 <body>
 <div class="top-banner admin" role="note">PANEL DE ADMINISTRACIÓN — cambios aquí se reflejan de inmediato en el sitio público, salvo el contenido "en revisión"</div>
@@ -12,523 +13,612 @@
 <div id="vista-login">
   <div class="login-shell">
     <div class="login-marca">
-      <svg class="site-mark" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
-        <circle cx="24" cy="24" r="21" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="2" />
-        <path d="M24 10 L28 24 L24 27 L20 24 Z" fill="#fff" />
-        <path d="M24 38 L20 24 L24 21 L28 24 Z" fill="rgba(255,255,255,0.65)" />
-        <circle cx="24" cy="24" r="2.4" fill="#fff" />
-      </svg>
-      <h1>Justicia Orienta</h1>
-      <p>Panel de administración del catálogo</p>
-      <ul class="login-marca-lista">
-        <li>Gestión del catálogo por área</li>
-        <li>Flujo de revisión y aprobación</li>
-        <li>Indicadores para decisiones</li>
-      </ul>
+      <div class="login-marca-arriba">
+        <svg class="site-mark" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+          <circle cx="24" cy="24" r="21" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="2" />
+          <path d="M24 10 L28 24 L24 27 L20 24 Z" fill="#fff" />
+          <path d="M24 38 L20 24 L24 21 L28 24 Z" fill="rgba(255,255,255,0.7)" />
+          <circle cx="24" cy="24" r="2.4" fill="#fff" />
+        </svg>
+        <span class="login-marca-nombre">Justicia Orienta</span>
+      </div>
+
+      <div class="login-marca-medio">
+        <h1>Panel de administración</h1>
+        <ul class="login-marca-lista">
+          <li>Gestión del catálogo por área</li>
+          <li>Flujo de revisión y aprobación</li>
+          <li>Indicadores para decisiones</li>
+        </ul>
+      </div>
+
+      <p class="login-marca-credito">Coordinación de Informática — Corte Superior de Justicia de Lima</p>
     </div>
     <div class="login-box">
-      <h2>Iniciar sesión</h2>
-      <div id="login-error"></div>
-      <form id="form-login">
-        <div class="field"><label for="login-dni">DNI</label><input id="login-dni" type="text" inputmode="numeric" pattern="[0-9]{8}" maxlength="8" placeholder="8 dígitos" autocomplete="username" required /></div>
-        <div class="field"><label for="login-pass">Contraseña</label><input id="login-pass" type="password" autocomplete="current-password" required /></div>
-        <button class="btn" type="submit" style="margin-top:0.4rem; width:100%;">Ingresar</button>
-      </form>
-      <p style="text-align:center; margin:1.1rem 0 0;"><a href="/">← Volver al inicio</a></p>
+      <div class="login-box-interior">
+        <div id="login-box-login">
+          <p class="login-box-eyebrow">Acceso administrativo</p>
+          <h2>Iniciar sesión</h2>
+          <p class="login-box-ayuda">Ingresa con el DNI y la contraseña que te asignó tu área.</p>
+          <div id="login-error"></div>
+          <form id="form-login">
+            <div class="field"><label for="login-dni">DNI</label><input id="login-dni" type="text" inputmode="numeric" pattern="[0-9]{8}" maxlength="8" placeholder="8 dígitos" autocomplete="username" required /></div>
+            <div class="field"><label for="login-pass">Contraseña</label><input id="login-pass" type="password" autocomplete="current-password" required /></div>
+            <button class="btn" type="submit" style="margin-top:0.4rem; width:100%;">Ingresar</button>
+          </form>
+          <p style="text-align:center; margin:0.9rem 0 0;"><button type="button" class="link-btn" id="btn-abrir-olvide">¿Olvidaste tu contraseña?</button></p>
+          <p style="text-align:center; margin:0.5rem 0 0;"><a href="/">← Volver al inicio</a></p>
+        </div>
+
+        <div id="login-box-restablecer" style="display:none;">
+          <p class="login-box-eyebrow">Restablecer contraseña</p>
+          <h2>Elige una nueva contraseña</h2>
+          <p class="login-box-ayuda">Escribe tu nueva contraseña para continuar.</p>
+          <div id="restablecer-error"></div>
+          <form id="form-restablecer">
+            <input type="hidden" id="r-token" />
+            <div class="field"><label for="r-nueva">Nueva contraseña (mínimo 6 caracteres)</label><input id="r-nueva" type="password" minlength="6" required /></div>
+            <div class="field"><label for="r-confirmar">Confirmar contraseña</label><input id="r-confirmar" type="password" minlength="6" required /></div>
+            <button class="btn" type="submit" style="margin-top:0.4rem; width:100%;">Guardar y continuar</button>
+          </form>
+          <p style="text-align:center; margin:0.9rem 0 0;"><a href="/admin">← Volver al inicio de sesión</a></p>
+        </div>
+      </div>
     </div>
+  </div>
+</div>
+
+<div id="modal-olvide" class="modal-backdrop" style="display:none;">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="olvide-titulo">
+    <h3 id="olvide-titulo">¿Olvidaste tu contraseña?</h3>
+    <p class="hint" style="margin-top:-0.4rem;">Escribe tu DNI. Si tu cuenta tiene un correo registrado, te mandamos un enlace para elegir una contraseña nueva.</p>
+    <form id="form-olvide">
+      <div class="field"><label for="olvide-dni">DNI</label><input id="olvide-dni" type="text" inputmode="numeric" pattern="[0-9]{8}" maxlength="8" placeholder="8 dígitos" required /></div>
+      <div id="olvide-error"></div>
+      <div style="display:flex; gap:0.6rem; margin-top:0.9rem;">
+        <button class="btn" type="submit" id="btn-olvide-enviar">Enviar enlace</button>
+        <button class="btn secondary" type="button" id="btn-olvide-cancelar">Cerrar</button>
+      </div>
+    </form>
+    <div id="olvide-exito" style="display:none;"></div>
   </div>
 </div>
 
 <div id="vista-app" style="display:none;">
-  <div class="topbar-admin">
-    <a class="home" href="/" id="link-marca-admin" style="font-family:var(--font-display); font-weight:700; text-decoration:none; color:var(--ink);">Justicia Orienta</a>
-    <div>
-      <div class="perfil-menu">
-        <button class="btn secondary" id="btn-perfil" type="button" aria-haspopup="true" aria-expanded="false">
-          👤 Mi perfil
-        </button>
-        <div id="menu-perfil" class="card perfil-dropdown" style="display:none;">
-          <div class="perfil-cabecera">
-            <span class="perfil-avatar" id="perfil-avatar" aria-hidden="true"></span>
-            <div>
-              <strong id="perfil-nombre"></strong>
-              <p class="meta" style="margin:0.1rem 0 0;">Rol: <span id="perfil-rol"></span></p>
+  <div class="admin-shell">
+
+    <aside class="admin-sidebar">
+      <a class="admin-brand" href="/" id="link-marca-admin">
+        <svg class="site-mark" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+          <circle cx="24" cy="24" r="21" fill="none" stroke="var(--accent2)" stroke-width="2" />
+          <path d="M24 10 L28 24 L24 27 L20 24 Z" fill="var(--accent2)" />
+          <path d="M24 38 L20 24 L24 21 L28 24 Z" fill="var(--accent2)" opacity="0.65" />
+          <circle cx="24" cy="24" r="2.4" fill="var(--accent2)" />
+        </svg>
+        <span>Justicia Orienta</span>
+      </a>
+
+      <nav class="admin-nav" id="nav-tabs" aria-label="Secciones del panel">
+        <button type="button" class="tab-btn" data-tab="tab-dashboard" aria-pressed="true"><span class="ico" aria-hidden="true">📊</span>Dashboard</button>
+
+        <p class="admin-nav-grupo">Catálogo</p>
+        <button type="button" class="tab-btn" data-tab="tab-dependencias" aria-pressed="false"><span class="ico" aria-hidden="true">🗂</span>Dependencias</button>
+        <button type="button" class="tab-btn" data-tab="tab-sedes" aria-pressed="false"><span class="ico" aria-hidden="true">🏛</span>Sedes</button>
+        <button type="button" class="tab-btn" data-tab="tab-mapa" aria-pressed="false"><span class="ico" aria-hidden="true">🧭</span>Mapa interno</button>
+
+        <p class="admin-nav-grupo">Control</p>
+        <button type="button" class="tab-btn" data-tab="tab-usuarios" aria-pressed="false"><span class="ico" aria-hidden="true">👥</span>Usuarios</button>
+        <button type="button" class="tab-btn" data-tab="tab-auditoria" aria-pressed="false"><span class="ico" aria-hidden="true">🛡</span>Auditoría</button>
+      </nav>
+
+      <div class="admin-sidebar-foot">
+        <a href="/">← Volver al sitio público</a>
+      </div>
+    </aside>
+
+    <div class="admin-main">
+      <header class="admin-topbar">
+        <p class="admin-topbar-titulo" id="admin-topbar-titulo">Dashboard</p>
+        <div class="perfil-menu">
+          <button class="btn secondary" id="btn-perfil" type="button" aria-haspopup="true" aria-expanded="false">
+            👤 Mi perfil
+          </button>
+          <div id="menu-perfil" class="card perfil-dropdown" style="display:none;">
+            <div class="perfil-cabecera">
+              <span class="perfil-avatar" id="perfil-avatar" aria-hidden="true"></span>
+              <div>
+                <strong id="perfil-nombre"></strong>
+                <p class="meta" style="margin:0.1rem 0 0;">Rol: <span id="perfil-rol"></span></p>
+              </div>
             </div>
-          </div>
-          <p class="meta" style="margin:0 0 0.15rem;">DNI: <span id="perfil-dni"></span></p>
-          <p class="meta" id="perfil-area-fila" style="margin:0 0 0.7rem;">Área: <span id="perfil-area"></span></p>
-          <hr style="border:none; border-top:1px solid var(--line); margin:0 0 0.7rem;" />
-          <button class="btn secondary" id="btn-mi-cuenta" type="button" style="width:100%; margin-bottom:0.4rem;">Cambiar contraseña</button>
-          <button class="btn secondary" id="btn-logout" type="button" style="width:100%;">Cerrar sesión</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
-
-  <div id="modal-password" class="modal-backdrop" style="display:none;">
-    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-password-titulo">
-      <h3 id="modal-password-titulo">Cambiar mi contraseña</h3>
-      <p id="modal-password-motivo" class="hint" style="display:none; margin-top:-0.4rem;">
-        Tu contraseña actual la eligió otra persona (cuenta nueva, o restablecida por un(a) administrador(a)) --
-        elige una propia antes de continuar.
-      </p>
-      <form id="form-password">
-        <div class="field"><label for="p-actual">Contraseña actual</label><input id="p-actual" type="password" required /></div>
-        <div class="field"><label for="p-nueva">Contraseña nueva (mínimo 6 caracteres)</label><input id="p-nueva" type="password" required minlength="6" /></div>
-        <div id="form-password-error"></div>
-        <div style="display:flex; gap:0.6rem; margin-top:0.8rem;">
-          <button class="btn" type="submit">Guardar</button>
-          <button class="btn secondary" type="button" id="btn-password-cancelar">Cancelar</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <main class="wide">
-    <div class="stat-row" id="stats"></div>
-    <div class="stat-row" id="stats-detalle" style="margin-top:-0.6rem; margin-bottom:1.2rem;">
-      <div class="card" style="padding:0.9rem 1rem;">
-        <strong>Consultas más frecuentes</strong>
-        <ol id="lista-top-consultas" class="meta" style="padding-left:1.2rem; margin:0.5rem 0 0;"></ol>
-      </div>
-      <div class="card" style="padding:0.9rem 1rem;">
-        <strong>Consultas por sede</strong>
-        <ol id="lista-consultas-sede" class="meta" style="padding-left:1.2rem; margin:0.5rem 0 0;"></ol>
-      </div>
-      <div class="card" style="padding:0.9rem 1rem;">
-        <strong>Consultas por área</strong>
-        <ol id="lista-consultas-area" class="meta" style="padding-left:1.2rem; margin:0.5rem 0 0;"></ol>
-      </div>
-      <div class="card" style="padding:0.9rem 1rem;">
-        <strong>Consultas por tipo</strong>
-        <ol id="lista-consultas-tipo" class="meta" style="padding-left:1.2rem; margin:0.5rem 0 0;"></ol>
-      </div>
-      <div class="card" style="padding:0.9rem 1rem;">
-        <strong>Búsquedas sin resultado, más frecuentes</strong>
-        <p class="hint" style="margin:0.2rem 0 0;">Lo que la gente busca y todavía no está en el catálogo.</p>
-        <ol id="lista-top-sin-resultado" class="meta" style="padding-left:1.2rem; margin:0.5rem 0 0;"></ol>
-      </div>
-      <div class="card" style="padding:0.9rem 1rem;">
-        <strong>Solicitudes de cobertura</strong>
-        <p class="hint" style="margin:0.2rem 0 0;">Búsquedas sin resultado ya asignadas a un área, con seguimiento -- cierra el ciclo del motor de descubrimiento.</p>
-        <ul id="lista-cobertura" class="meta" style="list-style:none; padding-left:0; margin:0.5rem 0 0;"></ul>
-      </div>
-      <div class="card" style="padding:0.9rem 1rem;">
-        <strong>Pendientes de aprobar, por área</strong>
-        <p class="hint" style="margin:0.2rem 0 0;">Antigüedad promedio desde el último cambio, sin haber sido aprobado.</p>
-        <ol id="lista-pendientes-area" class="meta" style="padding-left:1.2rem; margin:0.5rem 0 0;"></ol>
-      </div>
-      <div class="card" style="padding:0.9rem 1rem;">
-        <strong>Completitud de datos, por área</strong>
-        <p class="hint" style="margin:0.2rem 0 0;">De lo ya publicado: % con horario, teléfono y algún dato de accesibilidad confirmado.</p>
-        <ol id="lista-completitud-area" class="meta" style="padding-left:1.2rem; margin:0.5rem 0 0;"></ol>
-      </div>
-    </div>
-
-    <div id="fila-reporte" style="display:none; margin-bottom:1.2rem;">
-      <button class="btn secondary" id="btn-descargar-reporte" type="button">⬇ Descargar reporte (Excel)</button>
-    </div>
-
-    <section id="panel-solo-consulta" class="card" style="display:none; padding:1.2rem; margin-bottom:1.2rem;">
-      <p class="meta" style="margin:0;">
-        Tu perfil es de <strong>consulta</strong>: podés ver los indicadores de arriba, descargar el
-        reporte, y en la pestaña "Auditoría" de abajo, quién cambió qué y los posibles duplicados del
-        catálogo -- para supervisión, en solo lectura. La gestión del catálogo (crear/editar dependencias,
-        sedes, usuarios) la maneja cada área desde su propio rol.
-      </p>
-    </section>
-
-    <nav class="toolbar" id="nav-tabs" style="justify-content:flex-start; border:1px solid var(--line); border-radius:10px; margin-bottom:1.2rem;" aria-label="Secciones del panel">
-      <button type="button" class="tab-btn" data-tab="tab-dependencias" aria-pressed="true">Dependencias</button>
-      <button type="button" class="tab-btn" data-tab="tab-sedes" aria-pressed="false">Sedes</button>
-      <button type="button" class="tab-btn" data-tab="tab-usuarios" aria-pressed="false">Usuarios</button>
-      <button type="button" class="tab-btn" data-tab="tab-auditoria" aria-pressed="false">Auditoría</button>
-      <button type="button" class="tab-btn" data-tab="tab-mapa" aria-pressed="false">Mapa interno</button>
-    </nav>
-
-    <!-- ═══ DEPENDENCIAS ═══ -->
-    <section id="tab-dependencias" class="tab-panel">
-      <div class="panel">
-        <div class="panel-cabecera">
-          <h3>Dependencias</h3>
-          <div class="panel-cabecera-acciones">
-            <button class="btn secondary" id="btn-exportar-catalogo" type="button">⬇ Exportar catálogo (Excel)</button>
-            <button class="btn" id="btn-nueva-dependencia" type="button">+ Nueva dependencia</button>
+            <p class="meta" style="margin:0 0 0.15rem;">DNI: <span id="perfil-dni"></span></p>
+            <p class="meta" id="perfil-area-fila" style="margin:0 0 0.7rem;">Área: <span id="perfil-area"></span></p>
+            <hr style="border:none; border-top:1px solid var(--line); margin:0 0 0.7rem;" />
+            <button class="btn secondary" id="btn-mi-cuenta" type="button" style="width:100%; margin-bottom:0.4rem;">Cambiar contraseña</button>
+            <button class="btn secondary" id="btn-logout" type="button" style="width:100%;">Cerrar sesión</button>
           </div>
         </div>
-        <div style="display:flex; gap:0.8rem; flex-wrap:wrap; margin-bottom:0.8rem;">
-          <div class="field" style="max-width:14rem;">
-            <label for="filtro-estado">Filtrar por estado</label>
-            <select id="filtro-estado">
-              <option value="">Todos</option>
-              <option value="revision">En revisión</option>
-              <option value="activo">Activo</option>
-              <option value="inactivo">Inactivo</option>
-            </select>
-          </div>
-          <div class="field" style="flex:1; min-width:12rem;">
-            <label for="filtro-nombre">Buscar por nombre</label>
-            <input id="filtro-nombre" type="text" placeholder="Ej: civil, recursos..." />
-          </div>
-        </div>
-        <div class="table-wrap">
-          <table class="admin" id="tabla-dependencias">
-            <thead><tr><th>Nombre</th><th>Tipo</th><th>Sede / piso</th><th>Estado</th><th>Vigencia</th><th>Acciones</th></tr></thead>
-            <tbody></tbody>
-          </table>
-        </div>
-        <div id="paginacion-dep" class="paginacion"></div>
-      </div>
+      </header>
 
-      <div id="modal-cobertura" class="modal-backdrop" style="display:none;">
-        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="cobertura-titulo">
-          <h3 id="cobertura-titulo">Asignar a un área</h3>
-          <form id="form-cobertura">
-            <p class="meta">Búsqueda: <strong id="cobertura-query"></strong></p>
-            <div class="field"><label for="cob-area">Área responsable *</label><input id="cob-area" required /></div>
-            <div class="field"><label for="cob-comentario">Comentario</label><textarea id="cob-comentario"></textarea></div>
-            <div id="cobertura-error"></div>
-            <div style="display:flex; gap:0.6rem; margin-top:0.9rem;">
-              <button class="btn" type="submit">Asignar</button>
-              <button class="btn secondary" type="button" id="btn-cobertura-cancelar">Cancelar</button>
+      <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+      <div id="modal-password" class="modal-backdrop" style="display:none;">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-password-titulo">
+          <h3 id="modal-password-titulo">Cambiar mi contraseña</h3>
+          <p id="modal-password-motivo" class="hint" style="display:none; margin-top:-0.4rem;">
+            Tu contraseña actual la eligió otra persona (cuenta nueva, o restablecida por un(a) administrador(a)) --
+            elige una propia antes de continuar.
+          </p>
+          <form id="form-password">
+            <div class="field"><label for="p-actual">Contraseña actual</label><input id="p-actual" type="password" required /></div>
+            <div class="field"><label for="p-nueva">Contraseña nueva (mínimo 6 caracteres)</label><input id="p-nueva" type="password" required minlength="6" /></div>
+            <div id="form-password-error"></div>
+            <div style="display:flex; gap:0.6rem; margin-top:0.8rem;">
+              <button class="btn" type="submit">Guardar</button>
+              <button class="btn secondary" type="button" id="btn-password-cancelar">Cancelar</button>
             </div>
           </form>
         </div>
       </div>
 
-      <div id="modal-historial" class="modal-backdrop" style="display:none;">
-        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="historial-titulo">
-          <h3 id="historial-titulo">Trazabilidad</h3>
-          <div id="historial-contenido"></div>
-          <div style="display:flex; gap:0.6rem; margin-top:0.9rem;">
-            <button class="btn secondary" type="button" id="btn-historial-cerrar">Cerrar</button>
-          </div>
-        </div>
-      </div>
+      <main class="admin-content">
 
-      <div class="panel" id="panel-titulares" style="display:none; margin-top:1rem;">
-        <div class="panel-cabecera">
-          <h3>Actualizar titulares desde Conformación</h3>
-        </div>
-        <p class="hint" style="margin:0 0 0.8rem;">
-          Sube el reporte oficial de "Conformación" (Excel con hojas SALAS, JUZGADOS, PAZ LETRADO, TRANSITORIOS,
-          ODECMA) para llenar el titular de las dependencias que ya existen en el catálogo. Nunca crea dependencias
-          nuevas ni sobrescribe un titular ya cargado a mano.
-        </p>
-        <form id="form-titulares" style="display:flex; gap:0.8rem; flex-wrap:wrap; align-items:flex-end;">
-          <div class="field" style="min-width:14rem;">
-            <label for="t-sede">Sede a actualizar</label>
-            <select id="t-sede">
-              <option value="">Todas las sedes que traiga el archivo</option>
-            </select>
+        <!-- ═══ DASHBOARD ═══ -->
+        <section id="tab-dashboard" class="tab-panel">
+          <div class="dash-cabecera">
+            <h2>Dashboard</h2>
+            <p>Cómo está funcionando Justicia Orienta ahora mismo -- para decidir, no solo para mirar.</p>
           </div>
-          <div class="field" style="min-width:16rem;">
-            <label for="t-archivo">Archivo Excel de Conformación *</label>
-            <input id="t-archivo" type="file" accept=".xlsx" required />
-          </div>
-          <button class="btn" type="submit" id="btn-titulares-enviar">Actualizar titulares</button>
-        </form>
-        <div id="resultado-titulares" style="margin-top:0.9rem;"></div>
-      </div>
 
-      <div id="modal-dependencia" class="modal-backdrop" style="display:none;">
-        <div class="modal ancho" role="dialog" aria-modal="true" aria-labelledby="form-titulo">
-          <h3 id="form-titulo">Nueva dependencia</h3>
-          <form id="form-dep">
-            <input type="hidden" id="f-id" />
-            <div class="form-grid">
-              <div class="field"><label for="f-nombre">Nombre oficial *</label><input id="f-nombre" required /></div>
-              <div class="field"><label for="f-alias">Alias (separados por coma)</label><input id="f-alias" placeholder="once civil, 11 civil" /></div>
-              <div class="field">
-                <label for="f-tipo">Tipo *</label>
-                <select id="f-tipo" required>
-                  <option value="jurisdiccional">Jurisdiccional</option>
-                  <option value="administrativa">Administrativa</option>
-                  <option value="servicio">Servicio</option>
+          <section id="panel-solo-consulta" class="card dash-card" style="display:none;">
+            <p class="meta" style="margin:0;">
+              Tu perfil es de <strong>consulta</strong>: podés ver los indicadores de aquí, descargar el
+              reporte, y en "Auditoría" quién cambió qué y los posibles duplicados del catálogo -- para
+              supervisión, en solo lectura. La gestión del catálogo (crear/editar dependencias, sedes,
+              usuarios) la maneja cada área desde su propio rol.
+            </p>
+          </section>
+
+          <div class="stat-row" id="stats"></div>
+
+          <div id="fila-reporte" style="display:none;">
+            <button class="btn secondary" id="btn-descargar-reporte" type="button">⬇ Descargar reporte (Excel)</button>
+          </div>
+
+          <div class="dash-seccion dash-seccion--actividad">
+            <h3 class="dash-seccion-titulo"><span class="dash-seccion-ico" aria-hidden="true">🔎</span>Qué está buscando la gente</h3>
+            <div class="dash-grid">
+              <div class="card dash-card dash-card--ancha">
+                <strong><span class="dash-ico" aria-hidden="true">🔎</span>Consultas más frecuentes</strong>
+                <ol id="lista-top-consultas" class="meta"></ol>
+              </div>
+              <div class="card dash-card">
+                <strong><span class="dash-ico" aria-hidden="true">🏛</span>Consultas por sede</strong>
+                <ol id="lista-consultas-sede" class="meta"></ol>
+              </div>
+              <div class="card dash-card">
+                <strong><span class="dash-ico" aria-hidden="true">🏷</span>Consultas por área</strong>
+                <ol id="lista-consultas-area" class="meta"></ol>
+              </div>
+              <div class="card dash-card">
+                <strong><span class="dash-ico" aria-hidden="true">📄</span>Consultas por tipo</strong>
+                <ol id="lista-consultas-tipo" class="meta"></ol>
+              </div>
+            </div>
+          </div>
+
+          <div class="dash-seccion dash-seccion--calidad">
+            <h3 class="dash-seccion-titulo"><span class="dash-seccion-ico" aria-hidden="true">✅</span>Atención y calidad del catálogo</h3>
+            <div class="dash-grid">
+              <div class="card dash-card dash-card--ancha">
+                <strong><span class="dash-ico" aria-hidden="true">❓</span>Búsquedas sin resultado, más frecuentes</strong>
+                <p class="hint">Lo que la gente busca y todavía no está en el catálogo.</p>
+                <ol id="lista-top-sin-resultado" class="meta"></ol>
+              </div>
+              <div class="card dash-card">
+                <strong><span class="dash-ico" aria-hidden="true">📨</span>Solicitudes de cobertura</strong>
+                <p class="hint">Búsquedas sin resultado ya asignadas a un área, con seguimiento -- cierra el ciclo del motor de descubrimiento.</p>
+                <ul id="lista-cobertura" class="meta" style="list-style:none; padding-left:0;"></ul>
+              </div>
+              <div class="card dash-card dash-card--ancha">
+                <strong><span class="dash-ico" aria-hidden="true">⏳</span>Pendientes de aprobar, por área</strong>
+                <p class="hint">Antigüedad promedio desde el último cambio, sin haber sido aprobado.</p>
+                <ol id="lista-pendientes-area" class="meta"></ol>
+              </div>
+              <div class="card dash-card">
+                <strong><span class="dash-ico" aria-hidden="true">✅</span>Completitud de datos, por área</strong>
+                <p class="hint">De lo ya publicado: % con horario, teléfono y algún dato de accesibilidad confirmado.</p>
+                <ol id="lista-completitud-area" class="meta"></ol>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ═══ DEPENDENCIAS ═══ -->
+        <section id="tab-dependencias" class="tab-panel" style="display:none;">
+          <div class="panel">
+            <div class="panel-cabecera">
+              <h3>Dependencias</h3>
+              <div class="panel-cabecera-acciones">
+                <button class="btn secondary" id="btn-exportar-catalogo" type="button">⬇ Exportar catálogo (Excel)</button>
+                <button class="btn" id="btn-nueva-dependencia" type="button">+ Nueva dependencia</button>
+              </div>
+            </div>
+            <div class="panel-filtros">
+              <div class="field" style="max-width:14rem;">
+                <label for="filtro-estado">Filtrar por estado</label>
+                <select id="filtro-estado">
+                  <option value="">Todos</option>
+                  <option value="revision">En revisión</option>
+                  <option value="activo">Activo</option>
+                  <option value="inactivo">Inactivo</option>
                 </select>
               </div>
-              <div class="field"><label for="f-area">Área (para permisos de edición) *</label><input id="f-area" required /></div>
-              <div class="field"><label for="f-categoria">Categoría</label><input id="f-categoria" /></div>
-              <div class="field">
-                <label for="f-sede">Sede *</label>
-                <select id="f-sede" required></select>
+              <div class="field" style="flex:1; min-width:12rem;">
+                <label for="filtro-nombre">Buscar por nombre</label>
+                <input id="filtro-nombre" type="text" placeholder="Ej: civil, recursos..." />
               </div>
-              <div class="field">
-                <label for="f-edificio">Edificio</label>
-                <select id="f-edificio"><option value="">— Ninguno —</option></select>
-              </div>
-              <div class="field"><label for="f-piso">Piso</label><input id="f-piso" /></div>
-              <div class="field"><label for="f-oficina">Oficina</label><input id="f-oficina" /></div>
-              <div class="field"><label for="f-horario">Horario</label><input id="f-horario" /></div>
-              <div class="field"><label for="f-telefono">Teléfono / anexo</label><input id="f-telefono" /></div>
-              <div class="field"><label for="f-correo">Correo</label><input id="f-correo" type="email" /></div>
-              <div class="field" style="grid-column:1/-1;">
-                <label for="f-titular">Titular / responsable a cargo</label>
-                <input id="f-titular" placeholder="Ej.: Dra. Ana Pérez López - Jueza titular" />
-              </div>
-              <div class="field">
-                <label for="f-validado-por">Validado por</label>
-                <input id="f-validado-por" placeholder="Nombre de quien confirmó que el dato sigue vigente" />
-              </div>
-              <div class="field">
-                <label for="f-proxima-revision">Próxima revisión</label>
-                <input id="f-proxima-revision" type="date" />
-              </div>
-              <div class="field" style="grid-column:1/-1;"><label for="f-servicios">Resumen de servicios</label><textarea id="f-servicios"></textarea></div>
-              <div class="field" style="grid-column:1/-1;"><label for="f-requisitos">Requisitos</label><textarea id="f-requisitos"></textarea></div>
-              <div class="field" style="grid-column:1/-1;">
-                <span class="campo-etiqueta">Accesibilidad</span>
-                <div class="checkbox-grupo">
-                  <label><input type="checkbox" id="f-rampa" /> Rampa</label>
-                  <label><input type="checkbox" id="f-ascensor" /> Ascensor</label>
-                  <label><input type="checkbox" id="f-banio" /> Baño accesible</label>
-                  <label><input type="checkbox" id="f-ruta" /> Ruta accesible</label>
+            </div>
+            <div class="table-wrap">
+              <table class="admin" id="tabla-dependencias">
+                <thead><tr><th>Nombre</th><th>Tipo</th><th>Sede / piso</th><th>Estado</th><th>Vigencia</th><th>Acciones</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <div id="paginacion-dep" class="paginacion"></div>
+          </div>
+
+          <div id="modal-cobertura" class="modal-backdrop" style="display:none;">
+            <div class="modal" role="dialog" aria-modal="true" aria-labelledby="cobertura-titulo">
+              <h3 id="cobertura-titulo">Asignar a un área</h3>
+              <form id="form-cobertura">
+                <p class="meta">Búsqueda: <strong id="cobertura-query"></strong></p>
+                <div class="field"><label for="cob-area">Área responsable *</label><input id="cob-area" required /></div>
+                <div class="field"><label for="cob-comentario">Comentario</label><textarea id="cob-comentario"></textarea></div>
+                <div id="cobertura-error"></div>
+                <div style="display:flex; gap:0.6rem; margin-top:0.9rem;">
+                  <button class="btn" type="submit">Asignar</button>
+                  <button class="btn secondary" type="button" id="btn-cobertura-cancelar">Cancelar</button>
                 </div>
-              </div>
-              <div class="field" style="grid-column:1/-1;">
-                <label for="f-instrucciones">Cómo llegar dentro del edificio (opcional)</label>
-                <textarea id="f-instrucciones" placeholder="Ej.: Desde el ingreso principal, dirígete a los ascensores y sube al piso 5."></textarea>
-              </div>
-              <div class="field">
-                <label for="f-estado">Estado *</label>
-                <select id="f-estado" required></select>
-              </div>
-              <div class="field"><label for="f-responsable">Responsable de validar</label><input id="f-responsable" /></div>
+              </form>
             </div>
-            <div id="form-error"></div>
-            <div style="display:flex; gap:0.6rem; margin-top:0.9rem; flex-wrap:wrap;">
-              <button class="btn" type="submit">Guardar</button>
-              <button class="btn secondary" type="button" id="btn-cancelar">Cancelar</button>
-              <button class="btn" type="button" id="btn-aprobar" style="display:none; background:var(--accent2-strong);">✓ Aprobar y publicar</button>
-              <button class="btn secondary" type="button" id="btn-rechazar" style="display:none;">Devolver a revisión</button>
-            </div>
-          </form>
+          </div>
 
-          <div id="panel-servicios" style="display:none; margin-top:1.5rem; border-top:1px solid var(--line); padding-top:1rem;">
-            <h3 style="font-size:1rem;">Servicios de esta dependencia</h3>
-            <div id="lista-servicios" style="display:grid; gap:0.5rem; margin-bottom:0.8rem;"></div>
-            <form id="form-servicio" style="display:grid; gap:0.5rem;">
-              <div class="field"><label for="sv-nombre">Nuevo servicio</label><input id="sv-nombre" placeholder="Ej: Constancia de trabajo" required /></div>
-              <div class="field"><label for="sv-requisitos">Requisitos</label><input id="sv-requisitos" /></div>
-              <div class="field"><label for="sv-canal">Canal</label>
-                <select id="sv-canal">
-                  <option value="presencial">Presencial</option>
-                  <option value="virtual">Virtual</option>
-                  <option value="telefonico">Telefónico</option>
+          <div id="modal-historial" class="modal-backdrop" style="display:none;">
+            <div class="modal" role="dialog" aria-modal="true" aria-labelledby="historial-titulo">
+              <h3 id="historial-titulo">Trazabilidad</h3>
+              <div id="historial-contenido"></div>
+              <div style="display:flex; gap:0.6rem; margin-top:0.9rem;">
+                <button class="btn secondary" type="button" id="btn-historial-cerrar">Cerrar</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel" id="panel-titulares" style="display:none;">
+            <div class="panel-cabecera">
+              <h3>Actualizar titulares desde Conformación</h3>
+            </div>
+            <p class="hint" style="margin:0 0 0.8rem;">
+              Sube el reporte oficial de "Conformación" (Excel con hojas SALAS, JUZGADOS, PAZ LETRADO, TRANSITORIOS,
+              ODECMA) para llenar el titular de las dependencias que ya existen en el catálogo. Nunca crea dependencias
+              nuevas ni sobrescribe un titular ya cargado a mano.
+            </p>
+            <form id="form-titulares" style="display:flex; gap:0.8rem; flex-wrap:wrap; align-items:flex-end;">
+              <div class="field" style="min-width:14rem;">
+                <label for="t-sede">Sede a actualizar</label>
+                <select id="t-sede">
+                  <option value="">Todas las sedes que traiga el archivo</option>
                 </select>
               </div>
-              <button class="btn secondary" type="submit">Agregar servicio</button>
+              <div class="field" style="min-width:16rem;">
+                <label for="t-archivo">Archivo Excel de Conformación *</label>
+                <input id="t-archivo" type="file" accept=".xlsx" required />
+              </div>
+              <button class="btn" type="submit" id="btn-titulares-enviar">Actualizar titulares</button>
             </form>
+            <div id="resultado-titulares" style="margin-top:0.9rem;"></div>
           </div>
-        </div>
-      </div>
-    </section>
 
-    <!-- ═══ SEDES ═══ -->
-    <section id="tab-sedes" class="tab-panel" style="display:none;">
-      <div class="panel">
-        <div class="panel-cabecera">
-          <h3>Sedes</h3>
-          <div class="panel-cabecera-acciones">
-            <button class="btn" id="btn-nueva-sede" type="button">+ Nueva sede</button>
-          </div>
-        </div>
-        <div class="table-wrap">
-          <table class="admin" id="tabla-sedes">
-            <thead><tr><th>Nombre</th><th>Dirección</th><th>Estado</th><th></th></tr></thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
+          <div id="modal-dependencia" class="modal-backdrop" style="display:none;">
+            <div class="modal ancho" role="dialog" aria-modal="true" aria-labelledby="form-titulo">
+              <h3 id="form-titulo">Nueva dependencia</h3>
+              <form id="form-dep">
+                <input type="hidden" id="f-id" />
+                <div class="form-grid">
+                  <div class="field"><label for="f-nombre">Nombre oficial *</label><input id="f-nombre" required /></div>
+                  <div class="field"><label for="f-alias">Alias (separados por coma)</label><input id="f-alias" placeholder="once civil, 11 civil" /></div>
+                  <div class="field">
+                    <label for="f-tipo">Tipo *</label>
+                    <select id="f-tipo" required>
+                      <option value="jurisdiccional">Jurisdiccional</option>
+                      <option value="administrativa">Administrativa</option>
+                      <option value="servicio">Servicio</option>
+                    </select>
+                  </div>
+                  <div class="field"><label for="f-area">Área (para permisos de edición) *</label><input id="f-area" required /></div>
+                  <div class="field"><label for="f-categoria">Categoría</label><input id="f-categoria" /></div>
+                  <div class="field">
+                    <label for="f-sede">Sede *</label>
+                    <select id="f-sede" required></select>
+                  </div>
+                  <div class="field">
+                    <label for="f-edificio">Edificio</label>
+                    <select id="f-edificio"><option value="">— Ninguno —</option></select>
+                  </div>
+                  <div class="field"><label for="f-piso">Piso</label><input id="f-piso" /></div>
+                  <div class="field"><label for="f-oficina">Oficina</label><input id="f-oficina" /></div>
+                  <div class="field"><label for="f-horario">Horario</label><input id="f-horario" /></div>
+                  <div class="field"><label for="f-telefono">Teléfono / anexo</label><input id="f-telefono" /></div>
+                  <div class="field"><label for="f-correo">Correo</label><input id="f-correo" type="email" /></div>
+                  <div class="field" style="grid-column:1/-1;">
+                    <label for="f-titular">Titular / responsable a cargo</label>
+                    <input id="f-titular" placeholder="Ej.: Dra. Ana Pérez López - Jueza titular" />
+                  </div>
+                  <div class="field">
+                    <label for="f-validado-por">Validado por</label>
+                    <input id="f-validado-por" placeholder="Nombre de quien confirmó que el dato sigue vigente" />
+                  </div>
+                  <div class="field">
+                    <label for="f-proxima-revision">Próxima revisión</label>
+                    <input id="f-proxima-revision" type="date" />
+                  </div>
+                  <div class="field" style="grid-column:1/-1;"><label for="f-servicios">Resumen de servicios</label><textarea id="f-servicios"></textarea></div>
+                  <div class="field" style="grid-column:1/-1;"><label for="f-requisitos">Requisitos</label><textarea id="f-requisitos"></textarea></div>
+                  <div class="field" style="grid-column:1/-1;">
+                    <span class="campo-etiqueta">Accesibilidad</span>
+                    <div class="checkbox-grupo">
+                      <label><input type="checkbox" id="f-rampa" /> Rampa</label>
+                      <label><input type="checkbox" id="f-ascensor" /> Ascensor</label>
+                      <label><input type="checkbox" id="f-banio" /> Baño accesible</label>
+                      <label><input type="checkbox" id="f-ruta" /> Ruta accesible</label>
+                    </div>
+                  </div>
+                  <div class="field" style="grid-column:1/-1;">
+                    <label for="f-instrucciones">Cómo llegar dentro del edificio (opcional)</label>
+                    <textarea id="f-instrucciones" placeholder="Ej.: Desde el ingreso principal, dirígete a los ascensores y sube al piso 5."></textarea>
+                  </div>
+                  <div class="field">
+                    <label for="f-estado">Estado *</label>
+                    <select id="f-estado" required></select>
+                  </div>
+                  <div class="field"><label for="f-responsable">Responsable de validar</label><input id="f-responsable" /></div>
+                </div>
+                <div id="form-error"></div>
+                <div style="display:flex; gap:0.6rem; margin-top:0.9rem; flex-wrap:wrap;">
+                  <button class="btn" type="submit">Guardar</button>
+                  <button class="btn secondary" type="button" id="btn-cancelar">Cancelar</button>
+                  <button class="btn" type="button" id="btn-aprobar" style="display:none; background:var(--accent2-strong);">✓ Aprobar y publicar</button>
+                  <button class="btn secondary" type="button" id="btn-rechazar" style="display:none;">Devolver a revisión</button>
+                </div>
+              </form>
 
-      <div id="modal-sede" class="modal-backdrop" style="display:none;">
-        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="form-sede-titulo">
-          <h3 id="form-sede-titulo">Nueva sede</h3>
-          <form id="form-sede">
-            <input type="hidden" id="s-id" />
-            <div class="field"><label for="s-nombre">Nombre *</label><input id="s-nombre" required /></div>
-            <div class="field"><label for="s-direccion">Dirección</label><input id="s-direccion" /></div>
-            <div class="field"><label for="s-referencia">Referencia</label><input id="s-referencia" /></div>
-            <div class="field"><label for="s-horario">Horario de atención</label><input id="s-horario" /></div>
-            <div class="field"><label for="s-telefono">Teléfono</label><input id="s-telefono" /></div>
-            <div class="field">
-              <label for="s-estado">Estado *</label>
-              <select id="s-estado" required>
-                <option value="activo">Activo</option>
-                <option value="inactivo">Inactivo</option>
-              </select>
-            </div>
-            <div class="field">
-              <span class="campo-etiqueta">Accesibilidad</span>
-              <div class="checkbox-grupo">
-                <label><input type="checkbox" id="s-rampa" /> Rampa</label>
-                <label><input type="checkbox" id="s-ascensor" /> Ascensor</label>
-                <label><input type="checkbox" id="s-banio" /> Baño accesible</label>
-                <label><input type="checkbox" id="s-estacionamiento" /> Estacionamiento accesible</label>
-                <label><input type="checkbox" id="s-asistencia" /> Personal de asistencia</label>
+              <div id="panel-servicios" style="display:none; margin-top:1.5rem; border-top:1px solid var(--line); padding-top:1rem;">
+                <h3 style="font-size:1rem;">Servicios de esta dependencia</h3>
+                <div id="lista-servicios" style="display:grid; gap:0.5rem; margin-bottom:0.8rem;"></div>
+                <form id="form-servicio" style="display:grid; gap:0.5rem;">
+                  <div class="field"><label for="sv-nombre">Nuevo servicio</label><input id="sv-nombre" placeholder="Ej: Constancia de trabajo" required /></div>
+                  <div class="field"><label for="sv-requisitos">Requisitos</label><input id="sv-requisitos" /></div>
+                  <div class="field"><label for="sv-canal">Canal</label>
+                    <select id="sv-canal">
+                      <option value="presencial">Presencial</option>
+                      <option value="virtual">Virtual</option>
+                      <option value="telefonico">Telefónico</option>
+                    </select>
+                  </div>
+                  <button class="btn secondary" type="submit">Agregar servicio</button>
+                </form>
               </div>
             </div>
-            <div id="form-sede-error"></div>
-            <div style="display:flex; gap:0.6rem; margin-top:0.9rem;">
-              <button class="btn" type="submit">Guardar</button>
-              <button class="btn secondary" type="button" id="btn-sede-cancelar">Cancelar</button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </section>
-
-    <!-- ═══ USUARIOS ═══ -->
-    <section id="tab-usuarios" class="tab-panel" style="display:none;">
-      <div class="panel">
-        <div class="panel-cabecera">
-          <h3>Usuarios</h3>
-          <div class="panel-cabecera-acciones">
-            <button class="btn" id="btn-nuevo-usuario" type="button">+ Nuevo usuario</button>
           </div>
-        </div>
-        <div class="table-wrap">
-          <table class="admin" id="tabla-usuarios">
-            <thead><tr><th>Nombre</th><th>DNI</th><th>Rol</th><th>Área</th><th>Estado</th><th>Último acceso</th><th></th></tr></thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
+        </section>
 
-      <div id="modal-usuario" class="modal-backdrop" style="display:none;">
-        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="form-usuario-titulo">
-          <h3 id="form-usuario-titulo">Nuevo usuario</h3>
-          <form id="form-usuario">
-            <input type="hidden" id="u-id" />
-            <div class="field"><label for="u-nombre">Nombre *</label><input id="u-nombre" required /></div>
-            <div class="field" id="campo-u-dni"><label for="u-dni">DNI *</label><input id="u-dni" type="text" inputmode="numeric" pattern="[0-9]{8}" maxlength="8" placeholder="8 dígitos" required /></div>
-            <div class="field" id="campo-u-password"><label for="u-password">Contraseña inicial * (mínimo 6 caracteres)</label><input id="u-password" type="text" minlength="6" required /></div>
-            <div class="field">
-              <label for="u-rol">Rol *</label>
-              <select id="u-rol" required>
-                <option value="gestor">Gestor — crea/edita contenido de su área</option>
-                <option value="validador">Validador — revisa y publica su área</option>
-                <option value="auditor">Auditor — solo lectura de auditoría</option>
-                <option value="consulta">Consulta — indicadores y reportes, para toma de decisiones</option>
-                <option value="admin">Administrador — control total</option>
-              </select>
+        <!-- ═══ SEDES ═══ -->
+        <section id="tab-sedes" class="tab-panel" style="display:none;">
+          <div class="panel">
+            <div class="panel-cabecera">
+              <h3>Sedes</h3>
+              <div class="panel-cabecera-acciones">
+                <button class="btn" id="btn-nueva-sede" type="button">+ Nueva sede</button>
+              </div>
             </div>
-            <div class="field"><label for="u-area">Área (para gestor/validador)</label><input id="u-area" placeholder="Ej: Recursos Humanos" /></div>
-            <div class="field" id="campo-u-activo" style="display:none;">
-              <label><input type="checkbox" id="u-activo" checked /> Cuenta activa</label>
+            <div class="table-wrap">
+              <table class="admin" id="tabla-sedes">
+                <thead><tr><th>Nombre</th><th>Dirección</th><th>Estado</th><th></th></tr></thead>
+                <tbody></tbody>
+              </table>
             </div>
-            <div id="form-usuario-error"></div>
-            <div style="display:flex; gap:0.6rem; margin-top:0.9rem;">
-              <button class="btn" type="submit" id="btn-usuario-guardar">Crear usuario</button>
-              <button class="btn secondary" type="button" id="btn-usuario-cancelar">Cancelar</button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </section>
-
-    <!-- ═══ AUDITORÍA ═══ -->
-    <section id="tab-auditoria" class="tab-panel" style="display:none;">
-      <div class="panel">
-        <div class="panel-cabecera">
-          <h3>Auditoría reciente</h3>
-        </div>
-        <p class="hint" style="margin:0 0 0.8rem;">Quién cambió qué, cuándo, y qué acción tomó — las últimas 100 acciones registradas.</p>
-        <div class="table-wrap">
-          <table class="admin" id="tabla-auditoria">
-            <thead><tr><th>Fecha</th><th>Usuario</th><th>Entidad</th><th>Acción</th><th>Detalle</th></tr></thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
-      <div class="panel" style="margin-top:1.2rem;">
-        <h3>Posibles duplicados en el catálogo</h3>
-        <p class="hint" style="margin:0 0 0.8rem;">
-          Mismo nombre repetido dentro de la misma sede, sin importar el área -- el mismo tipo de caso ya
-          encontrado con "Mesa de Partes" al cargar el directorio oficial (ver README).
-        </p>
-        <div id="lista-duplicados"></div>
-      </div>
-    </section>
-
-    <section id="tab-mapa" class="tab-panel" style="display:none;">
-      <div class="panel">
-        <div class="panel-cabecera">
-          <h3>Mapa interno (wayfinding)</h3>
-          <div class="panel-cabecera-acciones">
-            <button class="btn" id="btn-nuevo-nodo" type="button">+ Nuevo nodo</button>
-            <button class="btn secondary" id="btn-nueva-conexion" type="button">+ Nueva conexión</button>
           </div>
-        </div>
-        <p class="hint" style="margin:0 0 0.8rem;">
-          Puntos reconocibles de una sede (nodos) y cómo se conectan entre sí (conexiones) -- así el
-          sistema arma la ruta paso a paso desde donde el ciudadano dice que está hasta la dependencia
-          buscada. No requiere plano ni coordenadas: basta con la secuencia de puntos y una instrucción
-          corta por tramo.
-        </p>
-        <div class="filtros" style="display:flex; gap:0.8rem; flex-wrap:wrap; margin-bottom:1rem;">
-          <div class="field" style="min-width:14rem;"><label for="mapa-sede">Sede</label><select id="mapa-sede"></select></div>
-          <div class="field" style="min-width:10rem;"><label for="mapa-piso">Piso</label><input id="mapa-piso" placeholder="Vacío = todos" /></div>
-        </div>
-        <h4 style="margin:0 0 0.5rem;">Nodos</h4>
-        <div class="table-wrap">
-          <table class="admin" id="tabla-nodos">
-            <thead><tr><th>Nombre</th><th>Piso</th><th>¿Punto de partida?</th><th>Dependencia vinculada</th><th>Acciones</th></tr></thead>
-            <tbody></tbody>
-          </table>
-        </div>
-        <h4 style="margin:1.2rem 0 0.5rem;">Conexiones</h4>
-        <div class="table-wrap">
-          <table class="admin" id="tabla-conexiones">
-            <thead><tr><th>Nodo A</th><th>Nodo B</th><th>Distancia</th><th>Instrucción A→B</th><th>Instrucción B→A</th><th>Acciones</th></tr></thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
 
-      <div id="modal-nodo" class="modal-backdrop" style="display:none;">
-        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="nodo-titulo">
-          <h3 id="nodo-titulo">Nuevo nodo</h3>
-          <form id="form-nodo">
-            <input type="hidden" id="n-id" />
-            <div class="field"><label for="n-sede">Sede *</label><select id="n-sede" required></select></div>
-            <div class="field"><label for="n-piso">Piso</label><input id="n-piso" placeholder="Ej: 1" /></div>
-            <div class="field"><label for="n-nombre">Nombre *</label><input id="n-nombre" required placeholder="Ej: Ingreso principal, Ascensor A" /></div>
-            <div class="field"><label><input type="checkbox" id="n-punto-partida" checked /> Aparece en "¿Dónde estás?" (es un punto reconocible)</label></div>
-            <div class="field"><label for="n-dependencia">Dependencia vinculada (opcional)</label><select id="n-dependencia"><option value="">— Ninguna —</option></select></div>
-            <div id="nodo-error"></div>
-            <div style="display:flex; gap:0.6rem; margin-top:0.9rem;">
-              <button class="btn" type="submit">Guardar</button>
-              <button class="btn secondary" type="button" id="btn-nodo-cancelar">Cancelar</button>
+          <div id="modal-sede" class="modal-backdrop" style="display:none;">
+            <div class="modal" role="dialog" aria-modal="true" aria-labelledby="form-sede-titulo">
+              <h3 id="form-sede-titulo">Nueva sede</h3>
+              <form id="form-sede">
+                <input type="hidden" id="s-id" />
+                <div class="field"><label for="s-nombre">Nombre *</label><input id="s-nombre" required /></div>
+                <div class="field"><label for="s-direccion">Dirección</label><input id="s-direccion" /></div>
+                <div class="field"><label for="s-referencia">Referencia</label><input id="s-referencia" /></div>
+                <div class="field"><label for="s-horario">Horario de atención</label><input id="s-horario" /></div>
+                <div class="field"><label for="s-telefono">Teléfono</label><input id="s-telefono" /></div>
+                <div class="field">
+                  <label for="s-estado">Estado *</label>
+                  <select id="s-estado" required>
+                    <option value="activo">Activo</option>
+                    <option value="inactivo">Inactivo</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <span class="campo-etiqueta">Accesibilidad</span>
+                  <div class="checkbox-grupo">
+                    <label><input type="checkbox" id="s-rampa" /> Rampa</label>
+                    <label><input type="checkbox" id="s-ascensor" /> Ascensor</label>
+                    <label><input type="checkbox" id="s-banio" /> Baño accesible</label>
+                    <label><input type="checkbox" id="s-estacionamiento" /> Estacionamiento accesible</label>
+                    <label><input type="checkbox" id="s-asistencia" /> Personal de asistencia</label>
+                  </div>
+                </div>
+                <div id="form-sede-error"></div>
+                <div style="display:flex; gap:0.6rem; margin-top:0.9rem;">
+                  <button class="btn" type="submit">Guardar</button>
+                  <button class="btn secondary" type="button" id="btn-sede-cancelar">Cancelar</button>
+                </div>
+              </form>
             </div>
-          </form>
-        </div>
-      </div>
+          </div>
+        </section>
 
-      <div id="modal-conexion" class="modal-backdrop" style="display:none;">
-        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="conexion-titulo">
-          <h3 id="conexion-titulo">Nueva conexión</h3>
-          <form id="form-conexion">
-            <input type="hidden" id="c-id" />
-            <div class="field"><label for="c-nodo-a">Nodo A *</label><select id="c-nodo-a" required></select></div>
-            <div class="field"><label for="c-nodo-b">Nodo B *</label><select id="c-nodo-b" required></select></div>
-            <div class="field"><label for="c-distancia">Distancia (pasos aprox.)</label><input id="c-distancia" type="number" value="1" min="1" /></div>
-            <div class="field"><label for="c-instr-ab">Instrucción caminando de A hacia B</label><textarea id="c-instr-ab" placeholder="Ej: Sube la escalera hasta el piso 3"></textarea></div>
-            <div class="field"><label for="c-instr-ba">Instrucción caminando de B hacia A</label><textarea id="c-instr-ba" placeholder="Ej: Baja la escalera hasta el piso 1"></textarea></div>
-            <div id="conexion-error"></div>
-            <div style="display:flex; gap:0.6rem; margin-top:0.9rem;">
-              <button class="btn" type="submit">Guardar</button>
-              <button class="btn secondary" type="button" id="btn-conexion-cancelar">Cancelar</button>
+        <!-- ═══ USUARIOS ═══ -->
+        <section id="tab-usuarios" class="tab-panel" style="display:none;">
+          <div class="panel">
+            <div class="panel-cabecera">
+              <h3>Usuarios</h3>
+              <div class="panel-cabecera-acciones">
+                <button class="btn" id="btn-nuevo-usuario" type="button">+ Nuevo usuario</button>
+              </div>
             </div>
-          </form>
-        </div>
-      </div>
-    </section>
-  </main>
+            <div class="table-wrap">
+              <table class="admin" id="tabla-usuarios">
+                <thead><tr><th>Nombre</th><th>DNI</th><th>Rol</th><th>Área</th><th>Estado</th><th>Último acceso</th><th></th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="modal-usuario" class="modal-backdrop" style="display:none;">
+            <div class="modal" role="dialog" aria-modal="true" aria-labelledby="form-usuario-titulo">
+              <h3 id="form-usuario-titulo">Nuevo usuario</h3>
+              <form id="form-usuario">
+                <input type="hidden" id="u-id" />
+                <div class="field"><label for="u-nombre">Nombre *</label><input id="u-nombre" required /></div>
+                <div class="field" id="campo-u-dni"><label for="u-dni">DNI *</label><input id="u-dni" type="text" inputmode="numeric" pattern="[0-9]{8}" maxlength="8" placeholder="8 dígitos" required /></div>
+                <div class="field"><label for="u-email">Correo (para "olvidé mi contraseña")</label><input id="u-email" type="email" placeholder="nombre@pj.gob.pe" /></div>
+                <div class="field" id="campo-u-password"><label for="u-password">Contraseña inicial * (mínimo 6 caracteres)</label><input id="u-password" type="text" minlength="6" required /></div>
+                <div class="field">
+                  <label for="u-rol">Rol *</label>
+                  <select id="u-rol" required>
+                    <option value="gestor">Gestor — crea/edita contenido de su área</option>
+                    <option value="validador">Validador — revisa y publica su área</option>
+                    <option value="auditor">Auditor — solo lectura de auditoría</option>
+                    <option value="consulta">Consulta — indicadores y reportes, para toma de decisiones</option>
+                    <option value="admin">Administrador — control total</option>
+                  </select>
+                </div>
+                <div class="field"><label for="u-area">Área (para gestor/validador)</label><input id="u-area" placeholder="Ej: Recursos Humanos" /></div>
+                <div class="field" id="campo-u-activo" style="display:none;">
+                  <label><input type="checkbox" id="u-activo" checked /> Cuenta activa</label>
+                </div>
+                <div id="form-usuario-error"></div>
+                <div style="display:flex; gap:0.6rem; margin-top:0.9rem;">
+                  <button class="btn" type="submit" id="btn-usuario-guardar">Crear usuario</button>
+                  <button class="btn secondary" type="button" id="btn-usuario-cancelar">Cancelar</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </section>
+
+        <!-- ═══ AUDITORÍA ═══ -->
+        <section id="tab-auditoria" class="tab-panel" style="display:none;">
+          <div class="panel">
+            <div class="panel-cabecera">
+              <h3>Auditoría reciente</h3>
+            </div>
+            <p class="hint" style="margin:0 0 0.8rem;">Quién cambió qué, cuándo, y qué acción tomó — las últimas 100 acciones registradas.</p>
+            <div class="table-wrap">
+              <table class="admin" id="tabla-auditoria">
+                <thead><tr><th>Fecha</th><th>Usuario</th><th>Entidad</th><th>Acción</th><th>Detalle</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="panel">
+            <h3>Posibles duplicados en el catálogo</h3>
+            <p class="hint" style="margin:0 0 0.8rem;">
+              Mismo nombre repetido dentro de la misma sede, sin importar el área -- el mismo tipo de caso ya
+              encontrado con "Mesa de Partes" al cargar el directorio oficial (ver README).
+            </p>
+            <div id="lista-duplicados"></div>
+          </div>
+        </section>
+
+        <section id="tab-mapa" class="tab-panel" style="display:none;">
+          <div class="panel">
+            <div class="panel-cabecera">
+              <h3>Mapa interno (wayfinding)</h3>
+              <div class="panel-cabecera-acciones">
+                <button class="btn" id="btn-nuevo-nodo" type="button">+ Nuevo nodo</button>
+                <button class="btn secondary" id="btn-nueva-conexion" type="button">+ Nueva conexión</button>
+              </div>
+            </div>
+            <p class="hint" style="margin:0 0 0.8rem;">
+              Puntos reconocibles de una sede (nodos) y cómo se conectan entre sí (conexiones) -- así el
+              sistema arma la ruta paso a paso desde donde el ciudadano dice que está hasta la dependencia
+              buscada. No requiere plano ni coordenadas: basta con la secuencia de puntos y una instrucción
+              corta por tramo.
+            </p>
+            <div class="panel-filtros">
+              <div class="field" style="min-width:14rem;"><label for="mapa-sede">Sede</label><select id="mapa-sede"></select></div>
+              <div class="field" style="min-width:10rem;"><label for="mapa-piso">Piso</label><input id="mapa-piso" placeholder="Vacío = todos" /></div>
+            </div>
+            <h4 class="subseccion">Nodos</h4>
+            <div class="table-wrap">
+              <table class="admin" id="tabla-nodos">
+                <thead><tr><th>Nombre</th><th>Piso</th><th>¿Punto de partida?</th><th>Dependencia vinculada</th><th>Acciones</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <h4 class="subseccion">Conexiones</h4>
+            <div class="table-wrap">
+              <table class="admin" id="tabla-conexiones">
+                <thead><tr><th>Nodo A</th><th>Nodo B</th><th>Distancia</th><th>Instrucción A→B</th><th>Instrucción B→A</th><th>Acciones</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="modal-nodo" class="modal-backdrop" style="display:none;">
+            <div class="modal" role="dialog" aria-modal="true" aria-labelledby="nodo-titulo">
+              <h3 id="nodo-titulo">Nuevo nodo</h3>
+              <form id="form-nodo">
+                <input type="hidden" id="n-id" />
+                <div class="field"><label for="n-sede">Sede *</label><select id="n-sede" required></select></div>
+                <div class="field"><label for="n-piso">Piso</label><input id="n-piso" placeholder="Ej: 1" /></div>
+                <div class="field"><label for="n-nombre">Nombre *</label><input id="n-nombre" required placeholder="Ej: Ingreso principal, Ascensor A" /></div>
+                <div class="field"><label><input type="checkbox" id="n-punto-partida" checked /> Aparece en "¿Dónde estás?" (es un punto reconocible)</label></div>
+                <div class="field"><label for="n-dependencia">Dependencia vinculada (opcional)</label><select id="n-dependencia"><option value="">— Ninguna —</option></select></div>
+                <div id="nodo-error"></div>
+                <div style="display:flex; gap:0.6rem; margin-top:0.9rem;">
+                  <button class="btn" type="submit">Guardar</button>
+                  <button class="btn secondary" type="button" id="btn-nodo-cancelar">Cancelar</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <div id="modal-conexion" class="modal-backdrop" style="display:none;">
+            <div class="modal" role="dialog" aria-modal="true" aria-labelledby="conexion-titulo">
+              <h3 id="conexion-titulo">Nueva conexión</h3>
+              <form id="form-conexion">
+                <input type="hidden" id="c-id" />
+                <div class="field"><label for="c-nodo-a">Nodo A *</label><select id="c-nodo-a" required></select></div>
+                <div class="field"><label for="c-nodo-b">Nodo B *</label><select id="c-nodo-b" required></select></div>
+                <div class="field"><label for="c-distancia">Distancia (pasos aprox.)</label><input id="c-distancia" type="number" value="1" min="1" /></div>
+                <div class="field"><label for="c-instr-ab">Instrucción caminando de A hacia B</label><textarea id="c-instr-ab" placeholder="Ej: Sube la escalera hasta el piso 3"></textarea></div>
+                <div class="field"><label for="c-instr-ba">Instrucción caminando de B hacia A</label><textarea id="c-instr-ba" placeholder="Ej: Baja la escalera hasta el piso 1"></textarea></div>
+                <div id="conexion-error"></div>
+                <div style="display:flex; gap:0.6rem; margin-top:0.9rem;">
+                  <button class="btn" type="submit">Guardar</button>
+                  <button class="btn secondary" type="button" id="btn-conexion-cancelar">Cancelar</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
 </div>
 
-<script src="/js/admin.js"></script>
+<script src="/js/admin.js?v=5"></script>
 </body>
 </html>

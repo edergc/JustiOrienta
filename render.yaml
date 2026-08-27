@@ -18,3 +18,20 @@ services:
       # postgresql+psycopg2://usuario:clave@host/basededatos?sslmode=require
       - key: DATABASE_URL
         sync: false
+      # URL pública real del sitio en producción (sin barra final), para armar
+      # el enlace del correo de "olvidé mi contraseña": .../admin?reset=token
+      - key: URL_PUBLICA
+        sync: false
+      # SMTP para el correo de "olvidé mi contraseña" -- cualquier proveedor
+      # (institucional, Gmail con contraseña de aplicación, etc.). Si se deja
+      # sin configurar, el correo no se envía de verdad: solo queda en el log.
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_USUARIO
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: SMTP_REMITENTE
+        sync: false

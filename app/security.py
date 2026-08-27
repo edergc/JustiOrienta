@@ -1,5 +1,7 @@
 """Autenticación: hash de contraseñas (bcrypt) y tokens (JWT). Todo con librerías
 libres (passlib, python-jose) -- sin servicios de terceros ni costo."""
+import hashlib
+import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
@@ -38,6 +40,19 @@ def crear_token(dni: str) -> str:
     expira = datetime.now(timezone.utc) + timedelta(minutes=settings.token_expire_minutes)
     payload = {"sub": dni, "exp": expira}
     return jwt.encode(payload, settings.justicia_orienta_secret, algorithm=ALGORITHM)
+
+
+def generar_token_reset() -> tuple[str, str]:
+    """Para "olvidé mi contraseña": (token_para_el_enlace, hash_para_guardar).
+    Nunca se guarda el token en texto plano -- mismo motivo que las
+    contraseñas: si alguien leyera la base de datos, no debería poder
+    restablecer contraseñas ajenas con lo que encuentre ahí."""
+    token = secrets.token_urlsafe(32)
+    return token, hash_token_reset(token)
+
+
+def hash_token_reset(token: str) -> str:
+    return hashlib.sha256(token.encode()).hexdigest()
 
 
 def get_usuario_actual(

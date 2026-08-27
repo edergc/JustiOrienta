@@ -185,6 +185,18 @@ function puedeVerReportes() {
   return USUARIO && (USUARIO.rol === "admin" || USUARIO.rol === "auditor" || USUARIO.rol === "consulta");
 }
 function esSoloConsulta() { return USUARIO && USUARIO.rol === "consulta"; }
+
+const TITULOS_TAB = {
+  "tab-dashboard": "Dashboard",
+  "tab-dependencias": "Dependencias",
+  "tab-sedes": "Sedes",
+  "tab-mapa": "Mapa interno",
+  "tab-usuarios": "Usuarios",
+  "tab-auditoria": "Auditoría",
+};
+function actualizarTituloTopbar(tabId) {
+  document.getElementById("admin-topbar-titulo").textContent = TITULOS_TAB[tabId] || "Panel de administración";
+}
 function puedeAprobar(dep) {
   if (!USUARIO) return false;
   if (USUARIO.rol === "admin") return true;
@@ -218,18 +230,27 @@ function mostrarApp() {
   document.getElementById("fila-reporte").style.display = puedeVerReportes() ? "" : "none";
   document.getElementById("panel-titulares").style.display = esAdmin() ? "" : "none";
 
+  // Las etiquetas de grupo del menú ("Catálogo", "Control") solo tienen
+  // sentido si algún botón del grupo quedó visible para este rol -- si no,
+  // quedaría un título de sección flotando sin nada debajo.
+  document.querySelectorAll(".admin-nav-grupo").forEach((etiqueta) => {
+    let hayVisible = false;
+    for (let el = etiqueta.nextElementSibling; el && !el.classList.contains("admin-nav-grupo"); el = el.nextElementSibling) {
+      if (el.classList.contains("tab-btn") && el.style.display !== "none") hayVisible = true;
+    }
+    etiqueta.style.display = hayVisible ? "" : "none";
+  });
+
   document.querySelectorAll(".tab-btn").forEach((b) => b.setAttribute("aria-pressed", "false"));
   document.querySelectorAll(".tab-panel").forEach((p) => (p.style.display = "none"));
 
-  // Arranca en "Dependencias" para quien gestiona catálogo, o en "Auditoría"
-  // para "consulta" (su única pestaña) -- nunca deja activa una pestaña que
-  // la sesión anterior dejó abierta y que este rol ya no puede ver.
-  const tabInicial = esSoloConsulta() ? "tab-auditoria" : "tab-dependencias";
-  const btnInicial = document.querySelector(`[data-tab="${tabInicial}"]`);
-  if (btnInicial.style.display !== "none") {
-    btnInicial.setAttribute("aria-pressed", "true");
-    document.getElementById(tabInicial).style.display = "block";
-  }
+  // El Dashboard es la pantalla de entrada para cualquier rol -- ahí se ven
+  // los indicadores (incluido "consulta", que no gestiona catálogo) y desde
+  // ahí cada quien elige a qué sección ir.
+  const tabInicial = "tab-dashboard";
+  document.querySelector(`[data-tab="${tabInicial}"]`).setAttribute("aria-pressed", "true");
+  document.getElementById(tabInicial).style.display = "block";
+  actualizarTituloTopbar(tabInicial);
 
   document.getElementById("panel-solo-consulta").style.display = esSoloConsulta() ? "block" : "none";
   const hayPestañaVisible = [...document.querySelectorAll(".tab-btn")].some((b) => b.style.display !== "none");
@@ -260,7 +281,21 @@ function cerrarSesion() {
   mostrarLogin();
 }
 
+// Si el enlace del correo de "olvidé mi contraseña" trae ?reset=token, se
+// muestra el formulario para elegir la nueva contraseña en vez del login
+// -- sin esto, quien hace clic en el enlace no tendría dónde escribirla.
+function tokenDeRestablecerEnURL() {
+  return new URLSearchParams(window.location.search).get("reset");
+}
+
 async function iniciar() {
+  const tokenReset = tokenDeRestablecerEnURL();
+  if (tokenReset) {
+    document.getElementById("r-token").value = tokenReset;
+    document.getElementById("login-box-login").style.display = "none";
+    document.getElementById("login-box-restablecer").style.display = "block";
+    return mostrarLogin();
+  }
   if (!TOKEN) return mostrarLogin();
   try {
     USUARIO = await api("/auth/yo");
@@ -294,6 +329,64 @@ document.getElementById("form-login").addEventListener("submit", async (e) => {
     mostrarApp();
   } catch (err) {
     mostrarLogin(err.message);
+  }
+});
+
+// ── "¿Olvidaste tu contraseña?" ──
+document.getElementById("btn-abrir-olvide").addEventListener("click", () => {
+  document.getElementById("form-olvide").reset();
+  document.getElementById("olvide-error").innerHTML = "";
+  document.getElementById("olvide-exito").style.display = "none";
+  document.getElementById("form-olvide").style.display = "";
+  abrirModal("modal-olvide", document.getElementById("olvide-dni"));
+});
+document.getElementById("btn-olvide-cancelar").addEventListener("click", () => cerrarModal("modal-olvide", document.getElementById("btn-abrir-olvide")));
+configurarCierreModal("modal-olvide", () => cerrarModal("modal-olvide", document.getElementById("btn-abrir-olvide")));
+
+document.getElementById("form-olvide").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const dni = document.getElementById("olvide-dni").value;
+  const errorBox = document.getElementById("olvide-error");
+  errorBox.innerHTML = "";
+  try {
+    const data = await api("/auth/olvide-password", { method: "POST", body: JSON.stringify({ dni }) });
+    document.getElementById("olvide-exito").innerHTML =
+      `<p class="meta" style="color:var(--accent2-strong); font-weight:600;">✓ ${data.mensaje}</p>` +
+      `<button class="btn secondary" type="button" id="btn-olvide-cerrar-exito" style="margin-top:0.6rem;">Cerrar</button>`;
+    document.getElementById("olvide-exito").style.display = "";
+    document.getElementById("form-olvide").style.display = "none";
+    document.getElementById("btn-olvide-cerrar-exito").addEventListener("click", () =>
+      cerrarModal("modal-olvide", document.getElementById("btn-abrir-olvide"))
+    );
+  } catch (err) {
+    errorBox.innerHTML = `<p class="error-msg">${err.message}</p>`;
+  }
+});
+
+// ── Elegir nueva contraseña desde el enlace del correo ──
+document.getElementById("form-restablecer").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const errorBox = document.getElementById("restablecer-error");
+  errorBox.innerHTML = "";
+  const nueva = document.getElementById("r-nueva").value;
+  const confirmar = document.getElementById("r-confirmar").value;
+  if (nueva !== confirmar) {
+    errorBox.innerHTML = `<p class="error-msg">Las contraseñas no coinciden.</p>`;
+    return;
+  }
+  try {
+    await api("/auth/restablecer-password", {
+      method: "POST",
+      body: JSON.stringify({ token: document.getElementById("r-token").value, nueva_password: nueva }),
+    });
+    window.history.replaceState({}, "", "/admin");
+    document.getElementById("login-box-restablecer").style.display = "none";
+    document.getElementById("login-box-login").style.display = "";
+    mostrarLogin();
+    document.getElementById("login-error").innerHTML =
+      '<p class="meta" style="color:var(--accent2-strong); font-weight:600;">✓ Contraseña actualizada. Ya puedes iniciar sesión.</p>';
+  } catch (err) {
+    errorBox.innerHTML = `<p class="error-msg">${err.message}</p>`;
   }
 });
 
@@ -484,6 +577,8 @@ document.querySelectorAll(".tab-btn").forEach((btn) => {
     document.querySelectorAll(".tab-panel").forEach((p) => (p.style.display = "none"));
     btn.setAttribute("aria-pressed", "true");
     document.getElementById(btn.dataset.tab).style.display = "block";
+    actualizarTituloTopbar(btn.dataset.tab);
+    window.scrollTo({ top: 0, behavior: "instant" });
   });
 });
 
@@ -514,51 +609,79 @@ async function cargarStats() {
     const detalle = propia ? ` (~${propia.antiguedad_promedio_dias} días en promedio)` : "";
     items.push([cantidad, `Pendientes en tu área${detalle}`, cantidad > 0]);
   }
-  for (const [n, l, alerta] of items) {
+  items.forEach(([n, l, alerta], indice) => {
     const d = document.createElement("div");
-    d.className = "stat";
-    d.innerHTML = `<div class="n"${alerta ? ' style="color:var(--danger)"' : ""}>${n}</div><div class="l">${l}</div>`;
+    // El primer indicador es la meta declarada del proyecto (primera
+    // orientación correcta, >80%) -- se destaca como "hero" con una barra
+    // de progreso, en vez de quedar igual de chico que el resto.
+    const esHero = indice === 0 && typeof s.primera_orientacion_correcta === "number";
+    d.className = "stat" + (esHero ? " stat-hero" : "");
+    const numeroYEtiqueta = `<div class="n"${alerta ? ' style="color:var(--danger)"' : ""}>${n}</div><div class="l">${l}</div>`;
+    if (esHero) {
+      const pct = Math.max(0, Math.min(100, s.primera_orientacion_correcta));
+      d.innerHTML =
+        `<div class="stat-hero-texto">${numeroYEtiqueta}</div>` +
+        `<div class="stat-hero-texto"><div class="stat-barra"><i style="width:${pct}%"></i></div>` +
+        `<div class="stat-meta">Meta institucional: 80%</div></div>`;
+    } else {
+      d.innerHTML = numeroYEtiqueta;
+    }
     box.appendChild(d);
-  }
+  });
+
+  // Cada fila lleva una mini-barra proporcional al valor más alto de su
+  // propia lista -- convierte los rankings de texto plano en algo que se
+  // lee de un vistazo, sin sacar una librería de gráficos para esto.
+  const filaConBarra = (etiquetaHtml, valor, max) => {
+    const pct = max > 0 ? Math.max(4, Math.round((valor / max) * 100)) : 0;
+    return `<li><div class="fila-texto">${etiquetaHtml}</div><div class="mini-barra"><i style="width:${pct}%"></i></div></li>`;
+  };
+  const maxDe = (arr, campo) => Math.max(1, ...arr.map((x) => x[campo]));
+  const listaVacia = '<li class="hint" style="list-style:none;">Todavía no hay datos.</li>';
 
   // t.consulta es el texto que alguien escribió en el buscador PÚBLICO, sin
   // ninguna cuenta ni restricción -- escaparHtml() es obligatorio acá, no
   // opcional: sin esto, cualquier persona anónima podía teclear HTML/JS en
   // el buscador y ejecutarlo en la sesión de quien viera este panel.
   const listaTop = document.getElementById("lista-top-consultas");
+  const maxTop = maxDe(s.top_consultas, "veces");
   listaTop.innerHTML = s.top_consultas.length
-    ? s.top_consultas.map((t) => `<li>${escaparHtml(t.consulta)} <span class="hint">(${t.veces})</span></li>`).join("")
-    : '<li class="hint" style="list-style:none;">Todavía no hay datos.</li>';
-
-  const listaVacia = '<li class="hint" style="list-style:none;">Todavía no hay datos.</li>';
+    ? s.top_consultas.map((t) => filaConBarra(`${escaparHtml(t.consulta)} <span class="hint">(${t.veces})</span>`, t.veces, maxTop)).join("")
+    : listaVacia;
 
   const listaSede = document.getElementById("lista-consultas-sede");
+  const maxSede = maxDe(s.consultas_por_sede, "veces");
   listaSede.innerHTML = s.consultas_por_sede.length
-    ? s.consultas_por_sede.map((c) => `<li>${escaparHtml(c.sede)} <span class="hint">(${c.veces})</span></li>`).join("")
+    ? s.consultas_por_sede.map((c) => filaConBarra(`${escaparHtml(c.sede)} <span class="hint">(${c.veces})</span>`, c.veces, maxSede)).join("")
     : listaVacia;
 
   const listaArea = document.getElementById("lista-consultas-area");
+  const maxArea = maxDe(s.consultas_por_area, "veces");
   listaArea.innerHTML = s.consultas_por_area.length
-    ? s.consultas_por_area.map((c) => `<li>${escaparHtml(c.area)} <span class="hint">(${c.veces})</span></li>`).join("")
+    ? s.consultas_por_area.map((c) => filaConBarra(`${escaparHtml(c.area)} <span class="hint">(${c.veces})</span>`, c.veces, maxArea)).join("")
     : listaVacia;
 
   const TIPO_LABEL = { jurisdiccional: "Jurisdiccional", administrativa: "Administrativa", servicio: "Servicio" };
   const listaTipo = document.getElementById("lista-consultas-tipo");
+  const maxTipo = maxDe(s.consultas_por_tipo, "veces");
   listaTipo.innerHTML = s.consultas_por_tipo.length
-    ? s.consultas_por_tipo.map((c) => `<li>${escaparHtml(TIPO_LABEL[c.tipo] || c.tipo)} <span class="hint">(${c.veces})</span></li>`).join("")
+    ? s.consultas_por_tipo
+        .map((c) => filaConBarra(`${escaparHtml(TIPO_LABEL[c.tipo] || c.tipo)} <span class="hint">(${c.veces})</span>`, c.veces, maxTipo))
+        .join("")
     : listaVacia;
 
   const listaSinResultado = document.getElementById("lista-top-sin-resultado");
+  const maxSinResultado = maxDe(s.top_consultas_sin_resultado, "veces");
   listaSinResultado.innerHTML = s.top_consultas_sin_resultado.length
     ? s.top_consultas_sin_resultado
-        .map(
-          (t) =>
-            `<li>${escaparHtml(t.consulta)} <span class="hint">(${t.veces})</span>` +
-            (esAdmin()
-              ? ` <button type="button" class="btn secondary" style="padding:0.1rem 0.5rem; font-size:0.75rem;" data-asignar="${escaparHtml(t.consulta)}">Asignar a un área</button>`
-              : "") +
-            `</li>`
-        )
+        .map((t) => {
+          const boton = esAdmin()
+            ? `<button type="button" class="btn secondary" style="padding:0.1rem 0.5rem; font-size:0.75rem; margin-top:0.4rem;" data-asignar="${escaparHtml(t.consulta)}">Asignar a un área</button>`
+            : "";
+          return (
+            filaConBarra(`${escaparHtml(t.consulta)} <span class="hint">(${t.veces})</span>`, t.veces, maxSinResultado).replace("</li>", `${boton}</li>`)
+          );
+        })
         .join("")
     : '<li class="hint" style="list-style:none;">Sin búsquedas sin resultado todavía -- buena señal.</li>';
   listaSinResultado.querySelectorAll("[data-asignar]").forEach((b) =>
@@ -567,16 +690,29 @@ async function cargarStats() {
   await cargarCobertura();
 
   const listaPendientes = document.getElementById("lista-pendientes-area");
+  const maxPendientes = maxDe(s.pendientes_por_area, "cantidad");
   listaPendientes.innerHTML = s.pendientes_por_area.length
     ? s.pendientes_por_area
-        .map((p) => `<li>${escaparHtml(p.area)} <span class="hint">(${p.cantidad}, ${p.antiguedad_promedio_dias} días en promedio)</span></li>`)
+        .map((p) =>
+          filaConBarra(
+            `${escaparHtml(p.area)} <span class="hint">(${p.cantidad}, ${p.antiguedad_promedio_dias} días en promedio)</span>`,
+            p.cantidad,
+            maxPendientes
+          )
+        )
         .join("")
     : '<li class="hint" style="list-style:none;">No hay nada pendiente de aprobar en este momento.</li>';
 
   const listaCompletitud = document.getElementById("lista-completitud-area");
   listaCompletitud.innerHTML = s.completitud_por_area.length
     ? s.completitud_por_area
-        .map((c) => `<li>${escaparHtml(c.area)} <span class="hint">(${c.activas} activas, ${c.porcentaje_completo}% completo)</span></li>`)
+        .map((c) =>
+          filaConBarra(
+            `${escaparHtml(c.area)} <span class="hint">(${c.activas} activas, ${c.porcentaje_completo}% completo)</span>`,
+            c.porcentaje_completo,
+            100
+          )
+        )
         .join("")
     : '<li class="hint" style="list-style:none;">Todavía no hay dependencias publicadas.</li>';
 }
@@ -833,6 +969,7 @@ function cargarUsuarioEnFormulario(id) {
   document.getElementById("form-usuario-titulo").textContent = `Editar: ${u.nombre}`;
   document.getElementById("u-id").value = u.id;
   document.getElementById("u-nombre").value = u.nombre;
+  document.getElementById("u-email").value = u.email || "";
   document.getElementById("u-rol").value = u.rol;
   document.getElementById("u-area").value = u.area || "";
   document.getElementById("u-activo").checked = u.activo;
@@ -868,6 +1005,7 @@ document.getElementById("form-usuario").addEventListener("submit", async (e) => 
     if (id) {
       const payload = {
         nombre: document.getElementById("u-nombre").value,
+        email: document.getElementById("u-email").value || null,
         rol: document.getElementById("u-rol").value,
         area: document.getElementById("u-area").value || null,
         activo: document.getElementById("u-activo").checked,
@@ -878,6 +1016,7 @@ document.getElementById("form-usuario").addEventListener("submit", async (e) => 
       const payload = {
         nombre: document.getElementById("u-nombre").value,
         dni: document.getElementById("u-dni").value,
+        email: document.getElementById("u-email").value || null,
         password: document.getElementById("u-password").value,
         rol: document.getElementById("u-rol").value,
         area: document.getElementById("u-area").value || null,

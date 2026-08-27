@@ -2,7 +2,7 @@ import re
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
 
 from app.models import Rol
 
@@ -29,6 +29,7 @@ class UsuarioOut(BaseModel):
     id: int
     nombre: str
     dni: str
+    email: Optional[str] = None
     rol: Rol
     area: Optional[str] = None
     activo: bool
@@ -40,6 +41,7 @@ class UsuarioOut(BaseModel):
 class UsuarioCreate(BaseModel):
     nombre: str
     dni: str
+    email: Optional[EmailStr] = None
     password: str
     rol: Rol = Rol.gestor
     area: Optional[str] = None
@@ -50,6 +52,7 @@ class UsuarioCreate(BaseModel):
 
 class UsuarioUpdate(BaseModel):
     nombre: str
+    email: Optional[EmailStr] = None
     rol: Rol
     area: Optional[str] = None
     activo: bool = True
@@ -64,6 +67,19 @@ class UsuarioUpdate(BaseModel):
 class CambiarPasswordIn(BaseModel):
     password_actual: str
     password_nueva: str
+
+
+class OlvidePasswordIn(BaseModel):
+    dni: str
+
+    _validar_dni = field_validator("dni")(_validar_dni)
+
+
+class RestablecerPasswordIn(BaseModel):
+    token: str
+    nueva_password: str
+
+    _validar_password = field_validator("nueva_password")(_validar_password_minima)
 
 
 class Token(BaseModel):

@@ -23,5 +23,20 @@ class Settings(BaseSettings):
     # todavía en la práctica, pero queda listo para cuando se necesite.
     cors_origins: list[str] = ["http://127.0.0.1:8743", "http://localhost:8743"]
 
+    # Correo saliente, solo para el enlace de "olvidé mi contraseña" -- sin
+    # servicio de terceros, un SMTP cualquiera (institucional o de prueba).
+    # Si smtp_host queda vacío (como en desarrollo local sin configurar
+    # nada), no falla: el correo se registra en el log en vez de enviarse
+    # de verdad, para poder probar el flujo sin credenciales reales.
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_usuario: str = ""
+    smtp_password: str = ""
+    smtp_remitente: str = "Justicia Orienta <no-responder@justiciaorienta.local>"
+
+    # Para armar el enlace del correo (…/admin?reset=token) -- en producción
+    # debe ser la URL pública real del sitio.
+    url_publica: str = "http://localhost:8743"
+
 
 settings = Settings()

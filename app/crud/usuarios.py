@@ -26,6 +26,7 @@ def crear(db: Session, data: schemas.UsuarioCreate) -> models.Usuario:
     usuario = models.Usuario(
         nombre=data.nombre,
         dni=data.dni,
+        email=data.email,
         password_hash=security.hash_password(data.password),
         rol=data.rol,
         area=data.area,
@@ -44,6 +45,7 @@ def actualizar(
     db: Session, usuario: models.Usuario, data: schemas.UsuarioUpdate, es_autoedicion: bool = False
 ) -> models.Usuario:
     usuario.nombre = data.nombre
+    usuario.email = data.email
     usuario.rol = data.rol
     usuario.area = data.area
     usuario.activo = data.activo
@@ -87,3 +89,31 @@ def resetear_intentos_fallidos(db: Session, usuario: models.Usuario) -> None:
         usuario.intentos_fallidos = 0
         usuario.bloqueado_hasta = None
         db.commit()
+
+
+MINUTOS_VIGENCIA_RESET = 30
+
+
+def generar_solicitud_reset(db: Session, usuario: models.Usuario) -> str:
+    """Crea un token de un solo uso, vigente MINUTOS_VIGENCIA_RESET, y
+    devuelve el token en texto plano (para mandarlo por correo) -- solo su
+    hash queda guardado."""
+    token, token_hash = security.generar_token_reset()
+    usuario.reset_token_hash = token_hash
+    usuario.reset_token_expira = ahora_utc() + timedelta(minutes=MINUTOS_VIGENCIA_RESET)
+    db.commit()
+    return token
+
+
+def obtener_por_token_reset(db: Session, token: str) -> Optional[models.Usuario]:
+    token_hash = security.hash_token_reset(token)
+    usuario = db.query(models.Usuario).filter(models.Usuario.reset_token_hash == token_hash).first()
+    if not usuario or not usuario.reset_token_expira or usuario.reset_token_expira < ahora_utc():
+        return None
+    return usuario
+
+
+def limpiar_token_reset(db: Session, usuario: models.Usuario) -> None:
+    usuario.reset_token_hash = None
+    usuario.reset_token_expira = None
+    db.commit()

@@ -97,6 +97,7 @@ app.include_router(admin_mapa.router, prefix=f"{API_PREFIX}/admin/mapa", tags=["
 app.mount("/css", StaticFiles(directory=STATIC_DIR / "css"), name="css")
 app.mount("/js", StaticFiles(directory=STATIC_DIR / "js"), name="js")
 app.mount("/icons", StaticFiles(directory=STATIC_DIR / "icons"), name="icons")
+app.mount("/img", StaticFiles(directory=STATIC_DIR / "img"), name="img")
 
 
 @app.get("/manifest.json", include_in_schema=False)

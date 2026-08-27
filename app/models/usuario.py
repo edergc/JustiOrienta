@@ -32,6 +32,10 @@ class Usuario(Base):
     # en vez de correo: es el dato que toda persona en Perú tiene con certeza,
     # a diferencia de una cuenta de correo institucional.
     dni = Column(String(8), unique=True, nullable=False, index=True)
+    # Solo para el flujo de "olvidé mi contraseña" (envío del enlace) -- el
+    # acceso en sí sigue siendo por DNI, nunca por correo. Nullable porque
+    # las cuentas creadas antes de este campo no lo tienen todavía.
+    email = Column(String(200), nullable=True)
     password_hash = Column(String(200), nullable=False)
     rol = Column(Enum(Rol), nullable=False, default=Rol.gestor)
     area = Column(String(150), nullable=True)  # obligatorio en la práctica para gestor/validador
@@ -53,6 +57,12 @@ class Usuario(Base):
     # quedaba solo como una sugerencia en el README, no algo que el sistema
     # exigiera.
     debe_cambiar_password = Column(Boolean, nullable=False, default=False)
+
+    # Token de un solo uso para "olvidé mi contraseña" -- se guarda solo el
+    # hash (igual que la contraseña): si alguien leyera la base de datos, no
+    # debería poder restablecer contraseñas ajenas con lo que encuentre ahí.
+    reset_token_hash = Column(String(64), nullable=True, index=True)
+    reset_token_expira = Column(DateTime, nullable=True)
 
     def __repr__(self):
         return f"<Usuario {self.dni} ({self.rol})>"

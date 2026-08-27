@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
-from app import crud, schemas, security
+from app import correo, crud, schemas, security
+from app.config import settings
 from app.database import get_db
 from app.models.base import ahora_utc
 
@@ -64,4 +65,33 @@ def cambiar_mi_password(
     if len(payload.password_nueva) < 6:
         raise HTTPException(status_code=422, detail="La nueva contraseña debe tener al menos 6 caracteres")
     crud.usuarios.cambiar_password(db, usuario, payload.password_nueva)
+    return {"ok": True}
+
+
+@router.post("/olvide-password")
+def olvide_password(payload: schemas.OlvidePasswordIn, db: Session = Depends(get_db)):
+    usuario = crud.usuarios.obtener_por_dni(db, payload.dni)
+    if not usuario:
+        raise HTTPException(status_code=404, detail="No encontramos una cuenta con ese DNI.")
+    if not usuario.email:
+        raise HTTPException(
+            status_code=409,
+            detail="Esa cuenta no tiene un correo registrado. Pide a un(a) administrador(a) que te lo "
+            "agregue, o que te restablezca la contraseña directamente desde el panel.",
+        )
+
+    token = crud.usuarios.generar_solicitud_reset(db, usuario)
+    enlace = f"{settings.url_publica}/admin?reset={token}"
+    correo.enviar_correo_restablecer(usuario.email, usuario.nombre, enlace, crud.usuarios.MINUTOS_VIGENCIA_RESET)
+    return {"ok": True, "mensaje": "Te enviamos un enlace a tu correo registrado."}
+
+
+@router.post("/restablecer-password")
+def restablecer_password(payload: schemas.RestablecerPasswordIn, db: Session = Depends(get_db)):
+    usuario = crud.usuarios.obtener_por_token_reset(db, payload.token)
+    if not usuario:
+        raise HTTPException(status_code=400, detail="El enlace no es válido o ya expiró. Pide uno nuevo.")
+    crud.usuarios.cambiar_password(db, usuario, payload.nueva_password)
+    crud.usuarios.limpiar_token_reset(db, usuario)
+    crud.usuarios.resetear_intentos_fallidos(db, usuario)
     return {"ok": True}
