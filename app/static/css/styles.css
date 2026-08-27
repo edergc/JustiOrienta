@@ -590,3 +590,9 @@ table.admin td.actions button { font-size: 0.78rem; padding: 0.35rem 0.65rem; }
   paint-order: stroke; stroke: var(--paper); stroke-width: 0.7;
 }
 .mapa-pin-etiqueta.destino { fill: var(--accent-strong); }
+
+/* ── esquema genérico "planta típica" (pisos 4-20) ── */
+.mapa-oficina-tipica { fill: var(--surface-soft); stroke: var(--line); stroke-width: 0.5; }
+.mapa-sala-tipica { fill: var(--accent2-tint); stroke: var(--accent2); stroke-width: 0.5; }
+.mapa-rotulo-piso { fill: var(--ink-soft); font-size: 3.4px; font-family: var(--font-body); font-weight: 600; }
+.mapa-tipica-aviso { padding: 0 0.9rem 0.8rem; margin: 0; }

@@ -202,6 +202,42 @@ function renderMapaSVG(pasos) {
   `;
 }
 
+// ── Diagrama genérico "planta típica" (pisos 4 al 20) ──
+// No hay datos de qué oficina exacta ocupa cada piso, así que este esquema
+// no representa un piso real en particular -- solo el patrón que sí está
+// documentado y se repite en esos pisos (hall de ascensores central rodeado
+// por un anillo de oficinas, con una sala de reuniones en cada extremo).
+// Sirve para que el ciudadano ubique el tipo de piso al que llega, no la
+// puerta exacta -- mismo espíritu que el aviso de texto que reemplaza.
+const PISO_TIPICO_MIN = 4;
+const PISO_TIPICO_MAX = 20;
+
+const OFICINAS_TIPICAS = [
+  [16, 34], [13, 44], [14, 54], [19, 63],
+  [84, 34], [87, 44], [86, 54], [81, 63],
+];
+const SALAS_REUNION_TIPICAS = [[27, 71], [73, 71]];
+
+function renderMapaGenericoSVG(piso, nombreDestino) {
+  const oficinas = OFICINAS_TIPICAS.map(([x, y]) => `<circle class="mapa-oficina-tipica" cx="${x}" cy="${y}" r="2.2" />`).join("");
+  const salas = SALAS_REUNION_TIPICAS
+    .map(([x, y]) => `<g><title>Sala de reuniones</title><circle class="mapa-sala-tipica" cx="${x}" cy="${y}" r="3" /></g>`)
+    .join("");
+  return `
+    <div class="mapa-ruta-contenedor">
+      <svg class="mapa-ruta-svg" viewBox="0 0 100 92" role="img" aria-label="Esquema típico del piso ${escaparHtmlPublico(piso)}" preserveAspectRatio="xMidYMid meet">
+        <ellipse class="mapa-edificio" cx="50" cy="48" rx="44" ry="40" />
+        ${oficinas}
+        ${salas}
+        <g><title>Hall de ascensores -- llegaste aquí</title><circle class="mapa-pin origen" cx="50" cy="22" r="3.2" /></g>
+        <text class="mapa-pin-etiqueta" x="50" y="15" text-anchor="middle">Hall de ascensores</text>
+        <text class="mapa-rotulo-piso" x="50" y="86" text-anchor="middle">Piso ${escaparHtmlPublico(piso)} -- distribución típica</text>
+      </svg>
+      <p class="hint mapa-tipica-aviso">Pregunta en este piso por "${escaparHtmlPublico(nombreDestino)}".</p>
+    </div>
+  `;
+}
+
 async function calcularYMostrarRuta(panel, dep) {
   const origenId = panel.querySelector("select").value;
   const resultado = panel.querySelector(".ruta-resultado");
@@ -221,21 +257,22 @@ async function calcularYMostrarRuta(panel, dep) {
       .filter((p) => p.instruccion)
       .map((p) => p.instruccion)
       .join(". ");
-    // Cuando la oficina no tiene su propio punto cargado, la ruta llega
-    // hasta un punto de referencia de su mismo piso (ej. el hall de
-    // ascensores) -- se avisa para no dar a entender que se llega a la
-    // puerta exacta.
-    const avisoAproximada = ruta.aproximada
-      ? `<p class="hint" style="margin-top:0.5rem;">Esta ruta llega hasta el piso correcto -- una vez ahí, pregunta por "${escaparHtmlPublico(ruta.dependencia_nombre)}".</p>`
-      : "";
-    // El mapa visual solo existe para el Nivel 1 (el único piso con plano
-    // dibujado y coordenadas cargadas) -- si algún tramo de la ruta pasa por
-    // otro piso o le falta posición, se omite en vez de dibujar algo
-    // incompleto o engañoso.
-    const mapaVisual =
-      ruta.pasos.every((p) => p.piso === "1" && p.pos_x != null && p.pos_y != null)
-        ? renderMapaSVG(ruta.pasos)
-        : "";
+    // El mapa real (con posiciones) solo existe para el Nivel 1. Para los
+    // pisos 4-20 (patrón repetido y documentado, aunque sin datos de qué
+    // oficina exacta cae dónde) se muestra en cambio un esquema genérico de
+    // "planta típica" -- en cualquier otro caso, el aviso de texto de
+    // siempre, sin inventar un dibujo que no corresponde.
+    const pisoFinal = ruta.pasos[ruta.pasos.length - 1]?.piso;
+    const pisoFinalNum = pisoFinal ? parseInt(pisoFinal, 10) : NaN;
+    let mapaVisual = "";
+    let avisoAproximada = "";
+    if (ruta.pasos.every((p) => p.piso === "1" && p.pos_x != null && p.pos_y != null)) {
+      mapaVisual = renderMapaSVG(ruta.pasos);
+    } else if (ruta.aproximada && pisoFinalNum >= PISO_TIPICO_MIN && pisoFinalNum <= PISO_TIPICO_MAX) {
+      mapaVisual = renderMapaGenericoSVG(pisoFinal, ruta.dependencia_nombre);
+    } else if (ruta.aproximada) {
+      avisoAproximada = `<p class="hint" style="margin-top:0.5rem;">Esta ruta llega hasta el piso correcto -- una vez ahí, pregunta por "${escaparHtmlPublico(ruta.dependencia_nombre)}".</p>`;
+    }
     resultado.innerHTML = `
       ${mapaVisual}
       <ol style="padding-left:1.2rem; margin-top:0.6rem;">${pasos || `<li>Ya estás en el punto más cercano a ${escaparHtmlPublico(ruta.dependencia_nombre)}.</li>`}</ol>
