@@ -54,24 +54,48 @@ def _puntuar_por_similitud(tokens: list[str], dep: models.Dependencia) -> float:
     return score
 
 
+# Palabras tan comunes en los nombres de dependencias jurisdiccionales que
+# compartirlas no distingue nada -- "juzgado" está en las 27 dependencias
+# que empiezan con "1°", así que exigirla no descarta ninguna. Sin esto,
+# buscar "1 juzgado constitucional" traía también el 1° de Familia, el de
+# Trabajo, el Civil... todos comparten el número Y la palabra "juzgado",
+# pero ninguno tiene que ver con lo que la persona pidió.
+_PALABRAS_GENERICAS_TIPO = {"juzgado", "juzgados", "sala", "salas"}
+
+
 def _filtrar_por_numero(tokens: list[str], puntuadas: list[tuple[float, "models.Dependencia"]]):
     """Si la consulta trae un número ("11 juzgado civil"), es el dato más
     específico que puede dar una persona -- de nada sirve mostrar cinco
     juzgados civiles distintos si uno de ellos SÍ es el número exacto.
     Cuando al menos un resultado coincide con todos los números pedidos, se
     descartan los que no -- si ninguno coincide, se deja la lista tal cual en
-    vez de vaciarla (mejor una respuesta aproximada que ninguna)."""
+    vez de vaciarla (mejor una respuesta aproximada que ninguna).
+
+    El número por sí solo no alcanza para desempatar entre especialidades
+    distintas que comparten el mismo número de orden (ej. "1° Juzgado Civil"
+    y "1° Juzgado de Familia..." comparten el "1"): si la consulta trae
+    además alguna palabra que no sea genérica ("constitucional", "civil",
+    "familia"...), se exige que también coincida, en una segunda pasada con
+    el mismo respaldo de "si nada calza, no vacíes la lista"."""
     numeros = [t for t in tokens if t.isdigit()]
     if not numeros:
         return puntuadas
 
-    def coincide(dep):
-        nombre_tokens = (dep.nombre_normalizado or "").split()
+    def tokens_de(dep):
+        nombre_tokens = set((dep.nombre_normalizado or "").split())
         alias_tokens = {t for a in dep.alias for t in (a.alias_normalizado or "").split()}
-        return all(n in nombre_tokens or n in alias_tokens for n in numeros)
+        return nombre_tokens | alias_tokens
 
-    con_numero = [(s, d) for s, d in puntuadas if coincide(d)]
-    return con_numero if con_numero else puntuadas
+    con_numero = [(s, d) for s, d in puntuadas if all(n in tokens_de(d) for n in numeros)]
+    if not con_numero:
+        return puntuadas
+
+    palabras_tipo = [t for t in tokens if not t.isdigit() and t not in _PALABRAS_GENERICAS_TIPO]
+    if not palabras_tipo:
+        return con_numero
+
+    con_tipo = [(s, d) for s, d in con_numero if all(p in tokens_de(d) for p in palabras_tipo)]
+    return con_tipo if con_tipo else con_numero
 
 
 def buscar_dependencias(db: Session, query: str, limite: int = 10) -> list[models.Dependencia]:
