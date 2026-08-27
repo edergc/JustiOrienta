@@ -146,10 +146,16 @@ def calcular_ruta(db: Session, origen_id: int, destino_dependencia_id: int) -> O
         for n in db.query(models.NodoUbicacion).filter(models.NodoUbicacion.id.in_(camino))
     }
 
-    pasos = [schemas.PasoRuta(nodo_id=camino[0], nombre=nodos_por_id[camino[0]].nombre, instruccion=None)]
+    def _paso(nodo, instruccion):
+        return schemas.PasoRuta(
+            nodo_id=nodo.id, nombre=nodo.nombre, instruccion=instruccion,
+            piso=nodo.piso, pos_x=nodo.pos_x, pos_y=nodo.pos_y,
+        )
+
+    pasos = [_paso(nodos_por_id[camino[0]], None)]
     for paso in pasos_grafo:
         nodo = nodos_por_id[paso["hasta_id"]]
-        pasos.append(schemas.PasoRuta(nodo_id=nodo.id, nombre=nodo.nombre, instruccion=paso["instruccion"]))
+        pasos.append(_paso(nodo, paso["instruccion"]))
 
     return schemas.RutaOut(
         origen_id=origen.id,

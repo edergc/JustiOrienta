@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, Column, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
 
 from app.models.base import Base, TimestampMixin
@@ -29,6 +29,14 @@ class NodoUbicacion(Base, TimestampMixin):
     # -- así una búsqueda normal puede ofrecer "¿cómo llego desde aquí?"
     # sin que el área tenga que mantener un segundo catálogo de ubicaciones.
     dependencia_id = Column(Integer, ForeignKey("dependencias.id"), nullable=True, index=True)
+
+    # Posición aproximada (0-100, porcentaje del ancho/alto del plano) para
+    # dibujar este punto sobre el mapa visual del piso -- solo tiene sentido
+    # donde ya existe un plano dibujado (hoy, el Nivel 1 de la Sede Javier
+    # Alzamora Valdez). Nulo en el resto: sin plano, no hay dónde ubicarlo,
+    # y el sistema simplemente no dibuja el mapa para esos casos.
+    pos_x = Column(Float, nullable=True)
+    pos_y = Column(Float, nullable=True)
 
     sede = relationship("Sede")
     dependencia = relationship("Dependencia")

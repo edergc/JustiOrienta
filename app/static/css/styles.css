@@ -562,3 +562,31 @@ table.admin td.actions button { font-size: 0.78rem; padding: 0.35rem 0.65rem; }
 }
 .feedback button:hover { border-color: var(--accent2); }
 .feedback .gracias { color: var(--accent2-strong); font-weight: 600; margin: 0; }
+
+/* ── mapa visual del Nivel 1 (wayfinding) ── */
+.mapa-ruta-contenedor {
+  border: 1px solid var(--line); border-radius: 12px; overflow: hidden;
+  background: var(--paper); margin-top: 0.6rem;
+}
+.mapa-ruta-svg { display: block; width: 100%; height: auto; aspect-ratio: 1 / 1; max-height: 22rem; }
+.mapa-edificio { fill: var(--surface); stroke: var(--line); stroke-width: 0.6; }
+.mapa-plaza { fill: var(--surface-soft); stroke: var(--line); stroke-width: 0.4; }
+.mapa-rotulo {
+  fill: var(--ink-soft); font-size: 2.6px; font-family: var(--font-body);
+  letter-spacing: 0.02em; opacity: 0.75;
+}
+.mapa-ruta-linea {
+  fill: none; stroke: var(--accent); stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round;
+  stroke-dasharray: 3 2.2; animation: mapa-marcha 1.1s linear infinite;
+}
+@keyframes mapa-marcha { to { stroke-dashoffset: -5.2; } }
+@media (prefers-reduced-motion: reduce) { .mapa-ruta-linea { animation: none; } }
+.mapa-pin { stroke: var(--surface); stroke-width: 0.5; }
+.mapa-pin.punto { fill: var(--accent2); opacity: 0.85; }
+.mapa-pin.origen { fill: var(--accent2-strong); }
+.mapa-pin.destino { fill: var(--accent); }
+.mapa-pin-etiqueta {
+  fill: var(--ink); font-size: 3.1px; font-weight: 700; font-family: var(--font-body);
+  paint-order: stroke; stroke: var(--paper); stroke-width: 0.7;
+}
+.mapa-pin-etiqueta.destino { fill: var(--accent-strong); }

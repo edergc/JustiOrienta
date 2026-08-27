@@ -1527,6 +1527,8 @@ function abrirNodo(id) {
       document.getElementById("n-piso").value = n.piso || "";
       document.getElementById("n-nombre").value = n.nombre;
       document.getElementById("n-punto-partida").checked = n.es_punto_partida;
+      document.getElementById("n-pos-x").value = n.pos_x ?? "";
+      document.getElementById("n-pos-y").value = n.pos_y ?? "";
       poblarDependenciasDelNodo(n.sede_id, n.dependencia_id);
     }
   }
@@ -1551,6 +1553,8 @@ document.getElementById("form-nodo").addEventListener("submit", async (e) => {
     dependencia_id: document.getElementById("n-dependencia").value
       ? parseInt(document.getElementById("n-dependencia").value)
       : null,
+    pos_x: document.getElementById("n-pos-x").value ? parseFloat(document.getElementById("n-pos-x").value) : null,
+    pos_y: document.getElementById("n-pos-y").value ? parseFloat(document.getElementById("n-pos-y").value) : null,
   };
   try {
     await api(id ? `/admin/mapa/nodos/${id}` : "/admin/mapa/nodos", {

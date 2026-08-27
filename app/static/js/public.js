@@ -156,6 +156,52 @@ async function alternarRutaInterna(tarjetaEl, dep) {
   }
 }
 
+// ── Mapa visual del Nivel 1 (Sede Javier Alzamora Valdez) ──
+// Diagrama esquemático propio (formas dibujadas a mano, no una copia de
+// ningún plano de terceros) que respeta la disposición real documentada:
+// planta en forma de abanico curvo, auditorio al fondo, dos bloques (A hacia
+// Av. Abancay, B hacia Av. Nicolás de Piérola) y la plaza semicircular al
+// frente. Las posiciones de cada punto (pos_x/pos_y, 0-100) se cargaron a
+// mano comparando el plano real -- ver app/cargar_mapa_jav_nivel1.py.
+const MAPA_FONDO_SVG = `
+  <path class="mapa-edificio" d="M12,55 C8,35 20,15 42,10 C55,6 70,8 80,14
+    C92,18 95,30 90,42 C88,55 85,62 78,68 C74,76 68,84 58,90
+    C50,95 50,95 42,90 C32,84 26,76 22,68 C15,62 12,58 12,55 Z" />
+  <path class="mapa-plaza" d="M30,90 C36,98 64,98 70,90 L70,100 L30,100 Z" />
+  <text class="mapa-rotulo" x="6" y="45" transform="rotate(-70 6 45)">Av. Nicolás de Piérola</text>
+  <text class="mapa-rotulo" x="94" y="45" transform="rotate(70 94 45)">Av. Abancay</text>
+  <text class="mapa-rotulo" x="72" y="9" transform="rotate(28 72 9)">Jr. Apurímac</text>
+  <text class="mapa-rotulo" x="50" y="99" text-anchor="middle">Plaza</text>
+`;
+
+function renderMapaSVG(pasos) {
+  const ultimo = pasos.length - 1;
+  const linea = pasos.map((p) => `${p.pos_x},${p.pos_y}`).join(" ");
+  const pines = pasos
+    .map((p, i) => {
+      const esOrigen = i === 0;
+      const esDestino = i === ultimo;
+      const clase = esOrigen ? "origen" : esDestino ? "destino" : "punto";
+      const r = esOrigen || esDestino ? 2.6 : 1.5;
+      const etiqueta =
+        esOrigen ? "Estás aquí" : esDestino ? escaparHtmlPublico(p.nombre) : null;
+      const texto = etiqueta
+        ? `<text class="mapa-pin-etiqueta ${esDestino ? "destino" : ""}" x="${p.pos_x}" y="${p.pos_y - r - 1.6}" text-anchor="middle">${etiqueta}</text>`
+        : "";
+      return `<g><title>${escaparHtmlPublico(p.nombre)}</title><circle class="mapa-pin ${clase}" cx="${p.pos_x}" cy="${p.pos_y}" r="${r}" />${texto}</g>`;
+    })
+    .join("");
+  return `
+    <div class="mapa-ruta-contenedor">
+      <svg class="mapa-ruta-svg" viewBox="0 0 100 100" role="img" aria-label="Mapa del Nivel 1 con la ruta resaltada" preserveAspectRatio="xMidYMid meet">
+        ${MAPA_FONDO_SVG}
+        <polyline class="mapa-ruta-linea" points="${linea}" />
+        ${pines}
+      </svg>
+    </div>
+  `;
+}
+
 async function calcularYMostrarRuta(panel, dep) {
   const origenId = panel.querySelector("select").value;
   const resultado = panel.querySelector(".ruta-resultado");
@@ -182,7 +228,16 @@ async function calcularYMostrarRuta(panel, dep) {
     const avisoAproximada = ruta.aproximada
       ? `<p class="hint" style="margin-top:0.5rem;">Esta ruta llega hasta el piso correcto -- una vez ahí, pregunta por "${escaparHtmlPublico(ruta.dependencia_nombre)}".</p>`
       : "";
+    // El mapa visual solo existe para el Nivel 1 (el único piso con plano
+    // dibujado y coordenadas cargadas) -- si algún tramo de la ruta pasa por
+    // otro piso o le falta posición, se omite en vez de dibujar algo
+    // incompleto o engañoso.
+    const mapaVisual =
+      ruta.pasos.every((p) => p.piso === "1" && p.pos_x != null && p.pos_y != null)
+        ? renderMapaSVG(ruta.pasos)
+        : "";
     resultado.innerHTML = `
+      ${mapaVisual}
       <ol style="padding-left:1.2rem; margin-top:0.6rem;">${pasos || `<li>Ya estás en el punto más cercano a ${escaparHtmlPublico(ruta.dependencia_nombre)}.</li>`}</ol>
       ${avisoAproximada}
       <button type="button" class="primary" data-leer-ruta style="margin-top:0.4rem;">🔊 Escuchar ruta</button>

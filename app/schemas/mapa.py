@@ -9,6 +9,8 @@ class NodoBase(BaseModel):
     nombre: str
     es_punto_partida: bool = True
     dependencia_id: Optional[int] = None
+    pos_x: Optional[float] = None
+    pos_y: Optional[float] = None
 
 
 class NodoCreate(NodoBase):
@@ -49,6 +51,13 @@ class PasoRuta(BaseModel):
     nodo_id: int
     nombre: str
     instruccion: Optional[str] = None
+    # Piso y posición del nodo -- el frontend los usa para decidir si puede
+    # dibujar el mapa visual de esta ruta (solo cuando TODOS los pasos caen
+    # en un piso con plano dibujado y coordenadas cargadas) sin tener que
+    # pedir estos datos aparte.
+    piso: Optional[str] = None
+    pos_x: Optional[float] = None
+    pos_y: Optional[float] = None
 
 
 class RutaOut(BaseModel):

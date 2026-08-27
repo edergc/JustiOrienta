@@ -45,40 +45,49 @@ PRIMER_PISO_SUPERIOR = 2
 # solo porque no hay planta de ese piso en particular.
 ULTIMO_PISO_SUPERIOR = 21
 
-# clave interna -> (nombre a mostrar, piso, es punto de partida seleccionable)
+# clave interna -> (nombre a mostrar, piso, es punto de partida seleccionable, pos_x %, pos_y %)
+#
+# pos_x/pos_y ubican el punto sobre el mapa visual del Nivel 1 (ver
+# renderMapaSVG en public.js) -- 0-100, x de izquierda a derecha, y de atrás
+# (auditorio) hacia adelante (plaza/ingreso). Estimadas a ojo comparando la
+# posición relativa de cada ambiente en la lámina "Zonificación - Micro,
+# primer piso" de JAV_DiSEÑO.pdf: no son coordenadas topográficas, solo
+# sitúan cada punto en el lugar aproximado correcto dentro del edificio.
+# El resto de pisos no tiene mapa visual, así que quedan en None.
 NODOS = {
-    "ingreso_principal": ("Ingreso principal", NIVEL_1, True),
-    "hall_principal": ("Hall principal", NIVEL_1, True),
-    "hall_ascensores_a": ("Hall de ascensores - Bloque A (lado Abancay)", NIVEL_1, True),
-    "hall_ascensores_b": ("Hall de ascensores - Bloque B (lado Nicolás de Piérola)", NIVEL_1, True),
-    "hall_a": ("Hall - Bloque A", NIVEL_1, False),
-    "hall_b": ("Hall - Bloque B", NIVEL_1, False),
-    "recepcion_a": ("Recepción del Bloque A", NIVEL_1, True),
-    "recepcion_b": ("Recepción del Bloque B", NIVEL_1, True),
-    "informes_a": ("Informes - Bloque A", NIVEL_1, True),
-    "informes_b": ("Informes - Bloque B", NIVEL_1, True),
-    "pagos_a": ("Pagos y servicios - Bloque A", NIVEL_1, True),
-    "pagos_b": ("Pagos y servicios - Bloque B", NIVEL_1, True),
-    "ingreso_vehicular": ("Ingreso vehicular (Av. Nicolás de Piérola)", NIVEL_1, True),
-    "salida_vehicular": ("Salida vehicular (Jr. Santa Rosa)", NIVEL_1, True),
-    "auditorio": ("Auditorio (escenario y sala de butacas)", NIVEL_1, True),
-    "patio_a": ("Patio exterior - Bloque A", NIVEL_1, True),
-    "patio_b": ("Patio exterior - Bloque B", NIVEL_1, True),
-    "bancos": ("Zona de bancos (agencias de pago)", NIVEL_1, True),
-    "oficinas_apurimac": ("Oficinas (lado Jr. Apurímac)", NIVEL_1, True),
-    "deposito_a": ("Depósito - Bloque A", NIVEL_1, False),
-    "deposito_b": ("Depósito - Bloque B", NIVEL_1, False),
+    "ingreso_principal": ("Ingreso principal", NIVEL_1, True, 50, 88),
+    "hall_principal": ("Hall principal", NIVEL_1, True, 50, 68),
+    "hall_ascensores_a": ("Hall de ascensores - Bloque A (lado Abancay)", NIVEL_1, True, 61, 51),
+    "hall_ascensores_b": ("Hall de ascensores - Bloque B (lado Nicolás de Piérola)", NIVEL_1, True, 39, 51),
+    "hall_a": ("Hall - Bloque A", NIVEL_1, False, 64, 63),
+    "hall_b": ("Hall - Bloque B", NIVEL_1, False, 36, 63),
+    "recepcion_a": ("Recepción del Bloque A", NIVEL_1, True, 73, 64),
+    "recepcion_b": ("Recepción del Bloque B", NIVEL_1, True, 27, 64),
+    "informes_a": ("Informes - Bloque A", NIVEL_1, True, 67, 62),
+    "informes_b": ("Informes - Bloque B", NIVEL_1, True, 33, 62),
+    "pagos_a": ("Pagos y servicios - Bloque A", NIVEL_1, True, 67, 73),
+    "pagos_b": ("Pagos y servicios - Bloque B", NIVEL_1, True, 33, 73),
+    "ingreso_vehicular": ("Ingreso vehicular (Av. Nicolás de Piérola)", NIVEL_1, True, 23, 37),
+    "salida_vehicular": ("Salida vehicular (Jr. Santa Rosa)", NIVEL_1, True, 81, 37),
+    "auditorio": ("Auditorio (escenario y sala de butacas)", NIVEL_1, True, 50, 28),
+    "patio_a": ("Patio exterior - Bloque A", NIVEL_1, True, 70, 32),
+    "patio_b": ("Patio exterior - Bloque B", NIVEL_1, True, 30, 32),
+    "bancos": ("Zona de bancos (agencias de pago)", NIVEL_1, True, 68, 22),
+    "oficinas_apurimac": ("Oficinas (lado Jr. Apurímac)", NIVEL_1, True, 79, 20),
+    "deposito_a": ("Depósito - Bloque A", NIVEL_1, False, 88, 49),
+    "deposito_b": ("Depósito - Bloque B", NIVEL_1, False, 16, 49),
     # SS.HH confirmados en JAV_DiSEÑO.pdf (lámina "Zonificación - Micro",
     # primer piso): dos junto al foyer del auditorio, dos junto a los halls
     # de ascensores -- no estaban en la primera carga del Nivel 1.
-    "ss_hh_auditorio_a": ("SS.HH - Auditorio, lado Bloque A", NIVEL_1, True),
-    "ss_hh_auditorio_b": ("SS.HH - Auditorio, lado Bloque B", NIVEL_1, True),
-    "ss_hh_ascensores_a": ("SS.HH - Hall de ascensores, Bloque A", NIVEL_1, True),
-    "ss_hh_ascensores_b": ("SS.HH - Hall de ascensores, Bloque B", NIVEL_1, True),
+    "ss_hh_auditorio_a": ("SS.HH - Auditorio, lado Bloque A", NIVEL_1, True, 62, 18),
+    "ss_hh_auditorio_b": ("SS.HH - Auditorio, lado Bloque B", NIVEL_1, True, 38, 18),
+    "ss_hh_ascensores_a": ("SS.HH - Hall de ascensores, Bloque A", NIVEL_1, True, 67, 47),
+    "ss_hh_ascensores_b": ("SS.HH - Hall de ascensores, Bloque B", NIVEL_1, True, 33, 47),
 }
 # Un "hall de ascensores" por cada piso superior -- ver nota de fuentes arriba.
+# Sin mapa visual propio, así que sin posición (None, None).
 for _piso in range(PRIMER_PISO_SUPERIOR, ULTIMO_PISO_SUPERIOR + 1):
-    NODOS[f"hall_ascensores_piso_{_piso}"] = (f"Hall de ascensores - piso {_piso}", str(_piso), True)
+    NODOS[f"hall_ascensores_piso_{_piso}"] = (f"Hall de ascensores - piso {_piso}", str(_piso), True, None, None)
 
 # (clave_a, clave_b, distancia, instruccion_a_a_b, instruccion_b_a_a)
 CONEXIONES = [
@@ -209,8 +218,9 @@ def aplicar(db) -> dict:
 
     creados_nodo = 0
     reusados_nodo = 0
+    posiciones_completadas = 0
     ids = {}
-    for clave, (nombre, piso, es_punto_partida) in NODOS.items():
+    for clave, (nombre, piso, es_punto_partida, pos_x, pos_y) in NODOS.items():
         existente = (
             db.query(models.NodoUbicacion)
             .filter(
@@ -223,9 +233,18 @@ def aplicar(db) -> dict:
         if existente:
             ids[clave] = existente.id
             reusados_nodo += 1
+            # Rellena la posición solo si el nodo todavía no tiene una --
+            # así una corrida vieja (de antes de que existiera pos_x/pos_y)
+            # se pone al día, sin pisar un ajuste que alguien ya hizo a mano
+            # desde el panel.
+            if existente.pos_x is None and existente.pos_y is None and pos_x is not None:
+                existente.pos_x = pos_x
+                existente.pos_y = pos_y
+                posiciones_completadas += 1
             continue
         nodo = models.NodoUbicacion(
-            sede_id=sede.id, piso=piso, nombre=nombre, es_punto_partida=es_punto_partida
+            sede_id=sede.id, piso=piso, nombre=nombre, es_punto_partida=es_punto_partida,
+            pos_x=pos_x, pos_y=pos_y,
         )
         db.add(nodo)
         db.flush()
@@ -286,6 +305,7 @@ def aplicar(db) -> dict:
         "renombrados": renombrados,
         "nodos_creados": creados_nodo,
         "nodos_reusados": reusados_nodo,
+        "posiciones_completadas": posiciones_completadas,
         "conexiones_creadas": creados_conexion,
         "conexiones_reusadas": reusadas_conexion,
         "vinculados": vinculados,
@@ -302,6 +322,8 @@ if __name__ == "__main__":
     if resumen["renombrados"]:
         print(f"Nodos renombrados: {resumen['renombrados']}")
     print(f"Nodos creados: {resumen['nodos_creados']} (ya existían: {resumen['nodos_reusados']})")
+    if resumen["posiciones_completadas"]:
+        print(f"Posiciones en el mapa completadas en nodos ya existentes: {resumen['posiciones_completadas']}")
     print(f"Conexiones creadas: {resumen['conexiones_creadas']} (ya existían: {resumen['conexiones_reusadas']})")
     print(f"Nodos vinculados a una dependencia: {resumen['vinculados']}")
     if resumen["sin_encontrar"]:
