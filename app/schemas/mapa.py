@@ -1,6 +1,6 @@
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class NodoBase(BaseModel):
@@ -9,8 +9,12 @@ class NodoBase(BaseModel):
     nombre: str
     es_punto_partida: bool = True
     dependencia_id: Optional[int] = None
-    pos_x: Optional[float] = None
-    pos_y: Optional[float] = None
+    # 0-100: porcentaje del ancho/alto del mapa visual (ver renderMapaSVG en
+    # public.js) -- un valor fuera de rango dibujaría el punto fuera del
+    # plano visible sin ningún aviso, así que se rechaza aquí antes de que
+    # llegue a la base de datos.
+    pos_x: Optional[float] = Field(default=None, ge=0, le=100)
+    pos_y: Optional[float] = Field(default=None, ge=0, le=100)
 
 
 class NodoCreate(NodoBase):
