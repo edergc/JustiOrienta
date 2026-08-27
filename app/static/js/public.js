@@ -175,11 +175,21 @@ async function calcularYMostrarRuta(panel, dep) {
       .filter((p) => p.instruccion)
       .map((p) => p.instruccion)
       .join(". ");
+    // Cuando la oficina no tiene su propio punto cargado, la ruta llega
+    // hasta un punto de referencia de su mismo piso (ej. el hall de
+    // ascensores) -- se avisa para no dar a entender que se llega a la
+    // puerta exacta.
+    const avisoAproximada = ruta.aproximada
+      ? `<p class="hint" style="margin-top:0.5rem;">Esta ruta llega hasta el piso correcto -- una vez ahí, pregunta por "${escaparHtmlPublico(ruta.dependencia_nombre)}".</p>`
+      : "";
     resultado.innerHTML = `
       <ol style="padding-left:1.2rem; margin-top:0.6rem;">${pasos || `<li>Ya estás en el punto más cercano a ${escaparHtmlPublico(ruta.dependencia_nombre)}.</li>`}</ol>
+      ${avisoAproximada}
       <button type="button" class="primary" data-leer-ruta style="margin-top:0.4rem;">🔊 Escuchar ruta</button>
     `;
-    resultado.querySelector("[data-leer-ruta]").addEventListener("click", () => leerTexto(textoCompleto || `Ya estás cerca de ${ruta.dependencia_nombre}.`));
+    const textoParaLeer = (textoCompleto || `Ya estás cerca de ${ruta.dependencia_nombre}.`) +
+      (ruta.aproximada ? ` Una vez ahí, pregunta por ${ruta.dependencia_nombre}.` : "");
+    resultado.querySelector("[data-leer-ruta]").addEventListener("click", () => leerTexto(textoParaLeer));
   } catch {
     resultado.innerHTML = `<p class="hint">No pudimos calcular la ruta. Intenta de nuevo.</p>`;
   }

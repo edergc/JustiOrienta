@@ -56,3 +56,7 @@ class RutaOut(BaseModel):
     destino_id: int
     dependencia_nombre: str
     pasos: list[PasoRuta]
+    # True cuando la dependencia no tiene un nodo propio vinculado a mano y
+    # la ruta llega solo hasta un punto de referencia de su piso (ej. el hall
+    # de ascensores) -- el paso final no es la puerta exacta de la oficina.
+    aproximada: bool = False

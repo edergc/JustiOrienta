@@ -1,8 +1,21 @@
 # -*- coding: utf-8 -*-
-"""Carga el mapa interno (nodos y conexiones) del Nivel 1 de la Sede Javier
-Alzamora Valdez -- interpretado de la planta arquitectonica real del
-edificio (JAV_EDIFICIO.pdf, "PLANTA PRIMER NIVEL", digitalizacion BIM del
-Ex Ministerio de Educacion, arq. Enrique Seoane Ros, 1956).
+"""Carga el mapa interno (nodos y conexiones) de la Sede Javier Alzamora
+Valdez: el Nivel 1 en detalle, y un "hall de ascensores" por piso del 2 al
+20 para el resto del edificio.
+
+Fuentes:
+- Nivel 1 (planta, accesos, zonificación y circulación real): JAV_EDIFICIO.pdf
+  (digitalización BIM) y JAV_DiSEÑO.pdf (Universidad Privada del Norte,
+  "Análisis de caso" del edificio -- trabajo académico, no un documento
+  oficial del Poder Judicial, pero con planos y circulación reales que
+  confirmaron y afinaron el trazado del Nivel 1 ya cargado).
+- Pisos 2 al 20: JAV_DiSEÑO.pdf confirma que los ascensores van del sótano 2
+  al último piso (la circulación vertical principal) y que el piso 4 al 11 y
+  12 al 20 repiten el mismo patrón de planta. No hay dato de qué oficina
+  exacta ocupa cada piso, así que solo se agrega un punto "Hall de
+  ascensores, piso N": suficiente para llevar a alguien al piso y ascensor
+  correctos de cualquier dependencia del catálogo (que sí trae el piso),
+  aunque no hasta la puerta exacta de la oficina.
 
 Uso:
     python -m app.cargar_mapa_jav_nivel1
@@ -11,42 +24,61 @@ Idempotente (como cargar_titulares.py y cargar_directorio_excel.py): correr
 esto varias veces no duplica nodos ni conexiones -- si un nodo con el mismo
 nombre ya existe en esa sede/piso, se reutiliza en vez de crear uno nuevo.
 
-Nota de precision: las conexiones e instrucciones se infirieron de la
-adyacencia visual en el plano 2D, no de una caminata real por el edificio.
-Es un punto de partida razonable, no una verificacion de campo -- Coordinacion
-de Informatica puede ajustar cualquier nodo o instruccion despues desde el
+Nota de precision: las conexiones e instrucciones del Nivel 1 se infirieron
+de la adyacencia visual en planos 2D (uno BIM, otro de un análisis de caso
+universitario), no de una caminata real por el edificio. Es un punto de
+partida razonable, no una verificación de campo -- Coordinación de
+Informática puede ajustar cualquier nodo o instrucción después desde el
 panel (pestaña "Mapa interno"), sin volver a correr este script.
 """
 from app import models
 from app.database import SessionLocal
 
 SEDE_NOMBRE = "Sede Javier Alzamora Valdez"
-NIVEL = "1"
+NIVEL_1 = "1"
+PRIMER_PISO_SUPERIOR = 2
+# JAV_DiSEÑO.pdf documenta en detalle el patrón repetido de los pisos 4 al 20
+# (y JAV_EDIFICIO.pdf, que el edificio tiene 21 niveles) -- el 21 no tiene
+# planta propia en ninguna de las dos fuentes, pero el catálogo real (piso
+# registrado en las dependencias ya cargadas) confirma que existe y tiene
+# oficinas activas, así que se incluye igual: incorrecto dejarlo sin ruta
+# solo porque no hay planta de ese piso en particular.
+ULTIMO_PISO_SUPERIOR = 21
 
-# clave interna -> (nombre a mostrar, es punto de partida seleccionable)
+# clave interna -> (nombre a mostrar, piso, es punto de partida seleccionable)
 NODOS = {
-    "ingreso_principal": ("Ingreso principal", True),
-    "hall_principal": ("Hall principal", True),
-    "hall_ascensores_a": ("Hall de ascensores - Bloque A (lado Abancay)", True),
-    "hall_ascensores_b": ("Hall de ascensores - Bloque B (lado Nicolás de Piérola)", True),
-    "hall_a": ("Hall - Bloque A", False),
-    "hall_b": ("Hall - Bloque B", False),
-    "recepcion_a": ("Recepción del Bloque A", True),
-    "recepcion_b": ("Recepción del Bloque B", True),
-    "informes_a": ("Informes - Bloque A", True),
-    "informes_b": ("Informes - Bloque B", True),
-    "pagos_a": ("Pagos y servicios - Bloque A", True),
-    "pagos_b": ("Pagos y servicios - Bloque B", True),
-    "ingreso_vehicular": ("Ingreso vehicular (Av. Nicolás de Piérola)", True),
-    "salida_vehicular": ("Salida vehicular (Av. Abancay)", True),
-    "auditorio": ("Auditorio (escenario y sala de butacas)", True),
-    "patio_a": ("Patio exterior - Bloque A", True),
-    "patio_b": ("Patio exterior - Bloque B", True),
-    "bancos": ("Zona de bancos (agencias de pago)", True),
-    "oficinas_apurimac": ("Oficinas (lado Jr. Apurímac)", True),
-    "deposito_a": ("Depósito - Bloque A", False),
-    "deposito_b": ("Depósito - Bloque B", False),
+    "ingreso_principal": ("Ingreso principal", NIVEL_1, True),
+    "hall_principal": ("Hall principal", NIVEL_1, True),
+    "hall_ascensores_a": ("Hall de ascensores - Bloque A (lado Abancay)", NIVEL_1, True),
+    "hall_ascensores_b": ("Hall de ascensores - Bloque B (lado Nicolás de Piérola)", NIVEL_1, True),
+    "hall_a": ("Hall - Bloque A", NIVEL_1, False),
+    "hall_b": ("Hall - Bloque B", NIVEL_1, False),
+    "recepcion_a": ("Recepción del Bloque A", NIVEL_1, True),
+    "recepcion_b": ("Recepción del Bloque B", NIVEL_1, True),
+    "informes_a": ("Informes - Bloque A", NIVEL_1, True),
+    "informes_b": ("Informes - Bloque B", NIVEL_1, True),
+    "pagos_a": ("Pagos y servicios - Bloque A", NIVEL_1, True),
+    "pagos_b": ("Pagos y servicios - Bloque B", NIVEL_1, True),
+    "ingreso_vehicular": ("Ingreso vehicular (Av. Nicolás de Piérola)", NIVEL_1, True),
+    "salida_vehicular": ("Salida vehicular (Jr. Santa Rosa)", NIVEL_1, True),
+    "auditorio": ("Auditorio (escenario y sala de butacas)", NIVEL_1, True),
+    "patio_a": ("Patio exterior - Bloque A", NIVEL_1, True),
+    "patio_b": ("Patio exterior - Bloque B", NIVEL_1, True),
+    "bancos": ("Zona de bancos (agencias de pago)", NIVEL_1, True),
+    "oficinas_apurimac": ("Oficinas (lado Jr. Apurímac)", NIVEL_1, True),
+    "deposito_a": ("Depósito - Bloque A", NIVEL_1, False),
+    "deposito_b": ("Depósito - Bloque B", NIVEL_1, False),
+    # SS.HH confirmados en JAV_DiSEÑO.pdf (lámina "Zonificación - Micro",
+    # primer piso): dos junto al foyer del auditorio, dos junto a los halls
+    # de ascensores -- no estaban en la primera carga del Nivel 1.
+    "ss_hh_auditorio_a": ("SS.HH - Auditorio, lado Bloque A", NIVEL_1, True),
+    "ss_hh_auditorio_b": ("SS.HH - Auditorio, lado Bloque B", NIVEL_1, True),
+    "ss_hh_ascensores_a": ("SS.HH - Hall de ascensores, Bloque A", NIVEL_1, True),
+    "ss_hh_ascensores_b": ("SS.HH - Hall de ascensores, Bloque B", NIVEL_1, True),
 }
+# Un "hall de ascensores" por cada piso superior -- ver nota de fuentes arriba.
+for _piso in range(PRIMER_PISO_SUPERIOR, ULTIMO_PISO_SUPERIOR + 1):
+    NODOS[f"hall_ascensores_piso_{_piso}"] = (f"Hall de ascensores - piso {_piso}", str(_piso), True)
 
 # (clave_a, clave_b, distancia, instruccion_a_a_b, instruccion_b_a_a)
 CONEXIONES = [
@@ -65,6 +97,12 @@ CONEXIONES = [
     ("hall_ascensores_b", "hall_b", 1,
      "Sigue de frente hacia el hall del Bloque B.",
      "Regresa hacia el hall de ascensores del Bloque B."),
+    ("hall_ascensores_a", "ss_hh_ascensores_a", 1,
+     "El baño está junto al hall de ascensores.",
+     "Regresa hacia el hall de ascensores."),
+    ("hall_ascensores_b", "ss_hh_ascensores_b", 1,
+     "El baño está junto al hall de ascensores.",
+     "Regresa hacia el hall de ascensores."),
     ("hall_a", "recepcion_a", 1,
      "La recepción del Bloque A está al fondo del hall.",
      "Regresa hacia el hall del Bloque A."),
@@ -92,6 +130,12 @@ CONEXIONES = [
     ("auditorio", "patio_a", 1,
      "El patio exterior del Bloque A está a un costado del escenario.",
      "Regresa hacia el auditorio."),
+    ("auditorio", "ss_hh_auditorio_a", 1,
+     "El baño está a un costado del escenario, junto al foyer (lado Bloque A).",
+     "Regresa hacia el auditorio."),
+    ("auditorio", "ss_hh_auditorio_b", 1,
+     "El baño está a un costado del escenario, junto al foyer (lado Bloque B).",
+     "Regresa hacia el auditorio."),
     ("patio_a", "bancos", 2,
      "La zona de bancos está hacia el lado de Jr. Apurímac.",
      "Regresa hacia el patio exterior del Bloque A."),
@@ -106,11 +150,22 @@ CONEXIONES = [
      "El depósito y el ingreso vehicular están hacia la fachada."),
     ("salida_vehicular", "deposito_a", 1,
      "El depósito del Bloque A está junto a la salida vehicular.",
-     "La salida vehicular (Av. Abancay) está junto al depósito."),
+     "La salida vehicular (Jr. Santa Rosa) está junto al depósito."),
     ("deposito_a", "hall_a", 2,
      "El hall del Bloque A está hacia el interior, pasando el depósito.",
      "El depósito y la salida vehicular están hacia la fachada."),
 ]
+# Cada piso superior se conecta por ascensor desde AMBOS halls del Nivel 1 --
+# no sabemos si un piso en particular lo sirve el banco de ascensores del
+# Bloque A o el del Bloque B, así que se ofrecen los dos.
+for _piso in range(PRIMER_PISO_SUPERIOR, ULTIMO_PISO_SUPERIOR + 1):
+    _clave_piso = f"hall_ascensores_piso_{_piso}"
+    for _bloque in ("a", "b"):
+        CONEXIONES.append((
+            f"hall_ascensores_{_bloque}", _clave_piso, 3,
+            f"Toma el ascensor y sube al piso {_piso}.",
+            "Toma el ascensor y baja al Nivel 1.",
+        ))
 
 # clave de nodo -> nombre exacto de la dependencia ya cargada en el catálogo
 # (confirmado por búsqueda real: es la única "Mesa de Partes" en el piso 1).
@@ -119,21 +174,48 @@ VINCULOS = {
     "recepcion_a": "Mesa de Partes (Ubicación de Expedientes y Recepción de Solicitudes)",
 }
 
+# nombre viejo -> nombre nuevo, para cuando se corrige un nombre ya cargado
+# en producción -- sin esto, cambiar NODOS[clave][0] simplemente crea un
+# nodo nuevo con el nombre corregido y deja el viejo huérfano en la base.
+RENOMBRES = {
+    "Salida vehicular (Av. Abancay)": "Salida vehicular (Jr. Santa Rosa)",
+}
+
 
 def aplicar(db) -> dict:
     sede = db.query(models.Sede).filter(models.Sede.nombre == SEDE_NOMBRE).first()
     if not sede:
         raise SystemExit(f"No se encontró la sede '{SEDE_NOMBRE}'. ¿Está bien escrito el nombre?")
 
+    renombrados = 0
+    for nombre_viejo, nombre_nuevo in RENOMBRES.items():
+        ya_existe_nuevo = (
+            db.query(models.NodoUbicacion)
+            .filter(models.NodoUbicacion.sede_id == sede.id, models.NodoUbicacion.nombre == nombre_nuevo)
+            .first()
+        )
+        if ya_existe_nuevo:
+            continue
+        viejo = (
+            db.query(models.NodoUbicacion)
+            .filter(models.NodoUbicacion.sede_id == sede.id, models.NodoUbicacion.nombre == nombre_viejo)
+            .first()
+        )
+        if viejo:
+            viejo.nombre = nombre_nuevo
+            renombrados += 1
+    if renombrados:
+        db.flush()
+
     creados_nodo = 0
     reusados_nodo = 0
     ids = {}
-    for clave, (nombre, es_punto_partida) in NODOS.items():
+    for clave, (nombre, piso, es_punto_partida) in NODOS.items():
         existente = (
             db.query(models.NodoUbicacion)
             .filter(
                 models.NodoUbicacion.sede_id == sede.id,
-                models.NodoUbicacion.piso == NIVEL,
+                models.NodoUbicacion.piso == piso,
                 models.NodoUbicacion.nombre == nombre,
             )
             .first()
@@ -143,7 +225,7 @@ def aplicar(db) -> dict:
             reusados_nodo += 1
             continue
         nodo = models.NodoUbicacion(
-            sede_id=sede.id, piso=NIVEL, nombre=nombre, es_punto_partida=es_punto_partida
+            sede_id=sede.id, piso=piso, nombre=nombre, es_punto_partida=es_punto_partida
         )
         db.add(nodo)
         db.flush()
@@ -201,6 +283,7 @@ def aplicar(db) -> dict:
 
     db.commit()
     return {
+        "renombrados": renombrados,
         "nodos_creados": creados_nodo,
         "nodos_reusados": reusados_nodo,
         "conexiones_creadas": creados_conexion,
@@ -216,6 +299,8 @@ if __name__ == "__main__":
         resumen = aplicar(db)
     finally:
         db.close()
+    if resumen["renombrados"]:
+        print(f"Nodos renombrados: {resumen['renombrados']}")
     print(f"Nodos creados: {resumen['nodos_creados']} (ya existían: {resumen['nodos_reusados']})")
     print(f"Conexiones creadas: {resumen['conexiones_creadas']} (ya existían: {resumen['conexiones_reusadas']})")
     print(f"Nodos vinculados a una dependencia: {resumen['vinculados']}")

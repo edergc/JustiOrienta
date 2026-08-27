@@ -25,6 +25,23 @@ def nodo_de_dependencia(db: Session, dependencia_id: int) -> Optional[models.Nod
     )
 
 
+def nodo_de_referencia_por_piso(db: Session, sede_id: int, piso: Optional[str]) -> Optional[models.NodoUbicacion]:
+    """Cuando una dependencia no tiene su propio nodo vinculado a mano, pero sí
+    un piso registrado: un punto de referencia razonable de ese mismo piso
+    (ej. el hall de ascensores) sirve de destino aproximado -- mejor "sube al
+    piso 7 y pregunta ahí" que no ofrecer ninguna ruta. Se prioriza un nodo
+    marcado como punto de partida (es_punto_partida): son los que de verdad
+    describen un lugar reconocible, no un nodo interno de solo paso."""
+    if not piso:
+        return None
+    return (
+        db.query(models.NodoUbicacion)
+        .filter(models.NodoUbicacion.sede_id == sede_id, models.NodoUbicacion.piso == piso)
+        .order_by(models.NodoUbicacion.es_punto_partida.desc())
+        .first()
+    )
+
+
 def crear_nodo(db: Session, payload: schemas.NodoCreate) -> models.NodoUbicacion:
     nodo = models.NodoUbicacion(**payload.model_dump())
     db.add(nodo)
@@ -93,14 +110,27 @@ def eliminar_conexion(db: Session, conexion: models.ConexionNodo) -> None:
 
 
 def calcular_ruta(db: Session, origen_id: int, destino_dependencia_id: int) -> Optional[schemas.RutaOut]:
-    """None si el origen no existe, si la dependencia no tiene un nodo
-    asociado todavia, o si no hay un camino conectado entre ambos -- los
-    tres casos se tratan igual (todavia no se puede armar la ruta), quien
-    llama decide como comunicarlo."""
+    """None si el origen no existe, si no hay ningún punto de referencia
+    (nodo propio o del mismo piso) para la dependencia, o si no hay un camino
+    conectado entre ambos -- los tres casos se tratan igual (todavía no se
+    puede armar la ruta), quien llama decide cómo comunicarlo."""
     origen = obtener_nodo(db, origen_id)
     if not origen:
         return None
+    dependencia = (
+        db.query(models.Dependencia).filter(models.Dependencia.id == destino_dependencia_id).first()
+    )
+    if not dependencia:
+        return None
+
     destino = nodo_de_dependencia(db, destino_dependencia_id)
+    aproximada = False
+    if not destino:
+        # Sin nodo propio: se apunta al punto de referencia de su mismo piso
+        # (ej. el hall de ascensores) -- la ruta llega al piso correcto, no
+        # necesariamente a la puerta exacta de la oficina.
+        destino = nodo_de_referencia_por_piso(db, dependencia.sede_id, dependencia.piso)
+        aproximada = destino is not None
     if not destino:
         return None
 
@@ -124,6 +154,7 @@ def calcular_ruta(db: Session, origen_id: int, destino_dependencia_id: int) -> O
     return schemas.RutaOut(
         origen_id=origen.id,
         destino_id=destino.id,
-        dependencia_nombre=destino.dependencia.nombre if destino.dependencia else destino.nombre,
+        dependencia_nombre=dependencia.nombre,
         pasos=pasos,
+        aproximada=aproximada,
     )
