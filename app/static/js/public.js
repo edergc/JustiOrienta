@@ -34,6 +34,46 @@ EJEMPLOS.forEach((ej) => {
   chipsBox.appendChild(b);
 });
 
+// ── "¿Qué necesitas hacer?" -- chips de tarea, no de ejemplo de texto ──
+// Mismo espíritu que el "why do you need a court?" de GOV.UK: antes de
+// escribir nada, ofrecer las tareas más frecuentes de un ciudadano que
+// llega a la Corte. Cada una resuelve distinto:
+// - "buscar": es, en el fondo, una búsqueda de texto normal -- se elige el
+//   término real que sí encuentra la dependencia correcta en el catálogo
+//   (verificado contra la búsqueda pública, no adivinado).
+// - "ayuda": Justicia Orienta es un directorio, no un sistema de consulta
+//   de expedientes -- inventar una búsqueda para eso devolvería resultados
+//   falsos con confianza (ver nlp.py: "nunca inventar, siempre poder
+//   explicar por qué se sugirió algo"). Se manda a orientación humana con
+//   una nota honesta, en vez de fingir que el sistema sabe responder esto.
+const TAREAS = [
+  { etiqueta: "Presentar una demanda o escrito", tipo: "buscar", valor: "mesa de partes" },
+  { etiqueta: "Pagar una multa", tipo: "buscar", valor: "multa" },
+  {
+    etiqueta: "Consultar mi caso o expediente",
+    tipo: "ayuda",
+    valor: "Justicia Orienta todavía no consulta el estado de expedientes judiciales -- solo ubica dependencias, servicios y trámites. Para el estado de tu caso, pregunta en Mesa de Partes o en el módulo de orientación.",
+  },
+];
+
+const chipsTareasBox = document.getElementById("chips-tareas");
+TAREAS.forEach((tarea) => {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.textContent = tarea.etiqueta;
+  b.addEventListener("click", () => {
+    if (tarea.tipo === "ayuda") {
+      mostrarNecesitoAyuda(tarea.valor);
+      return;
+    }
+    document.getElementById("buscar").value = tarea.valor;
+    actualizarBotonLimpiar();
+    buscarYRenderizar(tarea.valor);
+    document.getElementById("buscar").focus();
+  });
+  chipsTareasBox.appendChild(b);
+});
+
 document.querySelectorAll(".tile-btn[data-ej]").forEach((b) => {
   b.addEventListener("click", () => {
     document.getElementById("buscar").value = b.dataset.ej;
@@ -503,7 +543,7 @@ document.getElementById("btn-ver-sede").addEventListener("click", () => {
 // ── "Necesito ayuda": salida siempre disponible a orientación humana, sin
 // depender de que el catálogo tenga cargada y publicada la información del
 // MAU de cada sede todavía ──
-function mostrarNecesitoAyuda() {
+function mostrarNecesitoAyuda(mensajeIntro) {
   const cont = document.getElementById("resultados");
   const feedback = document.getElementById("feedback-caja");
   document.getElementById("estado-vacio").style.display = "none";
@@ -517,6 +557,7 @@ function mostrarNecesitoAyuda() {
         <h2>Necesito ayuda</h2>
         <span class="badge servicio">Orientación humana</span>
       </div>
+      ${mensajeIntro ? `<p class="meta">${escaparHtmlPublico(mensajeIntro)}</p>` : ""}
       <p class="meta">¿No sabes qué necesitas, o prefieres que una persona te oriente directamente?</p>
       <ul class="meta" style="padding-left:1.1rem;">
         <li>Acércate al <strong>Módulo de Atención al Usuario (MAU)</strong>, ubicado en el ingreso de tu sede.</li>
@@ -529,7 +570,7 @@ function mostrarNecesitoAyuda() {
     </article>
   `);
 }
-document.getElementById("tile-necesito-ayuda").addEventListener("click", mostrarNecesitoAyuda);
+document.getElementById("tile-necesito-ayuda").addEventListener("click", () => mostrarNecesitoAyuda());
 
 // ── Retroalimentación ──
 function renderFeedback(consultaId) {

@@ -125,6 +125,13 @@ main.wide { max-width: 68rem; }
   font: inherit; font-size: 0.82rem; background: var(--surface); border: 1px solid var(--line);
   border-radius: 100px; padding: 0.35rem 0.8rem; cursor: pointer; color: var(--ink-soft);
 }
+/* Chips de tarea ("¿Qué necesitas hacer?"): un paso antes que los ejemplos
+   de texto libre, así que llevan más peso visual -- borde y letra del color
+   de acento, no el mismo gris neutro de "Ejemplos". */
+.chips-tareas button {
+  border-color: var(--accent2); color: var(--accent2-strong); font-weight: 600;
+}
+.chips-tareas button:hover { background: var(--accent2-tint); }
 
 #resultados { display: grid; gap: 0.9rem; }
 .card {
