@@ -1,10 +1,12 @@
 import io
+from datetime import timedelta
 
 from fastapi.testclient import TestClient
 from openpyxl import load_workbook
 
 from app import models
 from app.main import app
+from app.models.base import ahora_utc
 
 client = TestClient(app)
 
@@ -85,6 +87,7 @@ def test_reporte_xlsx_incluye_las_hojas_nuevas(db, sede, admin_usuario):
     wb = load_workbook(io.BytesIO(r.content))
     assert "Búsquedas sin resultado" in wb.sheetnames
     assert "Pendientes por área" in wb.sheetnames
+    assert "Vigencia por área" in wb.sheetnames
     assert "Completitud por área" in wb.sheetnames
 
 
@@ -124,3 +127,47 @@ def test_completitud_sin_dependencias_activas_no_falla(admin_usuario):
     ).json()
     assert resumen["completitud_por_area"] == []
     assert resumen["porcentaje_completitud_global"] is None
+
+
+def test_vigencia_por_area_cuenta_solo_lo_desactualizado_hace_mas_de_180_dias(db, sede, admin_usuario):
+    vieja = ahora_utc() - timedelta(days=200)
+    reciente = ahora_utc() - timedelta(days=10)
+    d1 = models.Dependencia(
+        tipo="administrativa", nombre="Vencida 1", sede_id=sede.id, area="Recursos Humanos", estado="activo",
+    )
+    d2 = models.Dependencia(
+        tipo="administrativa", nombre="Vencida 2", sede_id=sede.id, area="Recursos Humanos", estado="revision",
+    )
+    d3 = models.Dependencia(
+        tipo="administrativa", nombre="Al día", sede_id=sede.id, area="Recursos Humanos", estado="activo",
+    )
+    db.add_all([d1, d2, d3])
+    db.commit()
+    # Se pisa después del INSERT: onupdate solo se dispara en UPDATE, así que
+    # esto simula un registro que de verdad no se toca hace tiempo, sin que
+    # el propio guardado de la prueba lo "actualice" de nuevo.
+    db.query(models.Dependencia).filter(models.Dependencia.id.in_([d1.id, d2.id])).update(
+        {"actualizado_en": vieja}, synchronize_session=False
+    )
+    db.query(models.Dependencia).filter(models.Dependencia.id == d3.id).update(
+        {"actualizado_en": reciente}, synchronize_session=False
+    )
+    db.commit()
+
+    token = _token_admin()
+    resumen = client.get(
+        "/api/v1/admin/metricas/resumen", headers={"Authorization": f"Bearer {token}"}
+    ).json()
+
+    assert resumen["vigencia_total"] == 2
+    fila = next(v for v in resumen["vigencia_por_area"] if v["area"] == "Recursos Humanos")
+    assert fila["cantidad"] == 2
+
+
+def test_sin_vigencia_vencida_el_indicador_no_falla(admin_usuario):
+    token = _token_admin()
+    resumen = client.get(
+        "/api/v1/admin/metricas/resumen", headers={"Authorization": f"Bearer {token}"}
+    ).json()
+    assert resumen["vigencia_total"] == 0
+    assert resumen["vigencia_por_area"] == []

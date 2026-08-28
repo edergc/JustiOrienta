@@ -111,6 +111,26 @@ def resumen_metricas(
     )
     todos_los_dias = [d for dias in dias_por_area.values() for d in dias]
 
+    # Vigencia por área: cuántos registros llevan más de UMBRAL_ROJO_DIAS sin
+    # actualizarse -- mismo umbral y mismo campo (actualizado_en) que ya usa
+    # el semáforo rojo/ámbar/verde de la tabla de dependencias (ver
+    # semaforoVigencia() en admin.js), pero agregado por área para poder
+    # avisar "tu área tiene N registros para revisar" sin que nadie tenga que
+    # entrar a mirar fila por fila. Sobre TODAS las dependencias (no solo las
+    # publicadas), igual que ese semáforo, que se calcula para cualquier fila
+    # visible en la tabla sin importar su estado.
+    todas = db.query(models.Dependencia).all()
+    UMBRAL_ROJO_DIAS = 180
+    desactualizados_por_area = defaultdict(int)
+    for dep in todas:
+        if (ahora - dep.actualizado_en).days > UMBRAL_ROJO_DIAS:
+            desactualizados_por_area[dep.area or "Sin área"] += 1
+    vigencia_por_area = sorted(
+        ({"area": area, "cantidad": cantidad} for area, cantidad in desactualizados_por_area.items()),
+        key=lambda x: x["cantidad"],
+        reverse=True,
+    )
+
     # Completitud de datos por área, solo sobre lo YA publicado -- "pendientes
     # por área" ya cubre lo que falta aprobar; esto cubre lo que falta
     # TERMINAR de llenar en lo que el público ya está viendo (horario,
@@ -166,6 +186,9 @@ def resumen_metricas(
         "pendientes_total": len(pendientes),
         "pendientes_antiguedad_promedio_dias": round(sum(todos_los_dias) / len(todos_los_dias), 1) if todos_los_dias else None,
         "pendientes_por_area": pendientes_por_area,
+        # ── Vigencia: registros que llevan más de 180 días sin actualizar ──
+        "vigencia_total": sum(desactualizados_por_area.values()),
+        "vigencia_por_area": vigencia_por_area,
         # ── Completitud de datos ya publicados (horario, teléfono, algún
         # dato de accesibilidad confirmado), por área ──
         "porcentaje_completitud_global": porcentaje_completitud_global,
@@ -205,6 +228,7 @@ def descargar_reporte(
         ("% sobre accesibilidad", datos["porcentaje_sobre_accesibilidad"]),
         ("Dependencias pendientes de aprobar", datos["pendientes_total"]),
         ("Antigüedad promedio de lo pendiente (días)", datos["pendientes_antiguedad_promedio_dias"]),
+        ("Registros sin actualizar hace más de 180 días", datos["vigencia_total"]),
         ("% completitud de datos ya publicados", datos["porcentaje_completitud_global"]),
     ]
     resumen.append(["Indicador", "Valor"])
@@ -227,6 +251,8 @@ def descargar_reporte(
                 [(c["tipo"], c["veces"]) for c in datos["consultas_por_tipo"]])
     hoja_con_tabla(wb, "Pendientes por área", ["Área", "Cantidad", "Antigüedad promedio (días)"],
                 [(p["area"], p["cantidad"], p["antiguedad_promedio_dias"]) for p in datos["pendientes_por_area"]])
+    hoja_con_tabla(wb, "Vigencia por área", ["Área", "Sin actualizar hace más de 180 días"],
+                [(v["area"], v["cantidad"]) for v in datos["vigencia_por_area"]])
     hoja_con_tabla(wb, "Completitud por área", ["Área", "Dependencias activas", "% completo"],
                 [(c["area"], c["activas"], c["porcentaje_completo"]) for c in datos["completitud_por_area"]])
 

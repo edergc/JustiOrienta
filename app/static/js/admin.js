@@ -608,6 +608,13 @@ async function cargarStats() {
     const cantidad = propia ? propia.cantidad : 0;
     const detalle = propia ? ` (~${propia.antiguedad_promedio_dias} días en promedio)` : "";
     items.push([cantidad, `Pendientes en tu área${detalle}`, cantidad > 0]);
+
+    // Mismo tratamiento que "Pendientes en tu área": un aviso propio, en
+    // rojo si hay algo, en vez de obligar a leer la lista de todas las
+    // áreas para notar que la propia tiene registros vencidos.
+    const propiaVigencia = s.vigencia_por_area.find((v) => v.area === USUARIO.area);
+    const cantidadVigencia = propiaVigencia ? propiaVigencia.cantidad : 0;
+    items.push([cantidadVigencia, "Sin actualizar hace más de 180 días, en tu área", cantidadVigencia > 0]);
   }
   items.forEach(([n, l, alerta], indice) => {
     const d = document.createElement("div");
@@ -702,6 +709,14 @@ async function cargarStats() {
         )
         .join("")
     : '<li class="hint" style="list-style:none;">No hay nada pendiente de aprobar en este momento.</li>';
+
+  const listaVigencia = document.getElementById("lista-vigencia-area");
+  const maxVigencia = maxDe(s.vigencia_por_area, "cantidad");
+  listaVigencia.innerHTML = s.vigencia_por_area.length
+    ? s.vigencia_por_area
+        .map((v) => filaConBarra(`${escaparHtml(v.area)} <span class="hint">(${v.cantidad})</span>`, v.cantidad, maxVigencia))
+        .join("")
+    : '<li class="hint" style="list-style:none;">Todo el catálogo se actualizó en los últimos 180 días.</li>';
 
   const listaCompletitud = document.getElementById("lista-completitud-area");
   listaCompletitud.innerHTML = s.completitud_por_area.length
