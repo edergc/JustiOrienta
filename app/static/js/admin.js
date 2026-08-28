@@ -1491,13 +1491,14 @@ async function cargarMapa() {
           <td>${c.distancia}</td>
           <td>${escaparHtml(c.instruccion_a_b || "—")}</td>
           <td>${escaparHtml(c.instruccion_b_a || "—")}</td>
+          <td>${c.es_accesible ? "Sí" : "No"}</td>
           <td class="actions">
             <button class="btn secondary" data-editar-conexion="${c.id}">Editar</button>
             <button class="btn secondary" data-eliminar-conexion="${c.id}">Eliminar</button>
           </td>
         </tr>`
       ).join("")
-    : '<tr><td colspan="6" class="hint" style="padding:1rem;">Sin conexiones todavía.</td></tr>';
+    : '<tr><td colspan="7" class="hint" style="padding:1rem;">Sin conexiones todavía.</td></tr>';
   tbodyC.querySelectorAll("[data-editar-conexion]").forEach((b) =>
     b.addEventListener("click", () => abrirConexion(parseInt(b.dataset.editarConexion)))
   );
@@ -1604,6 +1605,7 @@ function limpiarFormularioConexion() {
   document.getElementById("c-nodo-a").innerHTML = opciones;
   document.getElementById("c-nodo-b").innerHTML = opciones;
   document.getElementById("c-distancia").value = "1";
+  document.getElementById("c-accesible").checked = true;
   document.getElementById("conexion-error").innerHTML = "";
 }
 
@@ -1623,6 +1625,7 @@ function abrirConexion(id) {
       document.getElementById("c-distancia").value = c.distancia;
       document.getElementById("c-instr-ab").value = c.instruccion_a_b || "";
       document.getElementById("c-instr-ba").value = c.instruccion_b_a || "";
+      document.getElementById("c-accesible").checked = c.es_accesible;
     }
   }
   abrirModal("modal-conexion", document.getElementById("c-nodo-a"));
@@ -1649,6 +1652,7 @@ document.getElementById("form-conexion").addEventListener("submit", async (e) =>
     distancia: parseInt(document.getElementById("c-distancia").value) || 1,
     instruccion_a_b: document.getElementById("c-instr-ab").value || null,
     instruccion_b_a: document.getElementById("c-instr-ba").value || null,
+    es_accesible: document.getElementById("c-accesible").checked,
   };
   try {
     await api(id ? `/admin/mapa/conexiones/${id}` : "/admin/mapa/conexiones", {

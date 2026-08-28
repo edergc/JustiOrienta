@@ -66,6 +66,13 @@ class ConexionNodo(Base, TimestampMixin):
     instruccion_a_b = Column(Text, nullable=True)  # instrucción caminando de A hacia B
     instruccion_b_a = Column(Text, nullable=True)  # instrucción caminando de B hacia A
 
+    # True por defecto: la mayoría de tramos (un pasillo, un ascensor) sí son
+    # accesibles -- se marca en False solo el tramo puntual que no lo es (una
+    # escalera sin ascensor alterno), en vez de exigir marcar accesible cada
+    # conexión ya cargada. Usado para excluir esos tramos del grafo cuando el
+    # ciudadano pide una ruta sin escaleras (ver rutas_internas.construir_grafo).
+    es_accesible = Column(Boolean, default=True, nullable=False)
+
     nodo_a = relationship("NodoUbicacion", foreign_keys=[nodo_a_id])
     nodo_b = relationship("NodoUbicacion", foreign_keys=[nodo_b_id])
 

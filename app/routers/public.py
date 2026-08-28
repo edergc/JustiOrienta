@@ -124,6 +124,7 @@ def puntos_partida(sede_id: int, piso: Optional[str] = None, db: Session = Depen
 def ruta_interna(
     origen_id: int = Query(..., description="Id del nodo donde el ciudadano dijo que está"),
     dependencia_id: int = Query(..., description="Id de la dependencia a la que quiere llegar"),
+    accesible: bool = Query(False, description="Evitar tramos no accesibles (ej. escaleras sin ascensor alterno)"),
     db: Session = Depends(get_db),
 ):
     """Ruta más corta, paso a paso, desde donde el ciudadano dijo que está
@@ -131,13 +132,16 @@ def ruta_interna(
     nodo asociado, o si no hay un camino cargado entre ambos puntos -- el
     mapa interno se carga sede por sede, así que esto es normal mientras no
     se haya cargado esa sede todavía, no un error del sistema."""
-    ruta = crud.mapa.calcular_ruta(db, origen_id, dependencia_id)
+    ruta = crud.mapa.calcular_ruta(db, origen_id, dependencia_id, solo_accesible=accesible)
     if not ruta:
-        raise HTTPException(
-            404,
-            "Todavía no hay una ruta interna cargada entre esos dos puntos. "
-            "Pregunta en el módulo de orientación o sigue la indicación de piso y oficina.",
+        mensaje = (
+            "Todavía no encontramos una ruta accesible (sin escaleras) entre esos dos puntos. "
+            "Pregunta en el módulo de orientación."
+            if accesible
+            else "Todavía no hay una ruta interna cargada entre esos dos puntos. "
+            "Pregunta en el módulo de orientación o sigue la indicación de piso y oficina."
         )
+        raise HTTPException(404, mensaje)
     return ruta
 
 

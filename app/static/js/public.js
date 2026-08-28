@@ -151,6 +151,9 @@ async function alternarRutaInterna(tarjetaEl, dep) {
         <select>${puntos.map((p) => `<option value="${p.id}">${p.nombre}${p.piso ? " (piso " + p.piso + ")" : ""}</option>`).join("")}</select>
         <button type="button" class="go">Ver ruta</button>
       </div>
+      <label style="display:flex; align-items:center; gap:0.4rem; margin-top:0.5rem; font-size:0.88rem;">
+        <input type="checkbox" data-accesible /> Necesito una ruta accesible (sin escaleras)
+      </label>
       <div class="ruta-resultado"></div>
     `;
     panel.querySelector("button.go").addEventListener("click", () => calcularYMostrarRuta(panel, dep));
@@ -271,12 +274,15 @@ function renderMapaGenericoSVG(piso, nombreDestino) {
 
 async function calcularYMostrarRuta(panel, dep) {
   const origenId = panel.querySelector("select").value;
+  const accesible = panel.querySelector("[data-accesible]").checked;
   const resultado = panel.querySelector(".ruta-resultado");
   resultado.innerHTML = `<p class="hint">Calculando ruta…</p>`;
   try {
-    const res = await fetch(`${API}/ruta?origen_id=${origenId}&dependencia_id=${dep.id}`);
+    const res = await fetch(`${API}/ruta?origen_id=${origenId}&dependencia_id=${dep.id}&accesible=${accesible}`);
     if (!res.ok) {
-      resultado.innerHTML = `<p class="hint">Esta oficina todavía no tiene una ruta interna cargada. Pregunta en el módulo de orientación.</p>`;
+      resultado.innerHTML = accesible
+        ? `<p class="hint">Todavía no encontramos una ruta accesible (sin escaleras) hasta ahí. Pregunta en el módulo de orientación.</p>`
+        : `<p class="hint">Esta oficina todavía no tiene una ruta interna cargada. Pregunta en el módulo de orientación.</p>`;
       return;
     }
     const ruta = await res.json();

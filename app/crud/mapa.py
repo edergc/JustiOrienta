@@ -109,11 +109,16 @@ def eliminar_conexion(db: Session, conexion: models.ConexionNodo) -> None:
     db.commit()
 
 
-def calcular_ruta(db: Session, origen_id: int, destino_dependencia_id: int) -> Optional[schemas.RutaOut]:
+def calcular_ruta(
+    db: Session, origen_id: int, destino_dependencia_id: int, solo_accesible: bool = False
+) -> Optional[schemas.RutaOut]:
     """None si el origen no existe, si no hay ningún punto de referencia
     (nodo propio o del mismo piso) para la dependencia, o si no hay un camino
     conectado entre ambos -- los tres casos se tratan igual (todavía no se
-    puede armar la ruta), quien llama decide cómo comunicarlo."""
+    puede armar la ruta), quien llama decide cómo comunicarlo. Con
+    solo_accesible=True, "no hay camino" también incluye el caso real de que
+    sí existe una ruta, pero pasa por un tramo no accesible (ej. una
+    escalera) -- Dijkstra ni siquiera ve esos tramos (ver construir_grafo)."""
     origen = obtener_nodo(db, origen_id)
     if not origen:
         return None
@@ -135,7 +140,7 @@ def calcular_ruta(db: Session, origen_id: int, destino_dependencia_id: int) -> O
         return None
 
     conexiones = listar_conexiones(db, origen.sede_id)
-    grafo = construir_grafo(conexiones)
+    grafo = construir_grafo(conexiones, solo_accesibles=solo_accesible)
     camino = ruta_mas_corta(grafo, origen.id, destino.id)
     if camino is None:
         return None

@@ -10,11 +10,18 @@ from typing import Optional
 Grafo = dict[int, list[tuple[int, int, Optional[str]]]]  # nodo_id -> [(vecino_id, distancia, instruccion)]
 
 
-def construir_grafo(conexiones) -> Grafo:
+def construir_grafo(conexiones, solo_accesibles: bool = False) -> Grafo:
     """conexiones: lista de ConexionNodo. Cada fila se agrega en ambos
-    sentidos, con la instrucción propia de cada dirección."""
+    sentidos, con la instrucción propia de cada dirección.
+
+    solo_accesibles=True excluye del grafo cualquier tramo marcado
+    es_accesible=False (ej. una escalera sin ascensor alterno) -- así
+    Dijkstra directamente no puede encontrar una ruta que pase por ahí, en
+    vez de calcular la más corta y recién después revisar si sirve."""
     grafo: Grafo = defaultdict(list)
     for c in conexiones:
+        if solo_accesibles and not c.es_accesible:
+            continue
         peso = c.distancia or 1
         grafo[c.nodo_a_id].append((c.nodo_b_id, peso, c.instruccion_a_b))
         grafo[c.nodo_b_id].append((c.nodo_a_id, peso, c.instruccion_b_a))

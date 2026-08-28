@@ -36,6 +36,7 @@ class ConexionBase(BaseModel):
     distancia: int = 1
     instruccion_a_b: Optional[str] = None
     instruccion_b_a: Optional[str] = None
+    es_accesible: bool = True
 
 
 class ConexionCreate(ConexionBase):

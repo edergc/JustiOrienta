@@ -574,7 +574,7 @@
             <h4 class="subseccion">Conexiones</h4>
             <div class="table-wrap">
               <table class="admin" id="tabla-conexiones">
-                <thead><tr><th>Nodo A</th><th>Nodo B</th><th>Distancia</th><th>Instrucción A→B</th><th>Instrucción B→A</th><th>Acciones</th></tr></thead>
+                <thead><tr><th>Nodo A</th><th>Nodo B</th><th>Distancia</th><th>Instrucción A→B</th><th>Instrucción B→A</th><th>Accesible</th><th>Acciones</th></tr></thead>
                 <tbody></tbody>
               </table>
             </div>
@@ -614,6 +614,7 @@
                 <div class="field"><label for="c-distancia">Distancia (pasos aprox.)</label><input id="c-distancia" type="number" value="1" min="1" /></div>
                 <div class="field"><label for="c-instr-ab">Instrucción caminando de A hacia B</label><textarea id="c-instr-ab" placeholder="Ej: Sube la escalera hasta el piso 3"></textarea></div>
                 <div class="field"><label for="c-instr-ba">Instrucción caminando de B hacia A</label><textarea id="c-instr-ba" placeholder="Ej: Baja la escalera hasta el piso 1"></textarea></div>
+                <div class="field"><label><input type="checkbox" id="c-accesible" checked /> Tramo accesible (sin escaleras -- desmarca si es una escalera sin ascensor alterno)</label></div>
                 <div id="conexion-error"></div>
                 <div style="display:flex; gap:0.6rem; margin-top:0.9rem;">
                   <button class="btn" type="submit">Guardar</button>
@@ -629,6 +630,6 @@
   </div>
 </div>
 
-<script src="/js/admin.js?v=7"></script>
+<script src="/js/admin.js?v=8"></script>
 </body>
 </html>
