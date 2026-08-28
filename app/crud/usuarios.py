@@ -22,6 +22,23 @@ def listar(db: Session) -> list[models.Usuario]:
     return db.query(models.Usuario).order_by(models.Usuario.nombre).all()
 
 
+def listar_validadores_de_area(db: Session, area: str) -> list[models.Usuario]:
+    """Quién puede aprobar el contenido de esta área -- usado para avisarle
+    por correo cuando algo queda pendiente de revisión (ver
+    admin_dependencias.py). Solo cuentas activas: notificar a una cuenta
+    deshabilitada no ayuda a nadie a enterarse."""
+    return (
+        db.query(models.Usuario)
+        .filter(
+            models.Usuario.rol == models.Rol.validador,
+            models.Usuario.area == area,
+            models.Usuario.activo.is_(True),
+        )
+        .order_by(models.Usuario.nombre)
+        .all()
+    )
+
+
 def crear(db: Session, data: schemas.UsuarioCreate) -> models.Usuario:
     usuario = models.Usuario(
         nombre=data.nombre,

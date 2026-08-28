@@ -1,6 +1,7 @@
 """CRUD de dependencias + flujo de publicación (revisión -> aprobación) +
 servicios anidados. Mount point: /api/v1/admin (ver app/main.py)."""
 import io
+import logging
 from typing import Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
@@ -9,7 +10,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Font
 from sqlalchemy.orm import Session
 
-from app import crud, schemas, security
+from app import correo, crud, schemas, security
 from app.cargar_titulares import aplicar as aplicar_titulares
 from app.cargar_titulares import extraer_organos
 from app.database import get_db
@@ -19,6 +20,28 @@ from app.models import Rol
 from app.models.base import ahora_utc
 
 router = APIRouter()
+logger = logging.getLogger("justicia_orienta")
+
+
+def _notificar_validadores_pendiente(db: Session, dep) -> None:
+    """Avisa por correo a quien puede aprobar el área de esta dependencia que
+    hay contenido esperando revisión (Fase 4 §3.2, paso 3 del flujo de
+    validación: hoy el/la validador(a) solo se entera si entra al panel por
+    su cuenta). Nunca bloquea el guardado -- un problema de SMTP no debería
+    impedir que el/la gestor(a) guarde su cambio, así que cualquier falla
+    solo queda registrada en el log."""
+    if not dep.area:
+        return
+    for validador in crud.usuarios.listar_validadores_de_area(db, dep.area):
+        if not validador.email:
+            continue
+        try:
+            correo.enviar_correo_pendiente_aprobacion(validador.email, validador.nombre, dep.nombre, dep.area)
+        except Exception:
+            logger.warning(
+                "No se pudo notificar a %s (%s) sobre '%s' pendiente de aprobar",
+                validador.email, validador.dni, dep.nombre, exc_info=True,
+            )
 
 
 def _validar_referencias(db: Session, sede_id: int, edificio_id: Optional[int]) -> None:
@@ -220,6 +243,8 @@ def crear_dependencia(
 
     dep = crud.dependencias.crear(db, data, payload.alias)
     crud.auditoria.registrar(db, usuario.dni, "dependencia", dep.id, "CREATE", f"Creó '{dep.nombre}'")
+    if data.get("estado") == "revision":
+        _notificar_validadores_pendiente(db, dep)
     return schemas.DependenciaOut.model_validate(dep)
 
 
@@ -259,10 +284,18 @@ def actualizar_dependencia(
         if getattr(dep, k) != v:
             cambios.append(f"{k}: '{getattr(dep, k)}' -> '{v}'")
 
+    # Se guarda antes de que actualizar() sobrescriba dep.estado en memoria --
+    # sin esto no habría forma de distinguir "recién entró a revisión" (avisar)
+    # de "un(a) gestor(a) volvió a guardar algo que ya estaba en revisión"
+    # (no reenviar el mismo correo en cada edición).
+    estado_anterior = dep.estado
+
     dep = crud.dependencias.actualizar(db, dep, data, payload.alias)
     crud.auditoria.registrar(
         db, usuario.dni, "dependencia", dep.id, "UPDATE", "; ".join(cambios) or "Sin cambios detectados"
     )
+    if data.get("estado") == "revision" and estado_anterior != "revision":
+        _notificar_validadores_pendiente(db, dep)
     return schemas.DependenciaOut.model_validate(dep)
 
 

@@ -99,6 +99,78 @@ def enviar_correo_restablecer(destino: str, nombre: str, enlace: str, minutos: i
     )
 
 
+def _plantilla_pendiente_html(nombre_validador: str, dependencia_nombre: str, area: str, enlace_panel: str) -> str:
+    nombre_seguro = html.escape(nombre_validador)
+    dep_segura = html.escape(dependencia_nombre)
+    area_segura = html.escape(area)
+    enlace_seguro = html.escape(enlace_panel)
+    return f"""\
+<div style="background:{_PAPEL}; padding:32px 16px; font-family:{_FUENTE_TEXTO};">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+         style="max-width:520px; margin:0 auto; background:#ffffff; border-radius:12px; overflow:hidden; border:1px solid {_LINEA};">
+    <tr>
+      <td style="background:{_TEAL_OSCURO}; padding:24px 32px;">
+        <span style="font-family:{_FUENTE_TITULO}; font-size:19px; font-weight:700; color:#ffffff; letter-spacing:0.01em;">
+          Justicia Orienta
+        </span>
+        <div style="font-size:12px; color:#cfe6df; margin-top:2px;">Panel de administración del catálogo</div>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:32px;">
+        <h1 style="margin:0 0 16px; font-family:{_FUENTE_TITULO}; font-weight:400; font-size:21px; color:{_TINTA};">
+          Contenido pendiente de aprobar
+        </h1>
+        <p style="margin:0 0 14px; font-size:15px; line-height:1.6; color:{_TINTA_SUAVE};">Hola {nombre_seguro},</p>
+        <p style="margin:0 0 26px; font-size:15px; line-height:1.6; color:{_TINTA_SUAVE};">
+          <strong>{dep_segura}</strong> ({area_segura}) quedó en revisión y está esperando tu aprobación
+          en el panel de Justicia Orienta.
+        </p>
+        <table role="presentation" cellpadding="0" cellspacing="0">
+          <tr>
+            <td style="border-radius:8px; background:{_TEAL};">
+              <a href="{enlace_seguro}"
+                 style="display:inline-block; padding:13px 30px; font-family:{_FUENTE_TEXTO}; font-size:15px;
+                        font-weight:700; color:#ffffff; text-decoration:none; border-radius:8px;">
+                Revisar en el panel
+              </a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:16px 32px; background:{_PAPEL}; border-top:1px solid {_LINEA}; font-size:12px; color:{_TINTA_SUAVE};">
+        Coordinación de Informática — Corte Superior de Justicia de Lima
+      </td>
+    </tr>
+  </table>
+</div>
+"""
+
+
+def _plantilla_pendiente_texto(nombre_validador: str, dependencia_nombre: str, area: str, enlace_panel: str) -> str:
+    return (
+        f"Hola {nombre_validador},\n\n"
+        f'"{dependencia_nombre}" ({area}) quedó en revisión y está esperando tu aprobación '
+        "en el panel de Justicia Orienta.\n\n"
+        f"Entra a revisarlo aquí: {enlace_panel}\n\n"
+        "-- Coordinación de Informática, Corte Superior de Justicia de Lima"
+    )
+
+
+def enviar_correo_pendiente_aprobacion(
+    destino: str, nombre_validador: str, dependencia_nombre: str, area: str
+) -> None:
+    enlace_panel = f"{settings.url_publica}/admin"
+    enviar_correo(
+        destino,
+        f'Pendiente de aprobar: "{dependencia_nombre}" -- Justicia Orienta',
+        _plantilla_pendiente_texto(nombre_validador, dependencia_nombre, area, enlace_panel),
+        cuerpo_html=_plantilla_pendiente_html(nombre_validador, dependencia_nombre, area, enlace_panel),
+    )
+
+
 def enviar_correo(destino: str, asunto: str, cuerpo_texto: str, cuerpo_html: str | None = None) -> None:
     if not settings.smtp_host:
         # Desarrollo local sin SMTP configurado: se deja constancia de qué
