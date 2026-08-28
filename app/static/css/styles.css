@@ -115,6 +115,11 @@ main.wide { max-width: 68rem; }
 }
 
 .chips-label { font-size: 0.82rem; font-weight: 700; color: var(--ink-soft); margin: 0.7rem 0 0; text-transform: uppercase; letter-spacing: 0.04em; }
+.grupo-piso {
+  font-size: 0.78rem; font-weight: 700; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.05em;
+  margin: 1.4rem 0 0.5rem; padding-top: 0.9rem; border-top: 1px solid var(--line);
+}
+.grupo-piso:first-of-type { margin-top: 0.8rem; padding-top: 0; border-top: none; }
 .chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
 .chips button {
   font: inherit; font-size: 0.82rem; background: var(--surface); border: 1px solid var(--line);

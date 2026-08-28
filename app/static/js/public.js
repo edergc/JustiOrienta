@@ -114,12 +114,15 @@ function tarjeta(dep) {
       <button class="primary" type="button" data-leer>🔊 Escuchar</button>
       ${!enOtraSede && dep.sede ? `<button type="button" data-ruta-interna>🧭 ¿Cómo llego desde aquí?</button>` : ""}
       <a href="https://www.openstreetmap.org/search?query=${osmQuery}" target="_blank" rel="noopener">${enOtraSede ? "Cómo llegar hasta esa sede" : "Cómo llegar"} (OpenStreetMap)</a>
+      ${dep.sede ? `<button type="button" data-ver-sede>🏛️ Ver ficha completa de ${enOtraSede ? "esa" : "esta"} sede</button>` : ""}
     </div>
     <div class="ruta-interna-panel" style="display:none;"></div>
   `;
   el.querySelector("[data-leer]").addEventListener("click", () => leerEnVozAlta(dep));
   const btnRuta = el.querySelector("[data-ruta-interna]");
   if (btnRuta) btnRuta.addEventListener("click", () => alternarRutaInterna(el, dep));
+  const btnVerSede = el.querySelector("[data-ver-sede]");
+  if (btnVerSede) btnVerSede.addEventListener("click", () => mostrarDependenciasDeSede(dep.sede.id));
   return el;
 }
 
@@ -321,16 +324,20 @@ function escaparHtmlPublico(valor) {
   }[c]));
 }
 
-function tarjetaAccesibilidadSede(sede) {
-  const el = document.createElement("article");
-  el.className = "card";
-  const items = [
+function accesibilidadItemsDeSede(sede) {
+  return [
     sede.rampa ? "Rampa de acceso" : null,
     sede.ascensor ? "Ascensor" : null,
     sede.banio_accesible ? "Baño accesible" : null,
     sede.estacionamiento_accesible ? "Estacionamiento accesible" : null,
     sede.personal_asistencia ? "Personal de asistencia disponible" : null,
   ].filter(Boolean);
+}
+
+function tarjetaAccesibilidadSede(sede) {
+  const el = document.createElement("article");
+  el.className = "card";
+  const items = accesibilidadItemsDeSede(sede);
   const texto = items.length
     ? `${sede.nombre} cuenta con: ${items.join(", ")}.`
     : `No tenemos registrada información de accesibilidad confirmada para ${sede.nombre}. Consulta en el módulo de orientación.`;
@@ -373,6 +380,7 @@ function botonVolver() {
 function tarjetaFichaSede(sede, total) {
   const el = document.createElement("article");
   el.className = "card";
+  const itemsA11y = accesibilidadItemsDeSede(sede);
   el.innerHTML = `
     <div class="card-top">
       <h2>${sede.nombre}</h2>
@@ -382,6 +390,12 @@ function tarjetaFichaSede(sede, total) {
     ${sede.horario_atencion ? `<p class="meta"><strong>Horario:</strong> ${sede.horario_atencion}</p>` : ""}
     ${sede.telefono ? `<p class="meta"><strong>Teléfono:</strong> ${sede.telefono}</p>` : ""}
     <p class="meta">${total} dependencia${total === 1 ? "" : "s"} publicada${total === 1 ? "" : "s"} en esta sede.</p>
+    ${itemsA11y.length
+      ? `<div class="a11y-row">${itemsA11y.map((i) => `<span>${i}</span>`).join("")}</div>`
+      : `<p class="meta hint">Sin información de accesibilidad confirmada todavía.</p>`}
+    <div class="card-actions">
+      <a href="${API}/directorio.pdf?sede_id=${sede.id}" target="_blank" rel="noopener">Descargar directorio de esta sede (PDF)</a>
+    </div>
   `;
   return el;
 }
@@ -398,6 +412,34 @@ async function cargarSedesParaSelector() {
   } catch {
     sel.innerHTML = '<option value="">No se pudo cargar la lista de sedes</option>';
   }
+}
+
+// Orden de piso para la ficha de sede: Sótano primero, luego numérico
+// ascendente, cualquier otra etiqueta rara al final antes de "sin piso" --
+// una sede piloto sola puede tener ~180 dependencias, así que listarlas
+// sin agrupar por piso era, en la práctica, una sola lista enorme.
+function _clavePiso(piso) {
+  if (piso == null || piso === "") return [3, ""];
+  const normal = String(piso).trim();
+  if (/^s[oó]tano/i.test(normal)) return [0, normal];
+  const n = parseInt(normal, 10);
+  if (!Number.isNaN(n) && String(n) === normal) return [1, n];
+  return [2, normal];
+}
+
+function agruparPorPiso(deps) {
+  const grupos = new Map();
+  for (const dep of deps) {
+    const etiqueta = dep.piso ? `Piso ${dep.piso}` : "Sin piso registrado";
+    if (!grupos.has(etiqueta)) grupos.set(etiqueta, { piso: dep.piso, items: [] });
+    grupos.get(etiqueta).items.push(dep);
+  }
+  return [...grupos.entries()].sort(([, a], [, b]) => {
+    const ka = _clavePiso(a.piso), kb = _clavePiso(b.piso);
+    if (ka[0] !== kb[0]) return ka[0] - kb[0];
+    if (typeof ka[1] === "number" && typeof kb[1] === "number") return ka[1] - kb[1];
+    return String(ka[1]).localeCompare(String(kb[1]), "es");
+  });
 }
 
 async function mostrarDependenciasDeSede(sedeId) {
@@ -427,7 +469,13 @@ async function mostrarDependenciasDeSede(sedeId) {
       cont.appendChild(aviso);
       return;
     }
-    deps.forEach((dep) => cont.appendChild(tarjeta(dep)));
+    agruparPorPiso(deps).forEach(([etiqueta, grupo]) => {
+      const h3 = document.createElement("h3");
+      h3.className = "grupo-piso";
+      h3.textContent = `${etiqueta} — ${grupo.items.length} dependencia${grupo.items.length === 1 ? "" : "s"}`;
+      cont.appendChild(h3);
+      grupo.items.forEach((dep) => cont.appendChild(tarjeta(dep)));
+    });
   } catch {
     cargando.remove();
     const aviso = document.createElement("div");
