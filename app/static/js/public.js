@@ -94,6 +94,10 @@ function leerTexto(texto) {
   }
   const u = new SpeechSynthesisUtterance(texto);
   u.lang = "es-PE";
+  // "Habla más despacio" (ProyectoJusticia22.doc, sección "Justi"): la Web
+  // Speech API ya soporta rate de forma nativa y gratuita -- solo faltaba
+  // exponerlo como preferencia, igual que alto contraste o texto grande.
+  u.rate = localStorage.getItem("jo_vozLenta") === "1" ? 0.75 : 1;
   window.speechSynthesis.cancel();
   window.speechSynthesis.speak(u);
 }
@@ -731,6 +735,46 @@ function abrirConsultaSolicitud() {
   });
 }
 
+// ── "Justi": nombre de la forma en que el sistema orienta (ProyectoJusticia22.doc
+// / robot.txt) -- sin avatar, sin personaje 3D, sin IA generativa: eso
+// costaría dinero real y, más importante, esta página documenta reglas que
+// el sistema YA sigue hoy (verificables en el código), no promesas de un
+// chatbot que no existe. El principio 9 lo dice explícito a propósito.
+const PRINCIPIOS_JUSTI = [
+  "Busca por texto o por voz, tolerante a errores de tipeo -- no hace falta escribir el nombre oficial exacto.",
+  "Nunca inventa una respuesta: si no encuentra algo, lo dice con claridad, en vez de adivinar.",
+  "No interpreta resoluciones judiciales ni da asesoría legal -- solo ubica dependencias, servicios y trámites.",
+  "Prioriza accesibilidad: alto contraste, texto grande, tema oscuro, lectura en voz alta y velocidad de voz ajustable.",
+  "Ofrece atención humana en cualquier momento -- \"Necesito ayuda\", o pedir que te llamen o te escriban.",
+  "No guarda tu DNI, tu nombre ni graba tu voz -- el reconocimiento de voz lo procesa tu propio navegador, nunca un servidor.",
+  "Todo lo que publica cada área de la Corte pasa por una revisión antes de mostrarse al público.",
+  "Cuando un dato lleva mucho tiempo sin actualizarse, el propio sistema lo marca para que alguien lo revise.",
+  "Es un sistema, no una persona: \"Justi\" es el nombre que le damos a la forma en que orienta, no un asistente con inteligencia artificial que conversa libremente.",
+  "Nunca te deja sin saber cuál es el siguiente paso: si no puede resolverlo, siempre indica a dónde ir o con quién hablar.",
+];
+
+function mostrarComoFuncionaJusti() {
+  const cont = document.getElementById("resultados");
+  const feedback = document.getElementById("feedback-caja");
+  document.getElementById("estado-vacio").style.display = "none";
+  document.getElementById("panel-estoy-aqui").style.display = "none";
+  feedback.innerHTML = "";
+  cont.innerHTML = "";
+  cont.appendChild(botonVolver());
+  const lista = PRINCIPIOS_JUSTI.map((p) => `<li>${escaparHtmlPublico(p)}</li>`).join("");
+  cont.insertAdjacentHTML("beforeend", `
+    <article class="card">
+      <div class="card-top">
+        <h2>¿Cómo funciona Justi?</h2>
+        <span class="badge servicio">Sobre este sistema</span>
+      </div>
+      <p class="meta">Justi es el nombre que le dimos a la forma en que Justicia Orienta te guía -- todo lo que ves en esta página (búsqueda, mapa, accesibilidad, atención humana) sigue estas reglas:</p>
+      <ol class="meta" style="padding-left:1.2rem;">${lista}</ol>
+    </article>
+  `);
+}
+document.getElementById("btn-como-funciona-justi").addEventListener("click", mostrarComoFuncionaJusti);
+
 // ── Retroalimentación ──
 function renderFeedback(consultaId) {
   const box = document.getElementById("feedback-caja");
@@ -1002,6 +1046,14 @@ document.getElementById("btn-tema").addEventListener("click", (e) => {
   root.setAttribute("data-theme", nuevo);
   localStorage.setItem("jo_tema", nuevo);
   e.target.setAttribute("aria-pressed", String(!oscuroAhora));
+});
+
+const btnVozLenta = document.getElementById("btn-voz-lenta");
+btnVozLenta.setAttribute("aria-pressed", String(localStorage.getItem("jo_vozLenta") === "1"));
+btnVozLenta.addEventListener("click", () => {
+  const activo = localStorage.getItem("jo_vozLenta") === "1";
+  localStorage.setItem("jo_vozLenta", activo ? "0" : "1");
+  btnVozLenta.setAttribute("aria-pressed", String(!activo));
 });
 
 // ── Selector de perfil opcional ──

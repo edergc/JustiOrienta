@@ -130,11 +130,17 @@ _VERSION_ESTATICA = str(int(time.time()))
 
 def _pagina_con_version(nombre_archivo: str) -> HTMLResponse:
     html = (STATIC_DIR / nombre_archivo).read_text(encoding="utf-8")
-    # no-cache (no "no-store"): el navegador puede guardar una copia, pero
-    # debe revalidar con el servidor antes de usarla -- sin esto, el propio
-    # HTML de "/" o "/admin" podía quedar cacheado y el {{V}} nuevo (con la
-    # referencia correcta a JS/CSS) nunca llegaba a mostrarse.
-    return HTMLResponse(html.replace("{{V}}", _VERSION_ESTATICA), headers={"Cache-Control": "no-cache"})
+    # no-store, no solo no-cache: esta respuesta no trae ETag ni
+    # Last-Modified, asi que "no-cache" (que solo exige revalidar antes de
+    # reusar una copia) queda ambiguo sin nada con que revalidar -- en la
+    # practica, algunos navegadores igual sirven la copia vieja. no-store
+    # prohibe guardar la respuesta por completo, sin esa ambiguedad: el
+    # propio HTML de "/" o "/admin" (con la referencia a JS/CSS con la
+    # version correcta) siempre se pide de nuevo.
+    return HTMLResponse(
+        html.replace("{{V}}", _VERSION_ESTATICA),
+        headers={"Cache-Control": "no-store"},
+    )
 
 
 @app.get("/", include_in_schema=False)
