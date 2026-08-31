@@ -617,11 +617,119 @@ function mostrarNecesitoAyuda(mensajeIntro) {
       </ul>
       <div class="card-actions">
         <a href="/api/v1/directorio.pdf" target="_blank" rel="noopener">Descargar directorio completo (PDF)</a>
+        <button type="button" class="primary" id="btn-abrir-solicitud">📞 Solicitar que me llamen o me escriban</button>
+        <button type="button" id="btn-abrir-consulta-solicitud">🔎 Consultar una solicitud ya hecha</button>
       </div>
+      <div id="panel-solicitud" style="display:none; margin-top:0.8rem;"></div>
+      <div id="panel-consulta-solicitud" style="display:none; margin-top:0.8rem;"></div>
     </article>
   `);
+  document.getElementById("btn-abrir-solicitud").addEventListener("click", abrirFormularioSolicitud);
+  document.getElementById("btn-abrir-consulta-solicitud").addEventListener("click", abrirConsultaSolicitud);
 }
 document.getElementById("tile-necesito-ayuda").addEventListener("click", () => mostrarNecesitoAyuda());
+
+// ── "Solicitar que me llamen o me escriban" (Fase 4) ──
+// Un salto real de "buscador" a "atención" sin chat en vivo ni videollamada:
+// el ciudadano deja un dato de contacto, alguien del área correspondiente
+// lo contacta después. Devuelve un código (JO-2026-NNNNNN) para consultar
+// el estado más adelante, sin necesitar cuenta ni contraseña.
+function abrirFormularioSolicitud() {
+  const panel = document.getElementById("panel-solicitud");
+  if (panel.style.display !== "none") {
+    panel.style.display = "none";
+    return;
+  }
+  document.getElementById("panel-consulta-solicitud").style.display = "none";
+  panel.style.display = "block";
+  panel.innerHTML = `
+    <form id="form-solicitud">
+      <div class="field"><label for="sol-nombre">Tu nombre *</label><input id="sol-nombre" required /></div>
+      <div class="field"><label for="sol-telefono">Teléfono</label><input id="sol-telefono" type="tel" /></div>
+      <div class="field"><label for="sol-correo">Correo</label><input id="sol-correo" type="email" /></div>
+      <p class="hint" style="margin:0.2rem 0 0.6rem;">Déjanos un teléfono o un correo para poder contactarte.</p>
+      <div class="field"><label for="sol-motivo">¿Qué necesitas? *</label><textarea id="sol-motivo" required></textarea></div>
+      <div id="solicitud-error"></div>
+      <button class="primary" type="submit">Enviar solicitud</button>
+    </form>
+  `;
+  document.getElementById("form-solicitud").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const payload = {
+      nombre_contacto: document.getElementById("sol-nombre").value,
+      telefono: document.getElementById("sol-telefono").value || null,
+      correo: document.getElementById("sol-correo").value || null,
+      motivo: document.getElementById("sol-motivo").value,
+    };
+    const errorBox = document.getElementById("solicitud-error");
+    errorBox.innerHTML = "";
+    try {
+      const res = await fetch(`${API}/solicitudes-atencion`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        const detalle = Array.isArray(data.detail)
+          ? data.detail.map((d) => d.msg).join(" ")
+          : data.detail || "No pudimos enviar tu solicitud. Intenta de nuevo.";
+        errorBox.innerHTML = `<p class="hint">${escaparHtmlPublico(detalle)}</p>`;
+        return;
+      }
+      panel.innerHTML = `
+        <div class="fallback" role="status">
+          <p><strong>Solicitud recibida.</strong> Tu código de seguimiento es:</p>
+          <p style="font-size:1.3rem; font-weight:700; letter-spacing:0.02em;">${escaparHtmlPublico(data.codigo)}</p>
+          <p class="hint">Guárdalo -- lo necesitas para consultar el estado más adelante. Alguien del área correspondiente te contactará.</p>
+        </div>
+      `;
+    } catch {
+      errorBox.innerHTML = `<p class="hint">No pudimos conectar con el servidor. Intenta de nuevo en unos segundos.</p>`;
+    }
+  });
+}
+
+function abrirConsultaSolicitud() {
+  const panel = document.getElementById("panel-consulta-solicitud");
+  if (panel.style.display !== "none") {
+    panel.style.display = "none";
+    return;
+  }
+  document.getElementById("panel-solicitud").style.display = "none";
+  panel.style.display = "block";
+  panel.innerHTML = `
+    <div class="search-row">
+      <input id="sol-codigo" placeholder="Ej: JO-2026-000145" />
+      <button type="button" class="go">Consultar</button>
+    </div>
+    <div id="consulta-resultado" style="margin-top:0.5rem;"></div>
+  `;
+  panel.querySelector("button.go").addEventListener("click", async () => {
+    const codigo = document.getElementById("sol-codigo").value.trim();
+    const resultado = document.getElementById("consulta-resultado");
+    if (!codigo) return;
+    resultado.innerHTML = `<p class="hint">Consultando…</p>`;
+    try {
+      const res = await fetch(`${API}/solicitudes-atencion/${encodeURIComponent(codigo)}`);
+      if (!res.ok) {
+        resultado.innerHTML = `<p class="hint">No encontramos ninguna solicitud con ese código. Revisa que esté completo.</p>`;
+        return;
+      }
+      const data = await res.json();
+      const ESTADOS = {
+        recibida: "Recibida", derivada: "Derivada al área correspondiente",
+        en_atencion: "En atención", respondida: "Respondida", cerrada: "Cerrada",
+      };
+      resultado.innerHTML = `
+        <p class="hint"><strong>Estado:</strong> ${escaparHtmlPublico(ESTADOS[data.estado] || data.estado)}</p>
+        ${data.area ? `<p class="hint"><strong>Área:</strong> ${escaparHtmlPublico(data.area)}</p>` : ""}
+      `;
+    } catch {
+      resultado.innerHTML = `<p class="hint">No pudimos conectar con el servidor. Intenta de nuevo en unos segundos.</p>`;
+    }
+  });
+}
 
 // ── Retroalimentación ──
 function renderFeedback(consultaId) {

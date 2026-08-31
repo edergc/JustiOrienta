@@ -695,6 +695,7 @@ async function cargarStats() {
     b.addEventListener("click", () => abrirAsignarCobertura(b.dataset.asignar))
   );
   await cargarCobertura();
+  await cargarSolicitudesAtencion();
 
   const listaPendientes = document.getElementById("lista-pendientes-area");
   const maxPendientes = maxDe(s.pendientes_por_area, "cantidad");
@@ -813,6 +814,72 @@ document.getElementById("form-cobertura").addEventListener("submit", async (e) =
     document.getElementById("cobertura-error").innerHTML = `<p class="error-msg">${err.message}</p>`;
   }
 });
+
+// ═══════════════════════════════════════════════════════════
+// SOLICITUDES DE ATENCIÓN -- "que me llamen o me escriban" (Fase 4):
+// el ciudadano dejó un dato de contacto desde "Necesito ayuda" en el sitio
+// público; acá se le asigna un área, se cambia el estado y se deja una
+// nota. Solo admin edita -- gestor/validador/auditor pueden ver.
+// ═══════════════════════════════════════════════════════════
+const ESTADO_SOLICITUD_LABEL = {
+  recibida: "Recibida", derivada: "Derivada", en_atencion: "En atención",
+  respondida: "Respondida", cerrada: "Cerrada",
+};
+
+async function cargarSolicitudesAtencion() {
+  const box = document.getElementById("lista-solicitudes-atencion");
+  if (!box) return;
+  try {
+    const solicitudes = await api("/admin/solicitudes-atencion");
+    box.innerHTML = solicitudes.length
+      ? solicitudes
+          .map((s) => {
+            const contacto = [s.telefono, s.correo].filter(Boolean).join(" · ") || "sin dato de contacto";
+            return `
+        <li style="border:1px solid var(--line); border-radius:8px; padding:0.6rem 0.8rem; margin-bottom:0.5rem;">
+          <strong>${escaparHtml(s.codigo)}</strong> -- ${escaparHtml(s.nombre_contacto)} <span class="hint">(${escaparHtml(contacto)})</span>
+          <div class="hint" style="margin-top:0.2rem;">${escaparHtml(s.motivo)}</div>
+          ${
+            esAdmin()
+              ? `
+            <div style="display:flex; flex-wrap:wrap; gap:0.4rem; margin-top:0.4rem;">
+              <select data-sol-estado="${s.id}" style="font-size:0.8rem;">
+                ${Object.entries(ESTADO_SOLICITUD_LABEL)
+                  .map(([v, t]) => `<option value="${v}" ${v === s.estado ? "selected" : ""}>${t}</option>`)
+                  .join("")}
+              </select>
+              <input data-sol-area="${s.id}" value="${escaparHtml(s.area || "")}" placeholder="Área responsable" style="font-size:0.8rem; width:10rem;" />
+            </div>
+            <textarea data-sol-comentario="${s.id}" placeholder="Nota interna (opcional)" style="width:100%; margin-top:0.4rem; font-size:0.8rem;">${escaparHtml(s.comentario || "")}</textarea>
+          `
+              : `<span class="badge ${s.estado === "cerrada" ? "activo" : "revision"}">${ESTADO_SOLICITUD_LABEL[s.estado] || s.estado}</span>`
+          }
+        </li>`;
+          })
+          .join("")
+      : '<li class="hint" style="list-style:none;">Todavía no hay solicitudes de contacto.</li>';
+
+    const actualizar = async (id, payload) => {
+      try {
+        await api(`/admin/solicitudes-atencion/${id}`, { method: "PUT", body: JSON.stringify(payload) });
+        mostrarToast("Solicitud actualizada.");
+      } catch (err) {
+        mostrarToast(err.message || "No se pudo actualizar la solicitud");
+      }
+    };
+    box.querySelectorAll("[data-sol-estado]").forEach((sel) =>
+      sel.addEventListener("change", () => actualizar(sel.dataset.solEstado, { estado: sel.value }))
+    );
+    box.querySelectorAll("[data-sol-area]").forEach((inp) =>
+      inp.addEventListener("blur", () => actualizar(inp.dataset.solArea, { area: inp.value || null }))
+    );
+    box.querySelectorAll("[data-sol-comentario]").forEach((txt) =>
+      txt.addEventListener("blur", () => actualizar(txt.dataset.solComentario, { comentario: txt.value || null }))
+    );
+  } catch {
+    box.innerHTML = '<li class="hint" style="list-style:none;">No se pudo cargar.</li>';
+  }
+}
 
 // ═══════════════════════════════════════════════════════════
 // SEDES

@@ -12,6 +12,9 @@ from app.schemas.usuario import (
 from app.schemas.auditoria import AuditoriaOut
 from app.schemas.busqueda import BusquedaRespuesta, SatisfaccionIn
 from app.schemas.cobertura import SolicitudCoberturaCreate, SolicitudCoberturaUpdate, SolicitudCoberturaOut
+from app.schemas.solicitud_atencion import (
+    SolicitudAtencionCreate, SolicitudAtencionUpdate, SolicitudAtencionOut, SolicitudAtencionPublicaOut,
+)
 from app.schemas.mapa import (
     NodoCreate, NodoUpdate, NodoOut, ConexionCreate, ConexionUpdate, ConexionOut, RutaOut, PasoRuta,
 )
@@ -27,6 +30,7 @@ __all__ = [
     "AuditoriaOut",
     "BusquedaRespuesta", "SatisfaccionIn",
     "SolicitudCoberturaCreate", "SolicitudCoberturaUpdate", "SolicitudCoberturaOut",
+    "SolicitudAtencionCreate", "SolicitudAtencionUpdate", "SolicitudAtencionOut", "SolicitudAtencionPublicaOut",
     "NodoCreate", "NodoUpdate", "NodoOut", "ConexionCreate", "ConexionUpdate", "ConexionOut",
     "RutaOut", "PasoRuta",
 ]

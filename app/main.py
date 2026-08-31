@@ -20,6 +20,7 @@ from app.routers import (
     admin_metricas,
     admin_qr,
     admin_sedes,
+    admin_solicitudes_atencion,
     admin_usuarios,
     auth,
     public,
@@ -94,6 +95,11 @@ app.include_router(admin_metricas.router, prefix=f"{API_PREFIX}/admin/metricas",
 app.include_router(admin_qr.router, prefix=f"{API_PREFIX}/admin/qr", tags=["admin-qr"])
 app.include_router(admin_cobertura.router, prefix=f"{API_PREFIX}/admin/cobertura", tags=["admin-cobertura"])
 app.include_router(admin_mapa.router, prefix=f"{API_PREFIX}/admin/mapa", tags=["admin-mapa"])
+app.include_router(
+    admin_solicitudes_atencion.router,
+    prefix=f"{API_PREFIX}/admin/solicitudes-atencion",
+    tags=["admin-solicitudes-atencion"],
+)
 
 app.mount("/css", StaticFiles(directory=STATIC_DIR / "css"), name="css")
 app.mount("/js", StaticFiles(directory=STATIC_DIR / "js"), name="js")

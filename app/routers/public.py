@@ -1,12 +1,12 @@
 from datetime import datetime
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import Response
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from app import crud, nlp, schemas
+from app import crud, nlp, rate_limit, schemas
 from app.config import settings
 from app.database import get_db
 from app.reportes_pdf import generar_directorio_pdf
@@ -173,6 +173,40 @@ def directorio_pdf(
         # abre una pestaña nueva en vez de forzar la descarga.
         headers={"Content-Disposition": f'inline; filename="{nombre_archivo}"'},
     )
+
+
+@router.post("/solicitudes-atencion", response_model=schemas.SolicitudAtencionPublicaOut)
+def crear_solicitud_atencion(
+    payload: schemas.SolicitudAtencionCreate,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    """"Solicitar que me llamen o me escriban" (Fase 4): un salto real de
+    "buscador" a "atención" sin necesitar chat en vivo -- el ciudadano deja
+    su pedido con un dato de contacto, alguien del área correspondiente lo
+    contacta después. Devuelve un código para consultar el estado más
+    adelante, sin necesitar cuenta ni contraseña."""
+    ip = request.client.host if request.client else "sin-ip"
+    if not rate_limit.permitido(f"solicitud-atencion-ip:{ip}", maximo=5, ventana_segundos=900):
+        raise HTTPException(429, "Demasiadas solicitudes. Espera unos minutos e intenta de nuevo.")
+    solicitud = crud.solicitud_atencion.crear(db, payload)
+    return schemas.SolicitudAtencionPublicaOut.model_validate(solicitud)
+
+
+@router.get("/solicitudes-atencion/{codigo}", response_model=schemas.SolicitudAtencionPublicaOut)
+def consultar_solicitud_atencion(codigo: str, request: Request, db: Session = Depends(get_db)):
+    """Consulta pública de estado por código -- el código es lo único que
+    hace falta, nadie necesita iniciar sesión para saber "qué pasó con mi
+    solicitud". Límite por IP para que probar códigos al azar no sea
+    práctico (el código en sí no es secreto, pero tampoco hay razón para
+    facilitar recorrer todos)."""
+    ip = request.client.host if request.client else "sin-ip"
+    if not rate_limit.permitido(f"solicitud-atencion-consulta-ip:{ip}", maximo=20, ventana_segundos=900):
+        raise HTTPException(429, "Demasiadas consultas. Espera unos minutos e intenta de nuevo.")
+    solicitud = crud.solicitud_atencion.obtener_por_codigo(db, codigo)
+    if not solicitud:
+        raise HTTPException(404, "No encontramos ninguna solicitud con ese código.")
+    return schemas.SolicitudAtencionPublicaOut.model_validate(solicitud)
 
 
 @router.get("/salud")
