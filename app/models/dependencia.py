@@ -14,7 +14,7 @@ class Dependencia(Base, TimestampMixin):
     nombre_normalizado = Column(String(200), index=True)
 
     sede_id = Column(Integer, ForeignKey("sedes.id"), nullable=False, index=True)
-    edificio_id = Column(Integer, ForeignKey("edificios.id"), nullable=True)
+    edificio_id = Column(Integer, ForeignKey("edificios.id"), nullable=True, index=True)
     piso = Column(String(30))
     oficina = Column(String(50))
 
