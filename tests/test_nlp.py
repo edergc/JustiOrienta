@@ -47,3 +47,27 @@ def test_pregunta_de_accesibilidad_tolera_errores_de_tipeo():
     # que exige ortografía perfecta
     assert nlp.es_pregunta_de_accesibilidad(nlp.interpretar("hay rrampa"))
     assert nlp.es_pregunta_de_accesibilidad(nlp.interpretar("es acesible"))
+
+
+def test_detecta_senales_de_perfil_dentro_de_una_busqueda_normal():
+    # A diferencia de es_pregunta_de_accesibilidad (toda la consulta ES
+    # sobre accesibilidad), esto detecta la señal aunque venga junto con
+    # una búsqueda real de una dependencia.
+    t = nlp.interpretar("recursos humanos, mi mama usa silla de ruedas")
+    assert nlp.detectar_senales_perfil(t) == ["motora"]
+
+    t = nlp.interpretar("juzgado de familia para un adulto mayor")
+    assert nlp.detectar_senales_perfil(t) == ["adulto_mayor"]
+
+    t = nlp.interpretar("recursos humanos")
+    assert nlp.detectar_senales_perfil(t) == []
+
+
+def test_detecta_varias_senales_de_perfil_a_la_vez():
+    t = nlp.interpretar("soy adulto mayor y tengo dificultad visual")
+    assert set(nlp.detectar_senales_perfil(t)) == {"adulto_mayor", "visual"}
+
+
+def test_senales_de_perfil_no_se_disparan_con_palabras_sueltas_sin_relacion():
+    t = nlp.interpretar("mesa de partes")
+    assert nlp.detectar_senales_perfil(t) == []

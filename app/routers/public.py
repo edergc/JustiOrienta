@@ -72,6 +72,7 @@ def buscar(
         fallback=False,
         consulta_id=consulta.id,
         sede_accesibilidad=sede_out,
+        senales_perfil=nlp.detectar_senales_perfil(nq),
     )
 
 

@@ -124,7 +124,11 @@ _VERSION_ESTATICA = str(int(time.time()))
 
 def _pagina_con_version(nombre_archivo: str) -> HTMLResponse:
     html = (STATIC_DIR / nombre_archivo).read_text(encoding="utf-8")
-    return HTMLResponse(html.replace("{{V}}", _VERSION_ESTATICA))
+    # no-cache (no "no-store"): el navegador puede guardar una copia, pero
+    # debe revalidar con el servidor antes de usarla -- sin esto, el propio
+    # HTML de "/" o "/admin" podía quedar cacheado y el {{V}} nuevo (con la
+    # referencia correcta a JS/CSS) nunca llegaba a mostrarse.
+    return HTMLResponse(html.replace("{{V}}", _VERSION_ESTATICA), headers={"Cache-Control": "no-cache"})
 
 
 @app.get("/", include_in_schema=False)

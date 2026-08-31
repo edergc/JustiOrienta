@@ -43,6 +43,22 @@ def test_pregunta_de_accesibilidad_sin_sede_contexto_no_responde_sede(sede, admi
     assert r.json()["sede_accesibilidad"] is None
 
 
+def test_busqueda_con_senal_de_perfil_la_devuelve_junto_al_resultado(db, sede, admin_usuario):
+    _crear_dependencia_activa(db, sede)
+    r = client.get("/api/v1/buscar", params={"q": "recursos humanos, mi mama usa silla de ruedas"})
+    assert r.status_code == 200
+    data = r.json()
+    assert data["senales_perfil"] == ["motora"]
+    assert len(data["resultados"]) == 1  # la búsqueda normal sigue funcionando igual
+
+
+def test_busqueda_normal_no_trae_senales_de_perfil(db, sede, admin_usuario):
+    _crear_dependencia_activa(db, sede)
+    r = client.get("/api/v1/buscar", params={"q": "recursos humanos"})
+    assert r.status_code == 200
+    assert r.json()["senales_perfil"] == []
+
+
 def test_indicadores_de_consulta_se_reflejan_en_metricas(db, sede, admin_usuario):
     _crear_dependencia_activa(db, sede)
 

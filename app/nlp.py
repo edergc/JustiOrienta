@@ -166,6 +166,46 @@ def es_pregunta_de_accesibilidad(texto_normalizado: str) -> bool:
     )
 
 
+# Señales de perfil: cuando la persona menciona su situación DENTRO de una
+# búsqueda normal ("recursos humanos, mi mamá usa silla de ruedas"), no solo
+# cuando pregunta por accesibilidad en general (eso ya lo cubre
+# es_pregunta_de_accesibilidad arriba). Sirve para que el resultado de esa
+# búsqueda resalte su propia información de accesibilidad en vez de dejarla
+# al final de la tarjeta -- nunca para inventar una respuesta nueva, solo
+# para destacar un dato real que la tarjeta ya iba a mostrar.
+SENALES_PERFIL = {
+    "adulto_mayor": {"adulto mayor", "adultos mayores", "tercera edad", "anciano", "anciana"},
+    "visual": {"ciego", "ciega", "invidente", "no veo bien", "dificultad visual", "baja vision"},
+    "motora": {"silla de ruedas", "sillas de ruedas", "movilidad reducida", "no puede caminar"},
+    "auditiva": {"sordo", "sorda", "dificultad auditiva", "no escucha bien"},
+}
+
+
+def detectar_senales_perfil(texto_normalizado: str) -> list[str]:
+    """Mismo criterio de tolerancia a tipeo que es_pregunta_de_accesibilidad:
+    frases completas se buscan tal cual, palabras sueltas de 4+ letras
+    toleran variaciones menores. Devuelve las etiquetas detectadas, en el
+    orden fijo de SENALES_PERFIL (determinista, no depende del orden de un
+    dict de Python en tiempo de ejecución de una llamada a otra)."""
+    t = f" {texto_normalizado} "
+    tokens = texto_normalizado.split()
+    detectadas = []
+    for etiqueta, frases in SENALES_PERFIL.items():
+        frases_largas = {f for f in frases if " " in f}
+        palabras_sueltas = {f for f in frases if " " not in f}
+        if any(f" {frase} " in t for frase in frases_largas):
+            detectadas.append(etiqueta)
+            continue
+        if any(
+            es_similar(tok, palabra)
+            for tok in tokens
+            if len(tok) >= 4
+            for palabra in palabras_sueltas
+        ):
+            detectadas.append(etiqueta)
+    return detectadas
+
+
 def distancia_edicion(a: str, b: str) -> int:
     """Distancia de Levenshtein clásica (programación dinámica), sin
     dependencias externas -- para tolerar errores de tipeo menores."""

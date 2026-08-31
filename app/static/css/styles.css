@@ -91,6 +91,17 @@ header.site a.home { text-decoration: none; color: inherit; }
 main { max-width: 44rem; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
 main.wide { max-width: 68rem; }
 
+.perfil-selector {
+  max-width: 44rem; margin: 0 auto; padding: 0.9rem 1.5rem; text-align: center;
+  border-bottom: 1px solid var(--line); background: var(--accent2-tint);
+}
+.perfil-selector .chips-label { margin-top: 0; }
+.perfil-selector .chips { justify-content: center; }
+.perfil-cerrar {
+  font: inherit; font-size: 0.78rem; background: none; border: none; color: var(--ink-soft);
+  cursor: pointer; margin-top: 0.5rem; text-decoration: underline; padding: 0.2rem;
+}
+
 .search-wrap { margin-bottom: 1.6rem; }
 .search-wrap label { display: block; font-weight: 700; margin-bottom: 0.5rem; font-size: 1.1rem; }
 .search-row { display: flex; gap: 0.6rem; }

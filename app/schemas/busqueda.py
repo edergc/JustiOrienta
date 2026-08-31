@@ -16,6 +16,11 @@ class BusquedaRespuesta(BaseModel):
     # ascensor...) y se conoce la sede por contexto (?sede= en la URL) --
     # responde directo desde los booleanos de la sede, sin listar dependencias.
     sede_accesibilidad: Optional[SedeOut] = None
+    # Etiquetas de perfil detectadas dentro de la consulta (ej. "adulto
+    # mayor", "silla de ruedas") -- ver app/nlp.py: detectar_senales_perfil.
+    # Nunca cambia QUÉ se muestra, solo permite que el frontend resalte la
+    # información de accesibilidad que la tarjeta ya iba a mostrar.
+    senales_perfil: list[str] = []
 
 
 class SatisfaccionIn(BaseModel):

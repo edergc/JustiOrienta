@@ -380,6 +380,57 @@ function accesibilidadItemsDeSede(sede) {
   ].filter(Boolean);
 }
 
+// Mensaje por señal de perfil detectada dentro de una búsqueda normal (ver
+// app/nlp.py: detectar_senales_perfil). "accion" es opcional: cuando existe,
+// reusa las mismas funciones que ya activan las preferencias del toolbar
+// (aplicarFontStep/aplicarContraste) -- nunca inventa una preferencia nueva,
+// solo ofrece un atajo a lo que ya existe.
+const MENSAJES_SENAL_PERFIL = {
+  adulto_mayor: {
+    texto: "Puede ser para una persona adulta mayor. Si ayuda, puedes agrandar el texto.",
+    etiquetaAccion: "Agrandar texto",
+    accion: () => aplicarFontStep(2),
+  },
+  visual: {
+    texto: "Puede ser por dificultad visual. Puedes activar alto contraste y texto grande, o tocar \"🔊 Escuchar\" en cualquier resultado.",
+    etiquetaAccion: "Activar alto contraste y texto grande",
+    accion: () => { aplicarContraste(true); aplicarFontStep(3); },
+  },
+  motora: {
+    texto: "Puede ser por movilidad reducida. Revisa el ícono de accesibilidad (♿) en cada resultado antes de desplazarte.",
+    etiquetaAccion: null,
+    accion: null,
+  },
+  auditiva: {
+    texto: "Puede ser por dificultad auditiva. Toda la información también se muestra en texto, no solo en audio.",
+    etiquetaAccion: null,
+    accion: null,
+  },
+};
+
+function tarjetaSenalPerfil(senales) {
+  const el = document.createElement("div");
+  el.className = "fallback senal-perfil";
+  el.setAttribute("role", "status");
+  senales
+    .map((s) => MENSAJES_SENAL_PERFIL[s])
+    .filter(Boolean)
+    .forEach((m) => {
+      const p = document.createElement("p");
+      p.textContent = m.texto + " ";
+      if (m.accion) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "btn secondary";
+        btn.textContent = m.etiquetaAccion;
+        btn.addEventListener("click", m.accion);
+        p.appendChild(btn);
+      }
+      el.appendChild(p);
+    });
+  return el;
+}
+
 function tarjetaAccesibilidadSede(sede) {
   const el = document.createElement("article");
   el.className = "card";
@@ -665,6 +716,9 @@ async function buscarYRenderizar(q, opciones = {}) {
       renderFeedback(data.consulta_id);
       return;
     }
+    if (data.senales_perfil && data.senales_perfil.length) {
+      cont.appendChild(tarjetaSenalPerfil(data.senales_perfil));
+    }
     data.resultados.forEach((dep) => cont.appendChild(tarjeta(dep)));
     renderFeedback(data.consulta_id);
   } catch (e) {
@@ -794,10 +848,26 @@ btnLimpiar.addEventListener("click", () => {
 })();
 
 // ── Accesibilidad (persistida en el navegador del ciudadano) ──
+// Factorizado en funciones reusables (antes vivían solo dentro de cada
+// listener del toolbar) para que el selector de perfil opcional (más abajo)
+// pueda activar las mismas preferencias sin duplicar la lógica de
+// localStorage/aria-pressed.
 const root = document.documentElement;
 let fontStep = parseInt(localStorage.getItem("jo_fontStep") || "0", 10);
-root.style.setProperty("--fs", (16 + fontStep * 2.5) + "px");
-if (localStorage.getItem("jo_contraste") === "alto") root.setAttribute("data-contrast", "alto");
+
+function aplicarFontStep(step) {
+  fontStep = Math.max(-1, Math.min(3, step));
+  root.style.setProperty("--fs", (16 + fontStep * 2.5) + "px");
+  localStorage.setItem("jo_fontStep", fontStep);
+}
+aplicarFontStep(fontStep);
+
+function aplicarContraste(activo) {
+  root.setAttribute("data-contrast", activo ? "alto" : "normal");
+  localStorage.setItem("jo_contraste", activo ? "alto" : "normal");
+  document.getElementById("btn-contraste").setAttribute("aria-pressed", String(activo));
+}
+aplicarContraste(localStorage.getItem("jo_contraste") === "alto");
 
 // El tema puede venir del sistema (prefers-color-scheme) sin que haya ningún
 // atributo explícito todavía -- hay que tenerlo en cuenta como "oscuro
@@ -813,21 +883,10 @@ const prefTema = localStorage.getItem("jo_tema");
 if (prefTema === "dark" || prefTema === "light") root.setAttribute("data-theme", prefTema);
 document.getElementById("btn-tema").setAttribute("aria-pressed", String(temaEfectivoEsOscuro()));
 
-document.getElementById("btn-mas").addEventListener("click", () => {
-  fontStep = Math.min(fontStep + 1, 3);
-  root.style.setProperty("--fs", (16 + fontStep * 2.5) + "px");
-  localStorage.setItem("jo_fontStep", fontStep);
-});
-document.getElementById("btn-menos").addEventListener("click", () => {
-  fontStep = Math.max(fontStep - 1, -1);
-  root.style.setProperty("--fs", (16 + fontStep * 2.5) + "px");
-  localStorage.setItem("jo_fontStep", fontStep);
-});
-document.getElementById("btn-contraste").addEventListener("click", (e) => {
-  const on = root.getAttribute("data-contrast") === "alto";
-  root.setAttribute("data-contrast", on ? "normal" : "alto");
-  localStorage.setItem("jo_contraste", on ? "normal" : "alto");
-  e.target.setAttribute("aria-pressed", String(!on));
+document.getElementById("btn-mas").addEventListener("click", () => aplicarFontStep(fontStep + 1));
+document.getElementById("btn-menos").addEventListener("click", () => aplicarFontStep(fontStep - 1));
+document.getElementById("btn-contraste").addEventListener("click", () => {
+  aplicarContraste(root.getAttribute("data-contrast") !== "alto");
 });
 document.getElementById("btn-tema").addEventListener("click", (e) => {
   const oscuroAhora = temaEfectivoEsOscuro();
@@ -836,5 +895,64 @@ document.getElementById("btn-tema").addEventListener("click", (e) => {
   localStorage.setItem("jo_tema", nuevo);
   e.target.setAttribute("aria-pressed", String(!oscuroAhora));
 });
+
+// ── Selector de perfil opcional ──
+// Mismo espíritu que el "why do you need a court?" de GOV.UK, aplicado a
+// accesibilidad: en vez de esperar a que la persona descubra sola qué botón
+// del toolbar activar, se le pregunta una vez. Nunca obligatorio -- se
+// puede cerrar sin elegir nada, y solo aparece una vez por navegador (no
+// tiene sentido pedirle lo mismo a alguien que ya lo contestó la visita
+// pasada). Cada opción hace algo real con las preferencias que YA existen
+// arriba -- ninguna promete algo que el sistema no tiene todavía.
+const PERFILES = [
+  {
+    etiqueta: "👴 Soy adulto mayor",
+    aplicar: () => aplicarFontStep(2),
+    mensaje: "Aumenté el tamaño del texto. Puedes ajustarlo con los botones A+ / A− cuando quieras.",
+  },
+  {
+    etiqueta: "♿ Necesito accesibilidad",
+    aplicar: () => { aplicarContraste(true); aplicarFontStep(1); },
+    mensaje: "Activé alto contraste y un texto más grande. Puedes ajustarlos arriba, en cualquier momento.",
+  },
+  {
+    etiqueta: "👁️ Tengo dificultad visual",
+    aplicar: () => { aplicarContraste(true); aplicarFontStep(3); },
+    mensaje: "Activé alto contraste y el texto más grande disponible. También puedes tocar \"🔊 Escuchar\" en cualquier resultado.",
+  },
+  {
+    etiqueta: "🤝 Estoy ayudando a otra persona",
+    aplicar: () => {},
+    mensaje: "Puedes activar cualquier preferencia de accesibilidad arriba para la persona que acompañas, en cualquier momento.",
+  },
+  { etiqueta: "💬 Solo quiero consultar", aplicar: () => {}, mensaje: null },
+];
+
+function cerrarSelectorPerfil() {
+  const panel = document.getElementById("perfil-selector");
+  if (panel) panel.remove();
+  localStorage.setItem("jo_perfil_visto", "1");
+}
+
+if (!localStorage.getItem("jo_perfil_visto")) {
+  const chipsPerfil = document.getElementById("chips-perfil");
+  PERFILES.forEach((perfil) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = perfil.etiqueta;
+    b.addEventListener("click", () => {
+      perfil.aplicar();
+      cerrarSelectorPerfil();
+      if (perfil.mensaje) {
+        const feedback = document.getElementById("feedback-caja");
+        feedback.innerHTML = `<p class="hint" role="status">${escaparHtmlPublico(perfil.mensaje)}</p>`;
+      }
+    });
+    chipsPerfil.appendChild(b);
+  });
+  document.getElementById("btn-perfil-cerrar").addEventListener("click", cerrarSelectorPerfil);
+} else {
+  document.getElementById("perfil-selector")?.remove();
+}
 
 cargarSedesParaSelector();
