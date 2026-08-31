@@ -33,6 +33,7 @@
   <button id="btn-menos" type="button">A− Reducir texto</button>
   <button id="btn-tema" aria-pressed="false" type="button">🌙 Tema oscuro</button>
   <button id="btn-voz-lenta" aria-pressed="false" type="button">🐢 Voz más lenta</button>
+  <button id="btn-modo-mayor" aria-pressed="false" type="button">👵 Modo adulto mayor</button>
 </div>
 
 <div class="perfil-selector" id="perfil-selector" role="region" aria-label="Preferencias según tu situación">
@@ -58,8 +59,10 @@
     </form>
     <p class="chips-label">¿Qué necesitas hacer?</p>
     <div class="chips chips-tareas" aria-label="Tareas frecuentes" id="chips-tareas"></div>
-    <p class="chips-label">Ejemplos:</p>
-    <div class="chips" aria-label="Ejemplos de búsqueda" id="chips"></div>
+    <div id="grupo-ejemplos">
+      <p class="chips-label">Ejemplos:</p>
+      <div class="chips" aria-label="Ejemplos de búsqueda" id="chips"></div>
+    </div>
   </div>
 
   <div id="estado-vacio" class="empty-state">

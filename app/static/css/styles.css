@@ -620,3 +620,22 @@ table.admin td.actions button { font-size: 0.78rem; padding: 0.35rem 0.65rem; }
 .mapa-sala-tipica { fill: var(--accent2-tint); stroke: var(--accent2); stroke-width: 0.5; }
 .mapa-rotulo-piso { fill: var(--ink-soft); font-size: 3.4px; font-family: var(--font-body); font-weight: 600; }
 .mapa-tipica-aviso { padding: 0 0.9rem 0.8rem; margin: 0; }
+
+/* ── "Modo Adulto Mayor" (ProyectoJusticia22.doc) ──
+   No es una interfaz aparte: son los mismos botones y campos, más grandes y
+   con más espacio entre sí (objetivos táctiles más fáciles de acertar), y
+   la fila de "Ejemplos" (el contenido menos esencial de la portada) oculta
+   para reducir cuánto hay que leer antes de encontrar el buscador. El
+   tamaño de letra en sí ya lo sube aplicarModoMayor() reusando A+ (ver
+   public.js) -- acá solo van los tamaños de controles, que A+ no toca. */
+html[data-modo-mayor="on"] button,
+html[data-modo-mayor="on"] .search-row input,
+html[data-modo-mayor="on"] select {
+  font-size: 1.15em; padding: 0.85rem 1.2rem; min-height: 3rem;
+}
+html[data-modo-mayor="on"] .tile-btn { padding: 1.5rem; gap: 1rem; }
+html[data-modo-mayor="on"] .tile-btn strong { font-size: 1.2em; }
+html[data-modo-mayor="on"] .chips button { font-size: 1.05em; padding: 0.6rem 1.1rem; }
+html[data-modo-mayor="on"] .toolbar button { font-size: 1em; padding: 0.6rem 1.1rem; }
+html[data-modo-mayor="on"] #grupo-ejemplos { display: none; }
+html[data-modo-mayor="on"] .chips-label { font-size: 1.05em; }

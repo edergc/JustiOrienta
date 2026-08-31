@@ -1056,6 +1056,24 @@ btnVozLenta.addEventListener("click", () => {
   btnVozLenta.setAttribute("aria-pressed", String(!activo));
 });
 
+// "Modo Adulto Mayor" (ProyectoJusticia22.doc): no es una interfaz paralela,
+// es la misma interfaz con menos ruido visual y objetivos más grandes --
+// texto al máximo del mismo A+ que ya existe, botones más grandes (ver
+// [data-modo-mayor] en styles.css) y la fila de "Ejemplos" oculta (son el
+// contenido menos esencial de la portada). Las instrucciones ya son
+// numeradas y todo ya se puede escuchar, así que esas dos partes del pedido
+// del documento no necesitaban cambio alguno.
+function aplicarModoMayor(activo) {
+  root.setAttribute("data-modo-mayor", activo ? "on" : "off");
+  localStorage.setItem("jo_modoMayor", activo ? "1" : "0");
+  document.getElementById("btn-modo-mayor").setAttribute("aria-pressed", String(activo));
+  if (activo) aplicarFontStep(3);
+}
+aplicarModoMayor(localStorage.getItem("jo_modoMayor") === "1");
+document.getElementById("btn-modo-mayor").addEventListener("click", () => {
+  aplicarModoMayor(root.getAttribute("data-modo-mayor") !== "on");
+});
+
 // ── Selector de perfil opcional ──
 // Mismo espíritu que el "why do you need a court?" de GOV.UK, aplicado a
 // accesibilidad: en vez de esperar a que la persona descubra sola qué botón
@@ -1067,8 +1085,8 @@ btnVozLenta.addEventListener("click", () => {
 const PERFILES = [
   {
     etiqueta: "👴 Soy adulto mayor",
-    aplicar: () => aplicarFontStep(2),
-    mensaje: "Aumenté el tamaño del texto. Puedes ajustarlo con los botones A+ / A− cuando quieras.",
+    aplicar: () => aplicarModoMayor(true),
+    mensaje: "Activé el modo adulto mayor: texto más grande, botones más grandes y menos cosas en pantalla. Puedes desactivarlo cuando quieras desde \"👵 Modo adulto mayor\", arriba.",
   },
   {
     etiqueta: "♿ Necesito accesibilidad",
