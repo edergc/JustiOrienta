@@ -1,4 +1,5 @@
 import logging
+import time
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
@@ -6,7 +7,7 @@ from fastapi import FastAPI, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
@@ -113,11 +114,24 @@ def service_worker():
     return FileResponse(STATIC_DIR / "sw.js", media_type="application/javascript")
 
 
+# Un solo numero de version para todo /css y /js, calculado una vez cuando
+# arranca el proceso -- cada deploy (o cada reinicio local) es un proceso
+# nuevo, asi que el numero cambia solo, sin que nadie tenga que acordarse de
+# subir a mano un "?v=8" en el HTML cada vez que se edita un archivo estatico
+# (fuente real de bugs de "cache vieja" durante esta sesion).
+_VERSION_ESTATICA = str(int(time.time()))
+
+
+def _pagina_con_version(nombre_archivo: str) -> HTMLResponse:
+    html = (STATIC_DIR / nombre_archivo).read_text(encoding="utf-8")
+    return HTMLResponse(html.replace("{{V}}", _VERSION_ESTATICA))
+
+
 @app.get("/", include_in_schema=False)
 def index():
-    return FileResponse(STATIC_DIR / "index.html")
+    return _pagina_con_version("index.html")
 
 
 @app.get("/admin", include_in_schema=False)
 def admin_panel():
-    return FileResponse(STATIC_DIR / "admin.html")
+    return _pagina_con_version("admin.html")

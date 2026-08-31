@@ -1,0 +1,22 @@
+name: Mantener despierto el piloto (Render free tier)
+
+# Render duerme el servicio gratuito tras ~15 minutos sin trafico HTTP -- el
+# proximo pedido real (un ciudadano) paga esa espera de 30-90 segundos como
+# arranque en frio. Este ping gratuito lo evita durante horas de atencion,
+# sin tocar el codigo de la app ni costar nada (repo publico = minutos de
+# Actions ilimitados).
+#
+# Horario: cada 10 minutos, 07:00-18:59 hora de Peru (UTC-5, sin horario de
+# verano), de lunes a sabado -- fuera de eso, que duerma, no hay nadie
+# visitando a esa hora y no tiene sentido gastar minutos en vano.
+on:
+  schedule:
+    - cron: "*/10 12-23 * * 1-6"
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping /api/v1/salud
+        run: curl -fsS --max-time 30 "https://justicia-orienta.onrender.com/api/v1/salud" || true
