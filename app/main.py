@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from app.config import settings
+from app.config import SECRETO_POR_DEFECTO, settings
 from app.routers import (
     admin_auditoria,
     admin_cobertura,
@@ -44,6 +44,18 @@ logging.basicConfig(
     ],
 )
 logger = logging.getLogger("justicia_orienta")
+
+# Sin esto, desplegar en produccion sin fijar JUSTICIA_ORIENTA_SECRET queda en
+# silencio con la clave de relleno del repo publico -- cualquiera podria
+# forjar un JWT valido (incluido uno de admin) sin que nada lo avise. Se
+# revienta el arranque a proposito: un 500 en cada request seria mas facil de
+# pasar por alto que el proceso negandose a levantar.
+if settings.entorno == "produccion" and settings.justicia_orienta_secret == SECRETO_POR_DEFECTO:
+    raise RuntimeError(
+        "JUSTICIA_ORIENTA_SECRET sigue en su valor de relleno con ENTORNO=produccion. "
+        "Define una clave propia y secreta (ej. con `python -c \"import secrets; print(secrets.token_urlsafe(48))\"`) "
+        "antes de levantar el servicio."
+    )
 
 app = FastAPI(
     title=settings.app_name,
@@ -118,6 +130,13 @@ def service_worker():
     # un service worker es, por defecto, la carpeta desde la que se sirve
     # -- si viviera en /js/sw.js solo podría controlar /js/, no toda la app.
     return FileResponse(STATIC_DIR / "sw.js", media_type="application/javascript")
+
+
+@app.get("/presentacion-ceremonia.html", include_in_schema=False)
+def presentacion_ceremonia():
+    # Desactivada tras la ceremonia. Se deja la ruta (en vez de borrarla) para
+    # poder reactivarla facil si se necesita de nuevo.
+    return JSONResponse(status_code=404, content={"detail": "La presentación no está disponible en este momento."})
 
 
 # Un solo numero de version para todo /css y /js, calculado una vez cuando

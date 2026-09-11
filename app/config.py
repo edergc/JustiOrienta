@@ -3,6 +3,11 @@ disperso por el código). Lee de variables de entorno y, si existe, de un
 archivo .env -- ver .env.example."""
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+# Valor de relleno para desarrollo local sin .env. Si esto llega a producción
+# sin reemplazarse, cualquiera que lea el repo público puede forjar un JWT
+# válido (incluido uno de admin) -- ver el chequeo al arrancar en app/main.py.
+SECRETO_POR_DEFECTO = "cambia-esta-clave-antes-de-produccion"
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
@@ -15,7 +20,7 @@ class Settings(BaseSettings):
     # cambiar código: postgresql+psycopg2://usuario:clave@host:5432/db
     database_url: str = "sqlite:///./justicia_orienta.db"
 
-    justicia_orienta_secret: str = "cambia-esta-clave-antes-de-produccion"
+    justicia_orienta_secret: str = SECRETO_POR_DEFECTO
     token_expire_minutes: int = 8 * 60
 
     # Orígenes permitidos si el frontend llega a separarse en otro proceso/puerto.

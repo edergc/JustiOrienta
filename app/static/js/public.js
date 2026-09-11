@@ -129,26 +129,28 @@ function tarjeta(dep) {
   const enOtraSede = Boolean(sedeContextoId && dep.sede && dep.sede.id !== sedeContextoId);
 
   const servicios = (dep.servicios_detalle || [])
-    .map((s) => `<li><strong>${s.nombre}</strong>${s.requisitos ? " — " + s.requisitos : ""}</li>`)
+    .map((s) => `<li><strong>${escaparHtmlPublico(s.nombre)}</strong>${s.requisitos ? " — " + escaparHtmlPublico(s.requisitos) : ""}</li>`)
     .join("");
+  const nombreSedeSeguro = escaparHtmlPublico(nombreSede);
+  const direccionSegura = escaparHtmlPublico(direccion);
 
   el.innerHTML = `
     <div class="card-top">
-      <h2>${dep.nombre}</h2>
+      <h2>${escaparHtmlPublico(dep.nombre)}</h2>
       <span class="badge ${dep.tipo}">${badgeLabel(dep.tipo)}</span>
     </div>
-    <p class="meta"><strong>${nombreSede || "Sede no registrada"}</strong>${dep.piso ? " — Piso " + dep.piso : ""}${dep.oficina ? ", oficina " + dep.oficina : ""}</p>
-    ${dep.titular ? `<p class="meta"><strong>A cargo:</strong> ${dep.titular}</p>` : ""}
-    ${dep.telefono ? `<p class="meta"><strong>Teléfono / anexo:</strong> ${dep.telefono}</p>` : ""}
+    <p class="meta"><strong>${nombreSede ? nombreSedeSeguro : "Sede no registrada"}</strong>${dep.piso ? " — Piso " + escaparHtmlPublico(dep.piso) : ""}${dep.oficina ? ", oficina " + escaparHtmlPublico(dep.oficina) : ""}</p>
+    ${dep.titular ? `<p class="meta"><strong>A cargo:</strong> ${escaparHtmlPublico(dep.titular)}</p>` : ""}
+    ${dep.telefono ? `<p class="meta"><strong>Teléfono / anexo:</strong> ${escaparHtmlPublico(dep.telefono)}</p>` : ""}
     ${enOtraSede ? `
       <div class="otra-sede">
         Esto está en otra sede, no en la que estás ahora.
-        <span>${nombreSede}${direccion ? " — " + direccion : ""}</span>
+        <span>${nombreSedeSeguro}${direccion ? " — " + direccionSegura : ""}</span>
       </div>` : ""}
-    ${dep.horario ? `<p class="meta">Horario: ${dep.horario}</p>` : ""}
-    ${dep.servicios ? `<p class="meta">${dep.servicios}</p>` : ""}
+    ${dep.horario ? `<p class="meta">Horario: ${escaparHtmlPublico(dep.horario)}</p>` : ""}
+    ${dep.servicios ? `<p class="meta">${escaparHtmlPublico(dep.servicios)}</p>` : ""}
     ${servicios ? `<ul class="meta" style="padding-left:1.1rem; margin-top:0.4rem;">${servicios}</ul>` : ""}
-    ${dep.instrucciones_internas ? `<p class="meta"><strong>Cómo llegar dentro del edificio:</strong> ${dep.instrucciones_internas}</p>` : ""}
+    ${dep.instrucciones_internas ? `<p class="meta"><strong>Cómo llegar dentro del edificio:</strong> ${escaparHtmlPublico(dep.instrucciones_internas)}</p>` : ""}
     <div class="a11y-row">
       ${dep.rampa || (dep.sede && dep.sede.rampa) ? "<span>Rampa</span>" : ""}
       ${dep.ascensor || (dep.sede && dep.sede.ascensor) ? "<span>Ascensor</span>" : ""}
@@ -192,7 +194,7 @@ async function alternarRutaInterna(tarjetaEl, dep) {
     panel.innerHTML = `
       <label style="font-weight:700; font-size:0.9rem;">¿Dónde estás ahora?</label>
       <div class="search-row" style="margin-top:0.4rem;">
-        <select>${puntos.map((p) => `<option value="${p.id}">${p.nombre}${p.piso ? " (piso " + p.piso + ")" : ""}</option>`).join("")}</select>
+        <select>${puntos.map((p) => `<option value="${p.id}">${escaparHtmlPublico(p.nombre)}${p.piso ? " (piso " + escaparHtmlPublico(p.piso) + ")" : ""}</option>`).join("")}</select>
         <button type="button" class="go">Ver ruta</button>
       </div>
       <label style="display:flex; align-items:center; gap:0.4rem; margin-top:0.5rem; font-size:0.88rem;">
@@ -444,10 +446,10 @@ function tarjetaAccesibilidadSede(sede) {
     : `No tenemos registrada información de accesibilidad confirmada para ${sede.nombre}. Consulta en el módulo de orientación.`;
   el.innerHTML = `
     <div class="card-top">
-      <h2>Accesibilidad en ${sede.nombre}</h2>
+      <h2>Accesibilidad en ${escaparHtmlPublico(sede.nombre)}</h2>
       <span class="badge servicio">Sede</span>
     </div>
-    ${items.length ? `<div class="a11y-row">${items.map((i) => `<span>${i}</span>`).join("")}</div>` : `<p class="meta">${texto}</p>`}
+    ${items.length ? `<div class="a11y-row">${items.map((i) => `<span>${i}</span>`).join("")}</div>` : `<p class="meta">${escaparHtmlPublico(texto)}</p>`}
     <div class="card-actions">
       <button class="primary" type="button" data-leer>🔊 Escuchar</button>
     </div>
@@ -484,12 +486,12 @@ function tarjetaFichaSede(sede, total) {
   const itemsA11y = accesibilidadItemsDeSede(sede);
   el.innerHTML = `
     <div class="card-top">
-      <h2>${sede.nombre}</h2>
+      <h2>${escaparHtmlPublico(sede.nombre)}</h2>
       <span class="badge servicio">Sede</span>
     </div>
-    ${sede.direccion ? `<p class="meta"><strong>Dirección:</strong> ${sede.direccion}</p>` : ""}
-    ${sede.horario_atencion ? `<p class="meta"><strong>Horario:</strong> ${sede.horario_atencion}</p>` : ""}
-    ${sede.telefono ? `<p class="meta"><strong>Teléfono:</strong> ${sede.telefono}</p>` : ""}
+    ${sede.direccion ? `<p class="meta"><strong>Dirección:</strong> ${escaparHtmlPublico(sede.direccion)}</p>` : ""}
+    ${sede.horario_atencion ? `<p class="meta"><strong>Horario:</strong> ${escaparHtmlPublico(sede.horario_atencion)}</p>` : ""}
+    ${sede.telefono ? `<p class="meta"><strong>Teléfono:</strong> ${escaparHtmlPublico(sede.telefono)}</p>` : ""}
     <p class="meta">${total} dependencia${total === 1 ? "" : "s"} publicada${total === 1 ? "" : "s"} en esta sede.</p>
     ${itemsA11y.length
       ? `<div class="a11y-row">${itemsA11y.map((i) => `<span>${i}</span>`).join("")}</div>`
@@ -508,7 +510,7 @@ async function cargarSedesParaSelector() {
   if (!sel) return;
   try {
     const sedes = await (await fetch(`${API}/sedes`)).json();
-    sel.innerHTML = sedes.map((s) => `<option value="${s.id}">${s.nombre}</option>`).join("");
+    sel.innerHTML = sedes.map((s) => `<option value="${s.id}">${escaparHtmlPublico(s.nombre)}</option>`).join("");
     if (sedeContextoId) sel.value = String(sedeContextoId);
   } catch {
     sel.innerHTML = '<option value="">No se pudo cargar la lista de sedes</option>';

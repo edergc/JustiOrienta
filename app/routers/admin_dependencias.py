@@ -15,7 +15,7 @@ from app.cargar_titulares import aplicar as aplicar_titulares
 from app.cargar_titulares import extraer_organos
 from app.database import get_db
 from app.deteccion_duplicados import detectar_duplicados
-from app.excel_utils import autoajustar_columnas
+from app.excel_utils import autoajustar_columnas, fila_segura
 from app.models import Rol
 from app.models.base import ahora_utc
 
@@ -176,7 +176,7 @@ def exportar_catalogo(
     for celda in ws[1]:
         celda.font = Font(bold=True)
     for dep in deps:
-        ws.append([
+        ws.append(fila_segura([
             dep.id, dep.tipo, dep.categoria or "", dep.nombre, ", ".join(a.alias for a in dep.alias),
             dep.sede.nombre if dep.sede else "", dep.edificio.nombre if dep.edificio else "",
             dep.piso or "", dep.oficina or "", dep.horario or "",
@@ -184,7 +184,7 @@ def exportar_catalogo(
             _si_no(dep.rampa), _si_no(dep.ascensor), _si_no(dep.banio_accesible), _si_no(dep.ruta_accesible),
             dep.estado, dep.responsable_validar or "", dep.titular or "",
             dep.instrucciones_internas or "", dep.area or "",
-        ])
+        ]))
     autoajustar_columnas(ws)
 
     buffer = io.BytesIO()

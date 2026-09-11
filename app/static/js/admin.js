@@ -891,7 +891,7 @@ async function cargarSedes() {
   tbody.innerHTML = "";
   for (const s of CACHE_SEDES) {
     const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${s.nombre}</td><td>${s.direccion || "—"}</td><td>${estadoBadge(s.estado)}</td>
+    tr.innerHTML = `<td>${escaparHtml(s.nombre)}</td><td>${s.direccion ? escaparHtml(s.direccion) : "—"}</td><td>${estadoBadge(s.estado)}</td>
       <td>
         ${esAdmin() ? `<button class="btn secondary" data-editar-sede="${s.id}">Editar</button>` : ""}
         <button class="btn secondary" data-qr-sede="${s.id}">QR</button>
@@ -907,7 +907,7 @@ async function cargarSedes() {
 
   const selSede = document.getElementById("f-sede");
   const actual = selSede.value;
-  selSede.innerHTML = CACHE_SEDES.map((s) => `<option value="${s.id}">${s.nombre}</option>`).join("");
+  selSede.innerHTML = CACHE_SEDES.map((s) => `<option value="${s.id}">${escaparHtml(s.nombre)}</option>`).join("");
 
   const selSedeTitulares = document.getElementById("t-sede");
   const actualTitulares = selSedeTitulares.value;
@@ -1020,7 +1020,7 @@ async function cargarUsuarios() {
       ? ` <span class="badge inactivo" title="Se levanta al guardar la ficha, o solo(a) al pasar la hora indicada">Bloqueada hasta ${fechaServidor(u.bloqueado_hasta).toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" })}</span>`
       : "";
     tr.innerHTML = `
-      <td>${u.nombre}</td><td>${u.dni}</td><td>${u.rol}</td><td>${u.area || "—"}</td>
+      <td>${escaparHtml(u.nombre)}</td><td>${escaparHtml(u.dni)}</td><td>${escaparHtml(u.rol)}</td><td>${u.area ? escaparHtml(u.area) : "—"}</td>
       <td>${u.activo ? '<span class="badge activo">Activo</span>' : '<span class="badge inactivo">Inactivo</span>'}${badgeBloqueo}</td>
       <td>${ultimo}</td>
       <td><button class="btn secondary" data-editar-usuario="${u.id}">Editar</button></td>`;
@@ -1175,12 +1175,12 @@ async function cargarDependencias() {
     : '<tr><td colspan="6" class="hint" style="padding:1rem;">Sin resultados.</td></tr>';
   for (const d of CACHE_DEPS) {
     const tr = document.createElement("tr");
-    const nombreSede = d.sede ? d.sede.nombre : "—";
+    const nombreSede = d.sede ? escaparHtml(d.sede.nombre) : "—";
     const sem = semaforoVigencia(d.actualizado_en, d.validado_por);
     tr.innerHTML = `
-      <td>${d.nombre}</td>
-      <td>${d.tipo}</td>
-      <td>${nombreSede}${d.piso ? " · piso " + d.piso : ""}</td>
+      <td>${escaparHtml(d.nombre)}</td>
+      <td>${escaparHtml(d.tipo)}</td>
+      <td>${nombreSede}${d.piso ? " · piso " + escaparHtml(d.piso) : ""}</td>
       <td>${estadoBadge(d.estado)}</td>
       <td><span class="semaforo ${sem.clase}" title="${sem.texto}"></span> <span class="hint">${sem.texto}</span></td>
       <td class="actions">
@@ -1407,15 +1407,15 @@ async function cargarServicios(depId) {
     if (inactivo) row.style.opacity = "0.6";
     row.innerHTML = `
       <div class="card-top">
-        <strong>${s.nombre}</strong>${inactivo ? ' <span class="badge inactivo">Inactivo</span>' : ""}
+        <strong>${escaparHtml(s.nombre)}</strong>${inactivo ? ' <span class="badge inactivo">Inactivo</span>' : ""}
         ${
           inactivo
             ? `<button class="btn secondary" data-reactivar-servicio="${s.id}" style="font-size:0.78rem; padding:0.25rem 0.6rem;">Reactivar</button>`
             : `<button class="btn secondary" data-quitar-servicio="${s.id}" style="font-size:0.78rem; padding:0.25rem 0.6rem;">Quitar</button>`
         }
       </div>
-      ${s.requisitos ? `<p class="meta">Requisitos: ${s.requisitos}</p>` : ""}
-      ${s.canal ? `<p class="meta">Canal: ${s.canal}</p>` : ""}
+      ${s.requisitos ? `<p class="meta">Requisitos: ${escaparHtml(s.requisitos)}</p>` : ""}
+      ${s.canal ? `<p class="meta">Canal: ${escaparHtml(s.canal)}</p>` : ""}
     `;
     box.appendChild(row);
   }
