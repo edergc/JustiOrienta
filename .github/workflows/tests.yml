@@ -1,0 +1,30 @@
+name: Tests
+
+# Corre toda la suite (158 pruebas, SQLite en memoria -- ningun servicio de
+# base de datos que levantar) en cada push y pull request contra master. Sin
+# esto, un cambio que rompe algo solo se nota si alguien corre `pytest` a
+# mano antes de mergear -- ya paso una vez con el cache-busting (ver commit
+# 3defdd6) y no deberia depender de que alguien se acuerde.
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch: {}
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Correr pytest
+        run: python -m pytest -q

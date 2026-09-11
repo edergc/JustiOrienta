@@ -73,6 +73,41 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Sin CDN ni recursos de terceros en todo el frontend (css/js propios, sin
+# fuentes externas) -- permite un CSP estricto: "self" para todo, salvo
+# style-src ("unsafe-inline" porque el HTML usa bastantes atributos
+# style="" propios, ninguno de terceros) e img-src (agrega blob: porque el
+# QR y las descargas del panel se abren con URL.createObjectURL). Ademas de
+# CSP, cierra otros vectores clasicos: X-Frame-Options evita que otro sitio
+# embeba el panel en un iframe (clickjacking), y Permissions-Policy solo deja
+# microfono habilitado (lo usa la busqueda por voz) y bloquea el resto.
+_CSP = (
+    "default-src 'self'; "
+    "script-src 'self'; "
+    "style-src 'self' 'unsafe-inline'; "
+    "img-src 'self' data: blob:; "
+    "font-src 'self'; "
+    "connect-src 'self'; "
+    "frame-ancestors 'none'; "
+    "base-uri 'self'; "
+    "form-action 'self'"
+)
+
+
+@app.middleware("http")
+async def cabeceras_seguridad(request: Request, call_next):
+    respuesta = await call_next(request)
+    respuesta.headers["X-Content-Type-Options"] = "nosniff"
+    respuesta.headers["X-Frame-Options"] = "DENY"
+    respuesta.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    respuesta.headers["Permissions-Policy"] = "microphone=(self), camera=(), geolocation=(), payment=()"
+    respuesta.headers["Content-Security-Policy"] = _CSP
+    # HSTS: el navegador solo la respeta sobre HTTPS real, asi que no rompe
+    # nada servir esto tambien en HTTP (desarrollo/LAN) -- pero sí protege en
+    # cuanto el sitio quede detras de un proxy con TLS en produccion.
+    respuesta.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    return respuesta
+
 
 @app.exception_handler(RequestValidationError)
 async def error_validacion(request: Request, exc: RequestValidationError):
