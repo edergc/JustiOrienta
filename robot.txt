@@ -1,0 +1,376 @@
+
+Sí. Y creo que darle un rostro a Justicia Orienta podría ser una de las mejoras más potentes, especialmente por el público objetivo: adultos mayores y personas en situación de vulnerabilidad.
+
+Pero yo no haría simplemente un chatbot con una cara. Crearía un “orientador virtual” con identidad propia, diseñado para transmitir confianza, cercanía y paciencia.
+
+Podría funcionar así
+6
+
+En la pantalla aparecería, por ejemplo:
+
+?? Hola, soy Justi.
+
+Estoy aquí para ayudarte a encontrar la información o atención que necesitas.
+
+Puedes escribirme o hablarme. No necesitas conocer el nombre del juzgado ni de la oficina.
+
+?? ¿En qué puedo ayudarte?
+
+Y el ciudadano podría decir:
+
+“Tengo una audiencia pero no sé dónde tengo que ir.”
+
+El avatar podría responder verbalmente:
+
+“Claro, te ayudo. Primero vamos a identificar tu audiencia. Si tienes el número de expediente, puedes escribirlo o decirlo en voz alta.”
+
+Y mientras habla, la pantalla muestra las opciones.
+
+Pero hay una idea todavía mejor
+
+No le pondría simplemente una cara humana.
+
+Podríamos crear un personaje institucional de Justicia Orienta.
+
+Algo parecido a una mascota institucional, pero mucho más sofisticada.
+
+Por ejemplo:
+
+JUSTI
+
+Un personaje amigable, profesional y neutral.
+
+No debería parecer:
+
+? un robot frío
+? un personaje infantil
+? una caricatura exagerada
+? un abogado dando consejos jurídicos
+
+Debería transmitir:
+
+?? Cercanía
+
+?? Orientación
+
+??? Confianza
+
+?? Empatía
+
+? Inclusión
+
+?? Justicia
+
+Y podría tener diferentes formas de interacción
+1. Avatar estático
+
+El personaje aparece en la esquina.
+
+Cuando el ciudadano pregunta:
+
+“¿Dónde queda la sede?”
+
+Justi responde y cambia de expresión.
+
+2. Avatar animado
+
+Mientras habla:
+
+mueve ligeramente la cabeza
+gesticula
+parpadea
+cambia expresiones
+sincroniza labios con el audio
+
+Esto ya genera una sensación muchísimo más humana.
+
+3. Conversación por voz
+
+Aquí estaría el salto interesante.
+
+El usuario pulsa:
+
+?? Hablar con Justi
+
+Y dice:
+
+“Soy una persona mayor y quiero saber cómo puedo presentar una demanda.”
+
+Justi escucha ? interpreta ? responde por voz.
+
+4. Puede detectar cuándo necesita pasar a una persona real
+
+Esto me parece fundamental para Justicia Orienta.
+
+Justi no debería intentar resolverlo todo.
+
+Por ejemplo:
+
+“No entiendo la resolución que me dieron.”
+
+Justi podría decir:
+
+“Puedo ayudarte a encontrar información sobre el trámite, pero no debo interpretar una decisión judicial. Si deseas, puedo conectarte con un orientador de atención al ciudadano.”
+
+Y aparece:
+
+?? Hablar con un orientador
+
+?? Llamada
+?? Chat
+?? Videollamada
+?? Atención presencial
+
+Esto protege al proyecto de convertir la IA en un supuesto "asesor jurídico".
+
+5. Y para un adulto mayor sería espectacular
+
+Imagina este flujo:
+
+Justi:
+
+?? Buenos días, María.
+
+¿Qué necesitas hacer hoy?
+
+Botones enormes:
+
+?? Tengo un trámite
+?? Tengo un expediente
+?? Tengo una audiencia
+??? Necesito ir a una sede
+?? Necesito hablar con alguien
+
+Y también:
+
+?? Prefiero hablar
+6. El avatar puede cambiar según la situación
+
+No necesariamente necesitamos crear diferentes personajes.
+
+Puede tener diferentes estados:
+
+?? Bienvenida
+
+?? Escuchando
+
+?? Procesando
+
+?? Encontró la información
+
+?? Necesita aclaración
+
+?? Derivando a un orientador
+
+?? Leyendo información
+
+Esto hace que la interacción sea mucho más natural.
+
+7. Y aquí podemos conectar directamente con accesibilidad
+
+Esta es una idea que me gusta mucho para tu concurso:
+
+El usuario puede configurar a Justi
+
+?? Escuchar respuestas
+
+?? Texto grande
+
+?? Alto contraste
+
+?? Velocidad de voz lenta
+
+?? Solo texto
+
+?? Lengua de señas — futura fase
+
+Por ejemplo, un adulto mayor puede decir:
+
+“Habla más despacio.”
+
+Y Justi ajusta la velocidad.
+
+8. Incluso podríamos crear un "Justi Adulto Mayor"
+
+No otro personaje, sino otro modo de interacción.
+
+Cuando se activa:
+
+?? Modo acompañamiento
+
+Justi:
+
+habla más lentamente
+usa frases cortas
+evita términos técnicos
+confirma cada paso
+no muestra demasiadas opciones
+repite información cuando se solicita
+permite escuchar nuevamente
+mantiene visible el botón “Necesito ayuda”
+
+Eso es mucho más importante que simplemente hacer un avatar bonito.
+
+9. Y puede convertirse en la identidad de todo el proyecto
+
+Esto puede ser muy poderoso para la presentación.
+
+En lugar de:
+
+"Nuestra plataforma tiene un chatbot."
+
+Presentamos:
+
+Justi
+El orientador virtual de Justicia Orienta
+
+Y la historia sería:
+
+“Cuando una persona no sabe a qué oficina acudir, no queremos que tenga que aprender cómo funciona el Poder Judicial. Queremos que pueda simplemente contarle su necesidad a Justi.”
+
+Eso es una narrativa muy buena para un concurso.
+
+10. Incluso podríamos darle una personalidad institucional
+
+No sería una IA que "opina".
+
+Tendría principios:
+
+Justi siempre:
+
+1. Escucha antes de responder.
+
+2. Utiliza lenguaje sencillo.
+
+3. Nunca inventa información.
+
+4. Indica cuando no conoce una respuesta.
+
+5. No reemplaza al juez.
+
+6. No brinda asesoría jurídica personalizada.
+
+7. Protege la información del ciudadano.
+
+8. Prioriza accesibilidad.
+
+9. Ofrece atención humana cuando sea necesario.
+
+10. Nunca abandona al ciudadano sin indicarle cuál es el siguiente paso.
+
+Este último me parece particularmente bonito:
+
+“Nunca dejar al ciudadano sin saber cuál es el siguiente paso.”
+
+Podría incluso ser el principio rector de Justicia Orienta.
+
+11. Y sí: técnicamente podemos hacerlo
+
+No necesitamos construir algo gigantesco desde el inicio.
+
+Podríamos evolucionar tu sistema actual:
+
+                    JUSTICIA ORIENTA
+                           ¦
+                           ?
+                       +-------+
+                       ¦ JUSTI ¦
+                       +-------+
+                           ¦
+             +-------------+-------------+
+             ?             ?             ?
+          TEXTO           VOZ          AVATAR
+             ¦             ¦             ¦
+             +-------------+-------------+
+                           ?
+                  MOTOR DE ORIENTACIÓN
+                           ¦
+             +-------------+-------------+
+             ?             ?             ?
+          SEDES        TRÁMITES       DIRECTORIO
+             ¦             ¦             ¦
+             +-------------+-------------+
+                           ?
+                  ATENCIÓN HUMANA
+
+Y después podemos incorporar IA generativa de manera controlada.
+
+12. Pero yo haría algo incluso más ambicioso
+
+Tú anteriormente me mostraste que estabas desarrollando una mascota 3D universitaria, y precisamente ese concepto visual que estuvimos trabajando podría servirnos como referencia de cómo construir un personaje institucional.
+
+Podríamos crear un personaje 3D propio para Justicia Orienta, pero con una estética institucional peruana, moderna y sobria.
+
+Por ejemplo:
+
+Nombre: Justi
+Edad aparente: adulto joven
+Vestimenta: formal moderna, no necesariamente abogado
+Símbolo: elemento sutil relacionado con justicia/orientación
+Colores: identidad visual de la Corte
+Personalidad: paciente, amable, respetuosa
+Voz: cálida, clara, pausada
+Accesibilidad: expresiones y lenguaje comprensible
+
+Y no tendría que ser necesariamente masculino.
+
+Incluso podríamos diseñar Justi como personaje neutral para que no se perciba que representa a un determinado género.
+
+Y hay una última idea que creo que puede ser espectacular para tu concurso
+
+No presentaríamos:
+
+“Un chatbot con avatar.”
+
+Presentaríamos:
+
+JUSTI
+El primer orientador virtual accesible de Justicia Orienta
+
+Y debajo:
+
+“Una cara amiga para acercar la justicia a las personas.”
+
+Entonces la experiencia completa sería:
+
+Ciudadano
+
+?
+
+?? Justi te escucha
+
+?
+
+?? entiende tu necesidad
+
+?
+
+?? te orienta
+
+?
+
+? adapta la atención a tus necesidades
+
+?
+
+?? te conecta con una persona cuando la necesitas
+
+?
+
+?? la institución aprende de tus dificultades
+
+?
+
+?? el servicio de justicia mejora
+
+Ahí ya no estamos hablando simplemente de una página web.
+
+Estamos hablando de una nueva forma de relacionar al Poder Judicial con el ciudadano.
+
+Y 
+sí puedo diseñarte el rostro/personaje de Justi. Podemos 
+hacer varias propuestas visuales —por ejemplo, 
+3D institucional, 
+humano digital, 
+mascota 3D y 
+avatar minimalista accesible— y escoger cuál tendría mayor impacto para el concurso.

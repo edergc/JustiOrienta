@@ -1,0 +1,153 @@
+2026-08-21T02:26:37.727053467Z Using cached typing_inspection-0.4.4-py3-none-any.whl (14 kB)
+2026-08-21T02:26:37.728012352Z Using cached uvloop-0.22.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (4.4 MB)
+2026-08-21T02:26:37.730520592Z Using cached watchfiles-1.2.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (456 kB)
+2026-08-21T02:26:37.731680022Z Using cached websockets-17.0.1-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (220 kB)
+2026-08-21T02:26:37.732699201Z Using cached certifi-2026.7.22-py3-none-any.whl (136 kB)
+2026-08-21T02:26:37.733694699Z Using cached defusedxml-0.7.1-py2.py3-none-any.whl (25 kB)
+2026-08-21T02:26:37.734677397Z Using cached et_xmlfile-2.0.0-py3-none-any.whl (18 kB)
+2026-08-21T02:26:37.735637543Z Using cached mako-1.4.1-py3-none-any.whl (80 kB)
+2026-08-21T02:26:37.736619695Z Using cached passlib-1.7.4-py2.py3-none-any.whl (525 kB)
+2026-08-21T02:26:37.737819752Z Using cached python_jose-3.5.0-py2.py3-none-any.whl (34 kB)
+2026-08-21T02:26:37.738804175Z Using cached uvicorn-0.52.4-py3-none-any.whl (79 kB)
+2026-08-21T02:26:37.739796125Z Using cached cffi-2.1.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (221 kB)
+2026-08-21T02:26:37.740849674Z Using cached charset_normalizer-3.5.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (248 kB)
+2026-08-21T02:26:37.741903504Z Using cached markupsafe-3.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (22 kB)
+2026-08-21T02:26:37.742865631Z Using cached six-1.17.0-py2.py3-none-any.whl (11 kB)
+2026-08-21T02:26:37.743863815Z Using cached pycparser-3.0-py3-none-any.whl (48 kB)
+2026-08-21T02:26:37.920382961Z Installing collected packages: passlib, websockets, uvloop, typing-extensions, soupsieve, six, qrcode, pyyaml, python-multipart, python-dotenv, pypdfium2, pygments, pycparser, pyasn1, psycopg2-binary, pluggy, Pillow, packaging, MarkupSafe, iniconfig, idna, httptools, h11, greenlet, fonttools, et-xmlfile, defusedxml, click, charset-normalizer, certifi, bcrypt, annotated-types, annotated-doc, uvicorn, typing-inspection, sqlalchemy, rsa, pytest, pydantic-core, openpyxl, Mako, httpcore, fpdf2, ecdsa, cffi, beautifulsoup4, anyio, watchfiles, starlette, python-jose, pydantic, httpx, cryptography, alembic, pydantic-settings, pdfminer.six, fastapi, pdfplumber
+2026-08-21T02:26:43.591273226Z Successfully installed Mako-1.4.1 MarkupSafe-3.0.3 Pillow-12.3.0 alembic-1.19.1 annotated-doc-0.0.5 annotated-types-0.8.0 anyio-4.14.2 bcrypt-4.0.1 beautifulsoup4-4.15.0 certifi-2026.7.22 cffi-2.1.1 charset-normalizer-3.5.1 click-8.4.2 cryptography-50.0.0 defusedxml-0.7.1 ecdsa-0.19.2 et-xmlfile-2.0.0 fastapi-0.141.1 fonttools-4.63.0 fpdf2-2.8.8 greenlet-3.5.5 h11-0.16.0 httpcore-1.0.9 httptools-0.8.0 httpx-0.28.1 idna-3.19 iniconfig-2.3.0 openpyxl-3.1.5 packaging-26.3 passlib-1.7.4 pdfminer.six-20260107 pdfplumber-0.11.10 pluggy-1.6.0 psycopg2-binary-2.9.12 pyasn1-0.6.4 pycparser-3.0 pydantic-2.13.4 pydantic-core-2.46.4 pydantic-settings-2.15.0 pygments-2.21.0 pypdfium2-5.13.0 pytest-9.1.1 python-dotenv-1.2.3 python-jose-3.5.0 python-multipart-0.0.32 pyyaml-6.0.3 qrcode-8.2 rsa-4.9.1 six-1.17.0 soupsieve-2.9.2 sqlalchemy-2.0.52 starlette-1.6.0 typing-extensions-4.16.0 typing-inspection-0.4.4 uvicorn-0.52.4 uvloop-0.22.1 watchfiles-1.2.0 websockets-17.0.1
+2026-08-21T02:26:43.621507487Z 
+2026-08-21T02:26:43.621518347Z [notice] A new release of pip is available: 24.2 -> 26.2.1
+2026-08-21T02:26:43.62152029Z [notice] To update, run: pip install --upgrade pip
+2026-08-21T02:26:45.286004145Z ==> Uploading build...
+2026-08-21T02:26:50.85708178Z ==> Uploaded in 3.7s. Compression took 1.9s
+2026-08-21T02:26:50.860826592Z ==> Build successful ??
+2026-08-21T02:26:51.728578291Z ==> Deploying...
+2026-08-21T02:26:51.789115372Z ==> Setting WEB_CONCURRENCY=1 by default, based on available CPUs in the instance
+2026-08-21T02:27:16.131604951Z ==> Running 'alembic upgrade head && python -m app.seed && python -m app.cargar_directorio_pj && uvicorn app.main:app --host 0.0.0.0 --port $PORT'
+2026-08-21T02:27:31.656049131Z Traceback (most recent call last):
+2026-08-21T02:27:31.656068111Z   File "/opt/render/project/src/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 144, in __init__
+2026-08-21T02:27:31.687273745Z     self._dbapi_connection = engine.raw_connection()
+2026-08-21T02:27:31.772542905Z                              ^^^^^^^^^^^^^^^^^^^^^^^
+2026-08-21T02:27:31.772553215Z   File "/opt/render/project/src/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 3319, in raw_connection
+2026-08-21T02:27:31.772578796Z     return self.pool.connect()
+2026-08-21T02:27:31.772583816Z            ^^^^^^^^^^^^^^^^^^^
+2026-08-21T02:27:31.772588206Z   File "/opt/render/project/src/.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 448, in connect
+2026-08-21T02:27:31.772594936Z     return _ConnectionFairy._checkout(self)
+2026-08-21T02:27:31.772602476Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-08-21T02:27:31.772606647Z   File "/opt/render/project/src/.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 1272, in _checkout
+2026-08-21T02:27:31.772610887Z     fairy = _ConnectionRecord.checkout(pool)
+2026-08-21T02:27:31.772615027Z             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-08-21T02:27:31.772619267Z   File "/opt/render/project/src/.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 712, in checkout
+2026-08-21T02:27:31.772624067Z     rec = pool._do_get()
+2026-08-21T02:27:31.772628047Z           ^^^^^^^^^^^^^^
+2026-08-21T02:27:31.772632067Z   File "/opt/render/project/src/.venv/lib/python3.12/site-packages/sqlalchemy/pool/impl.py", line 307, in _do_get
+2026-08-21T02:27:31.772635987Z     return self._create_connection()
+2026-08-21T02:27:31.772640187Z            ^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-08-21T02:27:31.772644168Z   File "/opt/render/project/src/.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 389, in _create_connection
+2026-08-21T02:27:31.772648357Z     return _ConnectionRecord(self)
+2026-08-21T02:27:31.772652468Z            ^^^^^^^^^^^^^^^^^^^^^^^
+2026-08-21T02:27:31.772672088Z   File "/opt/render/project/src/.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 674, in __init__
+2026-08-21T02:27:31.772676888Z     self.__connect()
+2026-08-21T02:27:31.772681018Z   File "/opt/render/project/src/.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 900, in __connect
+2026-08-21T02:27:31.772685218Z     with util.safe_reraise():
+2026-08-21T02:27:31.772689778Z          ^^^^^^^^^^^^^^^^^^^
+2026-08-21T02:27:31.772693898Z   File "/opt/render/project/src/.venv/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py", line 122, in __exit__
+2026-08-21T02:27:31.772698269Z     raise exc_value.with_traceback(exc_tb)
+2026-08-21T02:27:31.772702479Z   File "/opt/render/project/src/.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 896, in __connect
+2026-08-21T02:27:31.772707169Z     self.dbapi_connection = connection = pool._invoke_creator(self)
+2026-08-21T02:27:31.772711399Z                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-08-21T02:27:31.772715479Z   File "/opt/render/project/src/.venv/lib/python3.12/site-packages/sqlalchemy/engine/create.py", line 667, in connect
+2026-08-21T02:27:31.772719799Z     return dialect.connect(*cargs_tup, **cparams)
+2026-08-21T02:27:31.772724209Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-08-21T02:27:31.772728309Z   File "/opt/render/project/src/.venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 630, in connect
+2026-08-21T02:27:31.7727473Z     return self.loaded_dbapi.connect(*cargs, **cparams)  # type: ignore[no-any-return]  # NOQA: E501
+2026-08-21T02:27:31.77275017Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-08-21T02:27:31.77275286Z   File "/opt/render/project/src/.venv/lib/python3.12/site-packages/psycopg2/__init__.py", line 122, in connect
+2026-08-21T02:27:31.77275536Z     conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+2026-08-21T02:27:31.77275793Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-08-21T02:27:31.77276165Z psycopg2.OperationalError: could not translate host name "ep-morning-bonus-acu0bhe7.sa-east-1.aws.neon  .tech" to address: Name or service not known
+2026-08-21T02:27:31.77276419Z 
+2026-08-21T02:27:31.77276656Z 
+2026-08-21T02:27:31.77276907Z The above exception was the direct cause of the following exception:
+2026-08-21T02:27:31.77277143Z 
+2026-08-21T02:27:31.772773811Z Traceback (most recent call last):
+2026-08-21T02:27:31.772776471Z   File "/opt/render/project/src/.venv/bin/alembic", line 8, in <module>
+2026-08-21T02:27:31.77277908Z     sys.exit(main())
+2026-08-21T02:27:31.772781641Z              ^^^^^^
+2026-08-21T02:27:31.772784131Z   File "/opt/render/project/src/.venv/lib/python3.12/site-packages/alembic/config.py", line 1039, in main
+2026-08-21T02:27:31.772786891Z     CommandLine(prog=prog).main(argv=argv)
+2026-08-21T02:27:31.772789361Z   File "/opt/render/project/src/.venv/lib/python3.12/site-packages/alembic/config.py", line 1029, in main
+2026-08-21T02:27:31.772794301Z     self.run_cmd(cfg, options)
+2026-08-21T02:27:31.772796941Z   File "/opt/render/project/src/.venv/lib/python3.12/site-packages/alembic/config.py", line 963, in run_cmd
+2026-08-21T02:27:31.772799511Z     fn(
+2026-08-21T02:27:31.772802141Z   File "/opt/render/project/src/.venv/lib/python3.12/site-packages/alembic/command.py", line 487, in upgrade
+2026-08-21T02:27:31.772804761Z     script.run_env()
+2026-08-21T02:27:31.772807391Z   File "/opt/render/project/src/.venv/lib/python3.12/site-packages/alembic/script/base.py", line 550, in run_env
+2026-08-21T02:27:31.772809901Z     util.load_python_file(self.dir, "env.py")
+2026-08-21T02:27:31.772812511Z   File "/opt/render/project/src/.venv/lib/python3.12/site-packages/alembic/util/pyfiles.py", line 114, in load_python_file
+2026-08-21T02:27:31.772815001Z     module = load_module_py(module_id, path)
+2026-08-21T02:27:31.772817592Z              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-08-21T02:27:31.772820392Z   File "/opt/render/project/src/.venv/lib/python3.12/site-packages/alembic/util/pyfiles.py", line 132, in load_module_py
+2026-08-21T02:27:31.772823072Z     spec.loader.exec_module(module)  # type: ignore
+2026-08-21T02:27:31.772825472Z     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-08-21T02:27:31.772828022Z   File "<frozen importlib._bootstrap_external>", line 995, in exec_module
+2026-08-21T02:27:31.772830532Z   File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+2026-08-21T02:27:31.772833162Z   File "/opt/render/project/src/migrations/env.py", line 82, in <module>
+2026-08-21T02:27:31.772835682Z     run_migrations_online()
+2026-08-21T02:27:31.772845722Z   File "/opt/render/project/src/migrations/env.py", line 70, in run_migrations_online
+2026-08-21T02:27:31.772848452Z     with connectable.connect() as connection:
+2026-08-21T02:27:31.772850952Z          ^^^^^^^^^^^^^^^^^^^^^
+2026-08-21T02:27:31.772853572Z   File "/opt/render/project/src/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 3295, in connect
+2026-08-21T02:27:31.772856042Z     return self._connection_cls(self)
+2026-08-21T02:27:31.772859082Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-08-21T02:27:31.772866953Z   File "/opt/render/project/src/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 146, in __init__
+2026-08-21T02:27:31.772869753Z     Connection._handle_dbapi_exception_noconnection(
+2026-08-21T02:27:31.772872513Z   File "/opt/render/project/src/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 2450, in _handle_dbapi_exception_noconnection
+2026-08-21T02:27:31.772875213Z     raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+2026-08-21T02:27:31.772877743Z   File "/opt/render/project/src/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 144, in __init__
+2026-08-21T02:27:31.772880383Z     self._dbapi_connection = engine.raw_connection()
+2026-08-21T02:27:31.772882923Z                              ^^^^^^^^^^^^^^^^^^^^^^^
+2026-08-21T02:27:31.772885523Z   File "/opt/render/project/src/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 3319, in raw_connection
+2026-08-21T02:27:31.772887943Z     return self.pool.connect()
+2026-08-21T02:27:31.772890383Z            ^^^^^^^^^^^^^^^^^^^
+2026-08-21T02:27:31.772896743Z   File "/opt/render/project/src/.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 448, in connect
+2026-08-21T02:27:31.772899563Z     return _ConnectionFairy._checkout(self)
+2026-08-21T02:27:31.772902013Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-08-21T02:27:31.772904474Z   File "/opt/render/project/src/.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 1272, in _checkout
+2026-08-21T02:27:31.773129419Z     fairy = _ConnectionRecord.checkout(pool)
+2026-08-21T02:27:31.77320859Z             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-08-21T02:27:31.773242571Z   File "/opt/render/project/src/.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 712, in checkout
+2026-08-21T02:27:31.773548508Z     rec = pool._do_get()
+2026-08-21T02:27:31.773728002Z           ^^^^^^^^^^^^^^
+2026-08-21T02:27:31.773732462Z   File "/opt/render/project/src/.venv/lib/python3.12/site-packages/sqlalchemy/pool/impl.py", line 307, in _do_get
+2026-08-21T02:27:31.773803894Z     return self._create_connection()
+2026-08-21T02:27:31.773857285Z            ^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-08-21T02:27:31.774160352Z   File "/opt/render/project/src/.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 389, in _create_connection
+2026-08-21T02:27:31.774376767Z     return _ConnectionRecord(self)
+2026-08-21T02:27:31.774383467Z            ^^^^^^^^^^^^^^^^^^^^^^^
+2026-08-21T02:27:31.774387097Z   File "/opt/render/project/src/.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 674, in __init__
+2026-08-21T02:27:31.775181215Z     self.__connect()
+2026-08-21T02:27:31.775191326Z   File "/opt/render/project/src/.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 900, in __connect
+2026-08-21T02:27:31.775194566Z     with util.safe_reraise():
+2026-08-21T02:27:31.775196996Z          ^^^^^^^^^^^^^^^^^^^
+2026-08-21T02:27:31.775199596Z   File "/opt/render/project/src/.venv/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py", line 122, in __exit__
+2026-08-21T02:27:31.775202436Z     raise exc_value.with_traceback(exc_tb)
+2026-08-21T02:27:31.775205066Z   File "/opt/render/project/src/.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 896, in __connect
+2026-08-21T02:27:31.775767319Z     self.dbapi_connection = connection = pool._invoke_creator(self)
+2026-08-21T02:27:31.775777139Z                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-08-21T02:27:31.775780679Z   File "/opt/render/project/src/.venv/lib/python3.12/site-packages/sqlalchemy/engine/create.py", line 667, in connect
+2026-08-21T02:27:31.775951373Z     return dialect.connect(*cargs_tup, **cparams)
+2026-08-21T02:27:31.77667903Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-08-21T02:27:31.77668731Z   File "/opt/render/project/src/.venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 630, in connect
+2026-08-21T02:27:31.77669229Z     return self.loaded_dbapi.connect(*cargs, **cparams)  # type: ignore[no-any-return]  # NOQA: E501
+2026-08-21T02:27:31.77669519Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-08-21T02:27:31.77669829Z   File "/opt/render/project/src/.venv/lib/python3.12/site-packages/psycopg2/__init__.py", line 122, in connect
+2026-08-21T02:27:31.77670194Z     conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+2026-08-21T02:27:31.77670484Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-08-21T02:27:31.776835333Z sqlalchemy.exc.OperationalError: (psycopg2.OperationalError) could not translate host name "ep-morning-bonus-acu0bhe7.sa-east-1.aws.neon  .tech" to address: Name or service not known
+2026-08-21T02:27:31.776839933Z 
+2026-08-21T02:27:31.777249873Z (Background on this error at: https://sqlalche.me/e/20/e3q8)
+2026-08-21T02:27:38.810707074Z ==> Exited with status 1
+2026-08-21T02:27:38.815587916Z ==> Common ways to troubleshoot your deploy: https://render.com/docs/troubleshooting-deploys
+2026-08-21T02:27:43.014050854Z ==> Running 'alembic upgrade head && python -m app.seed && python -m app.cargar_directorio_pj && uvicorn app.main:app --host 0.0.0.0 --port $PORT'
