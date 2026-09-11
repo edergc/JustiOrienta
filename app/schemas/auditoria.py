@@ -13,3 +13,11 @@ class AuditoriaOut(BaseModel):
     accion: str
     detalle: Optional[str] = None
     fecha: datetime
+    ip_origen: Optional[str] = None
+
+
+class AuditoriaListaOut(BaseModel):
+    items: list[AuditoriaOut]
+    total: int
+    skip: int
+    limite: int

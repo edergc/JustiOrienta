@@ -9,7 +9,7 @@ from app.schemas.usuario import (
     UsuarioOut, UsuarioCreate, UsuarioUpdate, CambiarPasswordIn, Token,
     OlvidePasswordIn, RestablecerPasswordIn,
 )
-from app.schemas.auditoria import AuditoriaOut
+from app.schemas.auditoria import AuditoriaOut, AuditoriaListaOut
 from app.schemas.busqueda import BusquedaRespuesta, SatisfaccionIn
 from app.schemas.cobertura import SolicitudCoberturaCreate, SolicitudCoberturaUpdate, SolicitudCoberturaOut
 from app.schemas.solicitud_atencion import (
@@ -27,7 +27,7 @@ __all__ = [
     "HistorialDependenciaOut",
     "UsuarioOut", "UsuarioCreate", "UsuarioUpdate", "CambiarPasswordIn", "Token",
     "OlvidePasswordIn", "RestablecerPasswordIn",
-    "AuditoriaOut",
+    "AuditoriaOut", "AuditoriaListaOut",
     "BusquedaRespuesta", "SatisfaccionIn",
     "SolicitudCoberturaCreate", "SolicitudCoberturaUpdate", "SolicitudCoberturaOut",
     "SolicitudAtencionCreate", "SolicitudAtencionUpdate", "SolicitudAtencionOut", "SolicitudAtencionPublicaOut",

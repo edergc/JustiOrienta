@@ -4,7 +4,7 @@ import io
 import logging
 from typing import Optional
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import StreamingResponse
 from openpyxl import Workbook
 from openpyxl.styles import Font
@@ -154,6 +154,7 @@ def _si_no(v: Optional[bool]) -> str:
 
 @router.get("/dependencias/exportar.xlsx")
 def exportar_catalogo(
+    request: Request,
     db: Session = Depends(get_db),
     usuario=Depends(security.get_usuario_actual),
 ):
@@ -186,6 +187,12 @@ def exportar_catalogo(
             dep.instrucciones_internas or "", dep.area or "",
         ]))
     autoajustar_columnas(ws)
+
+    ip = request.client.host if request.client else "sin-ip"
+    crud.auditoria.registrar(
+        db, usuario.dni, "catalogo", None, "EXPORTAR",
+        f"Exportó el catálogo completo a Excel ({len(deps)} dependencias, área={area or 'todas'})", ip,
+    )
 
     buffer = io.BytesIO()
     wb.save(buffer)

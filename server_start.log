@@ -1,85 +1,28 @@
 INFO:     Will watch for changes in these directories: ['E:\\PROGRAMACION\\JustiOrienta']
 INFO:     Uvicorn running on http://0.0.0.0:8743 (Press CTRL+C to quit)
-INFO:     Started reloader process [7556] using WatchFiles
+INFO:     Started reloader process [11152] using WatchFiles
 C:\Users\Administrador\AppData\Local\Programs\Python\Python312\Lib\site-packages\fpdf\__init__.py:40: UserWarning: You have both PyFPDF & fpdf2 installed. Both packages cannot be installed at the same time as they share the same module namespace. To only keep fpdf2, run: pip uninstall --yes pypdf && pip install --upgrade fpdf2
   warnings.warn(
-INFO:     Started server process [7008]
+INFO:     Started server process [3352]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
-INFO:     127.0.0.1:58235 - "GET /presentacion-ceremonia.html HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:58236 - "GET / HTTP/1.1" 200 OK
-INFO:     172.20.1.51:58237 - "GET /presentacion-ceremonia.html HTTP/1.1" 404 Not Found
-INFO:     172.20.2.3:32113 - "GET / HTTP/1.1" 200 OK
-INFO:     172.20.2.3:32113 - "GET /css/styles.css?v=1789149433 HTTP/1.1" 200 OK
-INFO:     172.20.2.3:32114 - "GET /js/public.js?v=1789149433 HTTP/1.1" 200 OK
-INFO:     172.20.2.3:32116 - "GET /manifest.json HTTP/1.1" 200 OK
-INFO:     172.20.2.3:32114 - "GET /icons/icon-192.png HTTP/1.1" 304 Not Modified
-INFO:     172.20.2.3:32113 - "GET /api/v1/sedes HTTP/1.1" 200 OK
-INFO:     172.20.2.3:32113 - "GET / HTTP/1.1" 200 OK
-INFO:     172.20.2.3:32113 - "GET /api/v1/sedes HTTP/1.1" 200 OK
-INFO:     172.20.2.3:32114 - "GET / HTTP/1.1" 200 OK
-INFO:     172.20.2.3:32114 - "GET /api/v1/sedes HTTP/1.1" 200 OK
-INFO:     172.20.2.3:32114 - "GET / HTTP/1.1" 200 OK
-INFO:     172.20.2.3:32114 - "GET /api/v1/sedes HTTP/1.1" 200 OK
-WARNING:  WatchFiles detected changes in 'app\config.py'. Reloading...
-INFO:     127.0.0.1:59641 - "GET / HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59642 - "GET /api/docs HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59687 - "GET /api/v1/buscar?q=mesa HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59791 - "GET /api/v1/salud HTTP/1.1" 200 OK
-INFO:     127.0.0.1:60051 - "GET /api/v1/admin/dependencias/exportar.xlsx HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:60180 - "GET /api/v1/salud HTTP/1.1" 200 OK
-INFO:     172.20.2.3:63690 - "GET / HTTP/1.1" 200 OK
-INFO:     172.20.2.3:63690 - "GET /css/styles.css?v=1789149433 HTTP/1.1" 200 OK
-INFO:     172.20.2.3:63691 - "GET /js/public.js?v=1789149433 HTTP/1.1" 200 OK
-INFO:     172.20.2.3:63692 - "GET /manifest.json HTTP/1.1" 200 OK
-INFO:     172.20.2.3:63691 - "GET /api/v1/sedes HTTP/1.1" 200 OK
-INFO:     172.20.2.3:63691 - "GET /icons/icon-192.png HTTP/1.1" 200 OK
-INFO:     172.20.2.3:63691 - "GET / HTTP/1.1" 200 OK
-INFO:     172.20.2.3:63691 - "GET /css/styles.css?v=1789149433 HTTP/1.1" 200 OK
-INFO:     172.20.2.3:63692 - "GET /manifest.json HTTP/1.1" 200 OK
-INFO:     172.20.2.3:63690 - "GET /js/public.js?v=1789149433 HTTP/1.1" 200 OK
-INFO:     172.20.2.3:63691 - "GET /api/v1/sedes HTTP/1.1" 200 OK
-INFO:     172.20.2.3:63691 - "GET /icons/icon-192.png HTTP/1.1" 200 OK
-INFO:     172.20.2.3:63691 - "GET / HTTP/1.1" 200 OK
-INFO:     172.20.2.3:63692 - "GET /manifest.json HTTP/1.1" 200 OK
-INFO:     172.20.2.3:63691 - "GET /css/styles.css?v=1789149433 HTTP/1.1" 200 OK
-INFO:     172.20.2.3:63690 - "GET /js/public.js?v=1789149433 HTTP/1.1" 200 OK
-INFO:     172.20.2.3:63690 - "GET /api/v1/sedes HTTP/1.1" 200 OK
-INFO:     172.20.2.3:63690 - "GET /icons/icon-192.png HTTP/1.1" 200 OK
-INFO:     172.20.2.3:63690 - "GET / HTTP/1.1" 200 OK
-INFO:     172.20.2.3:63690 - "GET /css/styles.css?v=1789149433 HTTP/1.1" 200 OK
-INFO:     172.20.2.3:63692 - "GET /manifest.json HTTP/1.1" 200 OK
-INFO:     172.20.2.3:63691 - "GET /js/public.js?v=1789149433 HTTP/1.1" 200 OK
-INFO:     172.20.2.3:63691 - "GET /api/v1/sedes HTTP/1.1" 200 OK
-INFO:     172.20.2.3:63691 - "GET /icons/icon-192.png HTTP/1.1" 200 OK
-INFO:     172.20.2.3:63691 - "GET / HTTP/1.1" 200 OK
-INFO:     172.20.2.3:63692 - "GET /manifest.json HTTP/1.1" 200 OK
-INFO:     172.20.2.3:63691 - "GET /css/styles.css?v=1789149433 HTTP/1.1" 200 OK
-INFO:     172.20.2.3:63690 - "GET /js/public.js?v=1789149433 HTTP/1.1" 200 OK
-INFO:     172.20.2.3:63691 - "GET /api/v1/sedes HTTP/1.1" 200 OK
-INFO:     172.20.2.3:63691 - "GET /icons/icon-192.png HTTP/1.1" 200 OK
-INFO:     172.20.2.3:63691 - "GET / HTTP/1.1" 200 OK
-INFO:     172.20.2.3:63692 - "GET /manifest.json HTTP/1.1" 200 OK
-INFO:     172.20.2.3:63691 - "GET /css/styles.css?v=1789149433 HTTP/1.1" 200 OK
-INFO:     172.20.2.3:63690 - "GET /js/public.js?v=1789149433 HTTP/1.1" 200 OK
-INFO:     172.20.2.3:63691 - "GET /api/v1/sedes HTTP/1.1" 200 OK
-INFO:     172.20.2.3:63691 - "GET /icons/icon-192.png HTTP/1.1" 200 OK
-INFO:     172.20.2.3:63691 - "GET / HTTP/1.1" 200 OK
-INFO:     172.20.2.3:63692 - "GET /manifest.json HTTP/1.1" 200 OK
-INFO:     172.20.2.3:63691 - "GET /css/styles.css?v=1789149433 HTTP/1.1" 200 OK
-INFO:     172.20.2.3:63690 - "GET /js/public.js?v=1789149433 HTTP/1.1" 200 OK
-INFO:     172.20.2.3:63690 - "GET /api/v1/sedes HTTP/1.1" 200 OK
-INFO:     172.20.2.3:63690 - "GET /icons/icon-192.png HTTP/1.1" 200 OK
-INFO:     172.20.2.6:57342 - "GET / HTTP/1.1" 200 OK
-INFO:     172.20.2.6:57342 - "GET /css/styles.css?v=1789149433 HTTP/1.1" 200 OK
-INFO:     172.20.2.6:57343 - "GET /js/public.js?v=1789149433 HTTP/1.1" 200 OK
-INFO:     172.20.2.6:57344 - "GET /manifest.json HTTP/1.1" 200 OK
-INFO:     172.20.2.6:57343 - "GET /api/v1/sedes HTTP/1.1" 200 OK
-INFO:     172.20.2.6:57343 - "GET /icons/icon-192.png HTTP/1.1" 200 OK
-INFO:     172.20.2.6:57362 - "GET /api/v1/buscar?q=11+civil&modo_accesible=true HTTP/1.1" 200 OK
-INFO:     172.20.2.6:57382 - "GET /api/v1/sedes/1/puntos-partida HTTP/1.1" 200 OK
-INFO:     172.20.2.6:57383 - "GET /api/v1/sedes/1/puntos-partida HTTP/1.1" 200 OK
-INFO:     172.20.2.6:57406 - "GET /api/v1/sedes/1/puntos-partida HTTP/1.1" 200 OK
-INFO:     172.20.2.6:57406 - "GET /api/v1/sedes/1/dependencias HTTP/1.1" 200 OK
-INFO:     172.20.2.6:57407 - "GET /api/v1/sedes HTTP/1.1" 200 OK
-INFO:     172.20.2.6:57410 - "GET /api/v1/buscar?q=recursos&modo_accesible=true HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61561 - "POST /api/v1/auth/login HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:61564 - "GET /api/v1/salud HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61617 - "GET /api/v1/admin/auditoria HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:61618 - "GET /api/v1/admin/auditoria/exportar.xlsx HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:61619 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61620 - "GET /admin HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61629 - "GET /admin HTTP/1.1" 200 OK
+INFO:     172.20.2.6:58846 - "GET /admin HTTP/1.1" 200 OK
+INFO:     172.20.2.6:58846 - "GET /css/styles.css?v=1789157559 HTTP/1.1" 200 OK
+INFO:     172.20.2.6:58847 - "GET /css/login-foto.css?v=1789157559 HTTP/1.1" 200 OK
+INFO:     172.20.2.6:58848 - "GET /js/admin.js?v=1789157559 HTTP/1.1" 200 OK
+INFO:     172.20.2.6:58847 - "GET / HTTP/1.1" 200 OK
+INFO:     172.20.2.6:58847 - "GET /js/public.js?v=1789157559 HTTP/1.1" 200 OK
+INFO:     172.20.2.6:58868 - "GET /api/v1/buscar?q=recur&modo_accesible=true HTTP/1.1" 200 OK
+INFO:     172.20.2.6:58868 - "GET /api/v1/buscar?q=recursos+&modo_accesible=true HTTP/1.1" 200 OK
+INFO:     172.20.2.6:58868 - "GET /api/v1/buscar?q=recursos+huma&modo_accesible=true HTTP/1.1" 200 OK
+INFO:     172.20.2.6:58868 - "GET /api/v1/buscar?q=recursos+humanos&modo_accesible=true HTTP/1.1" 200 OK
+INFO:     172.20.2.6:58868 - "GET /api/v1/buscar?q=recursos+humanos&modo_accesible=true HTTP/1.1" 200 OK
+INFO:     172.20.2.6:59034 - "GET /api/v1/sedes/1/puntos-partida HTTP/1.1" 200 OK
+INFO:     172.20.2.6:59034 - "GET /api/v1/ruta?origen_id=30&dependencia_id=91&accesible=false HTTP/1.1" 200 OK

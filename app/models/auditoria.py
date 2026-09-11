@@ -16,8 +16,15 @@ class Auditoria(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     usuario_dni = Column(String(8))
-    entidad = Column(String(30))  # dependencia | servicio | sede | edificio | usuario
+    entidad = Column(String(30))  # dependencia | servicio | sede | edificio | usuario | sesion | catalogo | ...
     entidad_id = Column(Integer, nullable=True)
-    accion = Column(String(20))  # CREATE | UPDATE | APROBAR | RECHAZAR | DELETE
+    # CREATE | UPDATE | APROBAR | RECHAZAR | DELETE | REACTIVAR | EXPORTAR |
+    # LOGIN_OK | LOGIN_FALLIDO | CUENTA_BLOQUEADA | CAMBIO_PASSWORD |
+    # OLVIDE_PASSWORD | PASSWORD_RESTABLECIDA -- String(30) porque los
+    # nombres de eventos de sesion son mas largos que los de CRUD original.
+    accion = Column(String(30))
     detalle = Column(Text)
     fecha = Column(DateTime, default=ahora_utc, index=True)
+    # IPv4 o IPv6 de quien hizo la accion -- contexto forense minimo que un
+    # log de auditoria "profesional" necesita para responder "desde donde".
+    ip_origen = Column(String(45), nullable=True)

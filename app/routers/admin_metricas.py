@@ -1,14 +1,14 @@
 import io
 from collections import defaultdict
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import StreamingResponse
 from openpyxl import Workbook
 from openpyxl.styles import Font
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app import models, security
+from app import crud, models, security
 from app.config import settings
 from app.database import get_db
 from app.excel_utils import hoja_con_tabla
@@ -198,6 +198,7 @@ def resumen_metricas(
 
 @router.get("/reporte.xlsx")
 def descargar_reporte(
+    request: Request,
     db: Session = Depends(get_db),
     usuario=Depends(security.requiere_lectura_reportes),
 ):
@@ -255,6 +256,9 @@ def descargar_reporte(
                 [(v["area"], v["cantidad"]) for v in datos["vigencia_por_area"]])
     hoja_con_tabla(wb, "Completitud por área", ["Área", "Dependencias activas", "% completo"],
                 [(c["area"], c["activas"], c["porcentaje_completo"]) for c in datos["completitud_por_area"]])
+
+    ip = request.client.host if request.client else "sin-ip"
+    crud.auditoria.registrar(db, usuario.dni, "reporte_metricas", None, "EXPORTAR", "Descargó el reporte de indicadores en Excel", ip)
 
     buffer = io.BytesIO()
     wb.save(buffer)

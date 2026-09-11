@@ -1450,12 +1450,35 @@ document.getElementById("form-servicio").addEventListener("submit", async (e) =>
 });
 
 // ── Auditoría ──
+const AUD_LIMITE = 20;
+let audSkip = 0;
+
+function _paramsAuditoria() {
+  const dni = document.getElementById("aud-filtro-dni").value.trim();
+  const entidad = document.getElementById("aud-filtro-entidad").value;
+  const accion = document.getElementById("aud-filtro-accion").value;
+  const desde = document.getElementById("aud-filtro-desde").value;
+  const hasta = document.getElementById("aud-filtro-hasta").value;
+  const params = new URLSearchParams();
+  if (dni) params.set("usuario_dni", dni);
+  if (entidad) params.set("entidad", entidad);
+  if (accion) params.set("accion", accion);
+  if (desde) params.set("desde", desde);
+  if (hasta) params.set("hasta", hasta);
+  return params;
+}
+
 async function cargarAuditoria() {
   if (!puedeLeerAuditoria()) return;
-  const registros = await api("/admin/auditoria");
+  const params = _paramsAuditoria();
+  params.set("skip", audSkip);
+  params.set("limite", AUD_LIMITE);
+  const resp = await api(`/admin/auditoria?${params}`);
   const tbody = document.querySelector("#tabla-auditoria tbody");
-  tbody.innerHTML = "";
-  for (const r of registros) {
+  tbody.innerHTML = resp.items.length
+    ? ""
+    : '<tr><td colspan="6" class="hint" style="padding:1rem;">Sin resultados con estos filtros.</td></tr>';
+  for (const r of resp.items) {
     const tr = document.createElement("tr");
     const fecha = fechaServidor(r.fecha).toLocaleString("es-PE");
     // El detalle puede contener texto libre que alguien más escribió (nombre
@@ -1463,11 +1486,61 @@ async function cargarAuditoria() {
     // se ejecute como HTML/JS en la sesión de quien lea la auditoría.
     tr.innerHTML = `<td>${fecha}</td><td>${escaparHtml(r.usuario_dni) || "—"}</td><td>${escaparHtml(r.entidad) || "—"}</td>` +
       `<td><span class="badge ${r.accion.toLowerCase()}">${escaparHtml(r.accion)}</span></td>` +
-      `<td>${escaparHtml(r.detalle)}</td>`;
+      `<td>${escaparHtml(r.detalle)}</td>` +
+      `<td>${escaparHtml(r.ip_origen) || "—"}</td>`;
     tbody.appendChild(tr);
   }
+  renderPaginacionAuditoria(resp.total);
   await cargarDuplicados();
 }
+
+function renderPaginacionAuditoria(total) {
+  const box = document.getElementById("paginacion-auditoria");
+  if (total === 0) {
+    box.innerHTML = "";
+    return;
+  }
+  const desde = audSkip + 1;
+  const hasta = Math.min(audSkip + AUD_LIMITE, total);
+  box.innerHTML = `
+    <span>Mostrando ${desde}–${hasta} de ${total}</span>
+    <div style="display:flex; gap:0.5rem;">
+      <button class="btn secondary" id="btn-aud-anterior" ${audSkip === 0 ? "disabled" : ""}>← Anterior</button>
+      <button class="btn secondary" id="btn-aud-siguiente" ${hasta >= total ? "disabled" : ""}>Siguiente →</button>
+    </div>`;
+  document.getElementById("btn-aud-anterior").addEventListener("click", () => {
+    audSkip = Math.max(0, audSkip - AUD_LIMITE);
+    cargarAuditoria();
+  });
+  document.getElementById("btn-aud-siguiente").addEventListener("click", () => {
+    audSkip += AUD_LIMITE;
+    cargarAuditoria();
+  });
+}
+
+function reiniciarYCargarAuditoria() {
+  audSkip = 0;
+  cargarAuditoria();
+}
+["aud-filtro-dni", "aud-filtro-entidad", "aud-filtro-accion", "aud-filtro-desde", "aud-filtro-hasta"].forEach((id) => {
+  const el = document.getElementById(id);
+  const evento = el.tagName === "SELECT" || el.type === "date" ? "change" : "input";
+  let debounce;
+  el.addEventListener(evento, () => {
+    clearTimeout(debounce);
+    debounce = setTimeout(reiniciarYCargarAuditoria, evento === "input" ? 300 : 0);
+  });
+});
+
+document.getElementById("btn-exportar-auditoria").addEventListener("click", () => {
+  const params = _paramsAuditoria();
+  const fecha = new Date().toISOString().slice(0, 10);
+  descargarArchivo(
+    `/admin/auditoria/exportar.xlsx?${params}`,
+    `auditoria_justicia_orienta_${fecha}.xlsx`,
+    "No se pudo exportar la auditoría."
+  );
+});
 
 async function cargarDuplicados() {
   const box = document.getElementById("lista-duplicados");

@@ -530,15 +530,64 @@
         <section id="tab-auditoria" class="tab-panel" style="display:none;">
           <div class="panel">
             <div class="panel-cabecera">
-              <h3>Auditoría reciente</h3>
+              <h3>Auditoría</h3>
+              <div class="panel-cabecera-acciones">
+                <button class="btn secondary" id="btn-exportar-auditoria" type="button">⬇ Exportar a Excel</button>
+              </div>
             </div>
-            <p class="hint" style="margin:0 0 0.8rem;">Quién cambió qué, cuándo, y qué acción tomó — las últimas 100 acciones registradas.</p>
+            <p class="hint" style="margin:0 0 0.8rem;">Quién hizo qué, cuándo, desde dónde — incluye inicios de sesión, cambios de contraseña y exportaciones, además de los cambios al catálogo.</p>
+            <div class="panel-filtros">
+              <div class="field" style="max-width:9rem;">
+                <label for="aud-filtro-dni">DNI</label>
+                <input id="aud-filtro-dni" type="text" placeholder="Todos" maxlength="8" />
+              </div>
+              <div class="field" style="max-width:13rem;">
+                <label for="aud-filtro-entidad">Entidad</label>
+                <select id="aud-filtro-entidad">
+                  <option value="">Todas</option>
+                  <option value="sesion">Sesión (login/password)</option>
+                  <option value="dependencia">Dependencia</option>
+                  <option value="servicio">Servicio</option>
+                  <option value="sede">Sede</option>
+                  <option value="edificio">Edificio</option>
+                  <option value="usuario">Usuario</option>
+                  <option value="nodo_ubicacion">Nodo de mapa</option>
+                  <option value="conexion_nodo">Conexión de mapa</option>
+                  <option value="solicitud_atencion">Solicitud de atención</option>
+                  <option value="solicitud_cobertura">Solicitud de cobertura</option>
+                  <option value="catalogo">Catálogo (exportación)</option>
+                  <option value="reporte_metricas">Reporte de métricas</option>
+                </select>
+              </div>
+              <div class="field" style="max-width:13rem;">
+                <label for="aud-filtro-accion">Acción</label>
+                <select id="aud-filtro-accion">
+                  <option value="">Todas</option>
+                  <option value="LOGIN_OK">Login exitoso</option>
+                  <option value="LOGIN_FALLIDO">Login fallido</option>
+                  <option value="CUENTA_BLOQUEADA">Cuenta bloqueada</option>
+                  <option value="CAMBIO_PASSWORD">Cambio de contraseña</option>
+                  <option value="OLVIDE_PASSWORD">Solicitó restablecer contraseña</option>
+                  <option value="PASSWORD_RESTABLECIDA">Contraseña restablecida</option>
+                  <option value="CREATE">Creación</option>
+                  <option value="UPDATE">Actualización</option>
+                  <option value="DELETE">Desactivación</option>
+                  <option value="REACTIVAR">Reactivación</option>
+                  <option value="APROBAR">Aprobación</option>
+                  <option value="RECHAZAR">Rechazo</option>
+                  <option value="EXPORTAR">Exportación</option>
+                </select>
+              </div>
+              <div class="field" style="max-width:9.5rem;"><label for="aud-filtro-desde">Desde</label><input id="aud-filtro-desde" type="date" /></div>
+              <div class="field" style="max-width:9.5rem;"><label for="aud-filtro-hasta">Hasta</label><input id="aud-filtro-hasta" type="date" /></div>
+            </div>
             <div class="table-wrap">
               <table class="admin" id="tabla-auditoria">
-                <thead><tr><th>Fecha</th><th>Usuario</th><th>Entidad</th><th>Acción</th><th>Detalle</th></tr></thead>
+                <thead><tr><th>Fecha</th><th>Usuario</th><th>Entidad</th><th>Acción</th><th>Detalle</th><th>IP</th></tr></thead>
                 <tbody></tbody>
               </table>
             </div>
+            <div id="paginacion-auditoria" class="paginacion"></div>
           </div>
           <div class="panel">
             <h3>Posibles duplicados en el catálogo</h3>

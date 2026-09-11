@@ -10,8 +10,12 @@ from app.models.base import ahora_utc
 router = APIRouter()
 
 
+def _ip(request: Request) -> str:
+    return request.client.host if request.client else "sin-ip"
+
+
 @router.post("/login", response_model=schemas.Token)
-def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+def login(request: Request, form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     usuario = crud.usuarios.obtener_por_dni(db, form.username)
 
     # El bloqueo se revisa ANTES de validar la contraseña y sin importar si es
@@ -25,6 +29,10 @@ def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
     ahora = ahora_utc()
     if usuario and usuario.bloqueado_hasta and usuario.bloqueado_hasta > ahora:
         minutos = max(1, -(-(usuario.bloqueado_hasta - ahora).seconds // 60))
+        crud.auditoria.registrar(
+            db, form.username, "sesion", None, "CUENTA_BLOQUEADA",
+            f"Intento de login mientras la cuenta seguia bloqueada ({minutos} min restantes)", _ip(request),
+        )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=f"Cuenta bloqueada temporalmente por múltiples intentos fallidos. "
@@ -34,16 +42,22 @@ def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
     if not usuario or not security.verificar_password(form.password, usuario.password_hash):
         if usuario:
             crud.usuarios.registrar_intento_fallido(db, usuario)
+        # Se registra el DNI escrito aunque la cuenta no exista -- detectar
+        # fuerza bruta contra cuentas inexistentes es tan importante como
+        # detectarla contra cuentas reales.
+        crud.auditoria.registrar(db, form.username, "sesion", None, "LOGIN_FALLIDO", "DNI o contraseña incorrectos", _ip(request))
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="DNI o contraseña incorrectos",
         )
     if not usuario.activo:
+        crud.auditoria.registrar(db, usuario.dni, "sesion", None, "LOGIN_FALLIDO", "Usuario deshabilitado", _ip(request))
         raise HTTPException(status_code=403, detail="Usuario deshabilitado")
 
     crud.usuarios.resetear_intentos_fallidos(db, usuario)
     usuario.ultimo_acceso = ahora_utc()
     db.commit()
+    crud.auditoria.registrar(db, usuario.dni, "sesion", None, "LOGIN_OK", "Inicio de sesión exitoso", _ip(request))
 
     token = security.crear_token(usuario.dni)
     return schemas.Token(access_token=token, usuario=schemas.UsuarioOut.model_validate(usuario))
@@ -57,6 +71,7 @@ def quien_soy(usuario=Depends(security.get_usuario_actual)):
 @router.put("/mi-password")
 def cambiar_mi_password(
     payload: schemas.CambiarPasswordIn,
+    request: Request,
     db: Session = Depends(get_db),
     usuario=Depends(security.get_usuario_actual),
 ):
@@ -65,6 +80,7 @@ def cambiar_mi_password(
     if len(payload.password_nueva) < 6:
         raise HTTPException(status_code=422, detail="La nueva contraseña debe tener al menos 6 caracteres")
     crud.usuarios.cambiar_password(db, usuario, payload.password_nueva)
+    crud.auditoria.registrar(db, usuario.dni, "sesion", None, "CAMBIO_PASSWORD", "Cambió su propia contraseña", _ip(request))
     return {"ok": True}
 
 
@@ -88,6 +104,12 @@ def olvide_password(payload: schemas.OlvidePasswordIn, request: Request, db: Ses
         token = crud.usuarios.generar_solicitud_reset(db, usuario)
         enlace = f"{settings.url_publica}/admin?reset={token}"
         correo.enviar_correo_restablecer(usuario.email, usuario.nombre, enlace, crud.usuarios.MINUTOS_VIGENCIA_RESET)
+        # Solo se registra cuando la cuenta existe de verdad -- auditar
+        # también los intentos sobre DNIs inexistentes filtraría esa misma
+        # información por otra vía (quién tiene cuenta) a quien pueda leer
+        # la auditoría, que es justo lo que la respuesta uniforme de abajo
+        # busca evitar.
+        crud.auditoria.registrar(db, usuario.dni, "sesion", None, "OLVIDE_PASSWORD", "Solicitó enlace para restablecer su contraseña", ip)
 
     # Misma respuesta exista o no la cuenta, y tenga o no correo registrado
     # -- así nadie puede usar este endpoint para averiguar qué DNIs tienen
@@ -96,11 +118,15 @@ def olvide_password(payload: schemas.OlvidePasswordIn, request: Request, db: Ses
 
 
 @router.post("/restablecer-password")
-def restablecer_password(payload: schemas.RestablecerPasswordIn, db: Session = Depends(get_db)):
+def restablecer_password(payload: schemas.RestablecerPasswordIn, request: Request, db: Session = Depends(get_db)):
     usuario = crud.usuarios.obtener_por_token_reset(db, payload.token)
     if not usuario:
         raise HTTPException(status_code=400, detail="El enlace no es válido o ya expiró. Pide uno nuevo.")
     crud.usuarios.cambiar_password(db, usuario, payload.nueva_password)
     crud.usuarios.limpiar_token_reset(db, usuario)
     crud.usuarios.resetear_intentos_fallidos(db, usuario)
+    crud.auditoria.registrar(
+        db, usuario.dni, "sesion", None, "PASSWORD_RESTABLECIDA",
+        "Restableció su contraseña con el enlace enviado por correo", _ip(request),
+    )
     return {"ok": True}
