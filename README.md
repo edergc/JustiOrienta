@@ -1,50 +1,72 @@
 # Justicia Orienta
 
-Orientador ciudadano accesible para la Corte Superior de Justicia de Lima — buena práctica postulada al
-Concurso "Gestores de Atención al Ciudadano" (ODANC Lima, 2026).
+Orientador ciudadano accesible para la Corte Superior de Justicia de Lima: un sitio público donde
+cualquier persona escribe o dicta en lenguaje natural qué trámite necesita ("dónde pago una multa",
+"necesito el juzgado de familia") y el sistema responde con la dependencia exacta — sede, piso, horario,
+requisitos y accesibilidad — sin inventar nada; si no tiene certeza, deriva a atención humana. Cada área
+de la Corte mantiene su propia información desde un panel administrativo con control de roles, y todo
+cambio pasa por un flujo de revisión antes de publicarse.
 
-Toda la tecnología usada en este repositorio es de código abierto y sin costo de licencia: Python,
-FastAPI, SQLAlchemy, SQLite/PostgreSQL, HTML/CSS/JS nativos.
+Nació como una buena práctica postulada al Concurso "Gestores de Atención al Ciudadano" (ODANC Lima,
+2026); este repositorio contiene la aplicación real (backend + panel + sitio público), no los documentos
+del concurso.
 
-## Qué hay en esta carpeta
+Toda la tecnología es de código abierto y sin costo de licencia: Python, FastAPI, SQLAlchemy, PostgreSQL,
+HTML/CSS/JS nativos (sin frameworks de frontend).
 
-| Archivo / carpeta | Qué es |
-|---|---|
-| `Presentación y Bases del Concurso...pdf` | Bases oficiales del concurso (ODANC Lima). |
-| `SUPER_MEGA_PROMPT_JUSTICIA_ORIENTA_2.0.md` | Visión completa original del proyecto. |
-| `JusticiaOrienta_00_Diseno_Servicio.html` | Brief de diseño de servicio: matriz de ideas, ficha de buena práctica, principios de accesibilidad. Ábrelo con doble clic. |
-| `JusticiaOrienta_01_Propuesta_Anonima.docx` | **Cuerpo oficial del concurso** — A4, Arial 12, doble espacio, sin nombres de autores. |
-| `JusticiaOrienta_02_Etiqueta_Sobre.docx` | Etiqueta con título y seudónimo para el sobre cerrado. |
-| `JusticiaOrienta_03_Hoja_Identificacion.docx` | Único ejemplar no anónimo: nombres, correo y firmas. |
-| `JusticiaOrienta_04_Plantilla_Catalogo_Piloto.xlsx` | Plantilla para el levantamiento real del catálogo (dependencias, horarios, accesibilidad). |
-| `JusticiaOrienta_05_Nota_Interna_para_Firma.docx` | Nota de una página, no anónima, para conseguir la autorización y firma del responsable. |
-| `JusticiaOrienta_06_Manual_Panel_Administracion.docx` | Manual paso a paso, con capturas reales, para personal de área que no programa. |
-| `JusticiaOrienta_07_Manual_Ciudadano.docx` | Guía en lenguaje simple para quien usa el sitio público, con capturas reales. |
-| `prototipo-v1/` | **V1** — micrositio estático de un solo archivo, sin backend, para demostrar el concepto sin instalar nada. |
-| `app/` | **V2** — aplicación real: backend FastAPI + base de datos + panel de administración. Esto es lo que sigue creciendo. |
-| `migrations/` | Migraciones versionadas de la base de datos (Alembic). |
-| `fuentes/` | Documentos oficiales usados como fuente de datos reales (ver más abajo). |
-| `tests/` | Pruebas automatizadas (`pytest`). |
-| `run.py` | Punto de arranque único del servidor. |
-| `backup_db.py` | Respaldo manual de la base de datos (ver "Respaldos y registro de errores"). |
+## Qué ofrece
 
-## Cómo correr la aplicación real (`app/`)
+**Al ciudadano** (sitio público, `/`):
 
-Requiere Python 3.10+ (ya viene con `pip`, no hace falta nada más para empezar).
+- Búsqueda por texto o por voz (reconocimiento de habla nativo del navegador, sin servicios de terceros),
+  con interpretación de lenguaje natural (tolera errores de tipeo, frases de cortesía, sinónimos).
+- Accesibilidad de verdad: alto contraste, texto ampliable, tema oscuro, lectura en voz alta de cada
+  resultado — no como una fase futura, sino desde la primera versión.
+- Ruta interna paso a paso dentro del edificio ("¿cómo llego desde aquí?"), con variante que evita
+  escaleras, en las sedes donde ya se cargó el mapa interno.
+- Solicitar que le llamen o le escriban cuando no encuentra lo que busca, con código de seguimiento.
+- Directorio completo descargable en PDF, para imprimir o usar sin conexión.
+- Acceso directo por código QR de sede o de dependencia (para carteles físicos).
+
+**A cada área de la Corte** (panel administrativo, `/admin`):
+
+- Gestión de su propio catálogo (dependencias, servicios, horarios, requisitos, accesibilidad), con
+  flujo de revisión: nadie se autopublica, un(a) validador(a) aprueba antes de que algo llegue al
+  ciudadano.
+- Mapa interno (nodos y conexiones) para habilitar el cálculo de ruta.
+- Indicadores: % de acierto de búsquedas, consultas sin resultado, pendientes de aprobar por área,
+  completitud de datos, uso por sede/accesibilidad/voz — con reporte descargable en Excel.
+- Auditoría completa (quién hizo qué, cuándo, desde qué IP), filtrable y exportable.
+- Exportación del catálogo completo a Excel, código QR por sede/dependencia, gestión de usuarios y roles.
+
+## Cómo replicar el sistema (levantar la aplicación)
+
+Requiere **Python 3.10+** (ya viene con `pip`).
 
 ```bash
+git clone <url-de-este-repositorio>
+cd JustiOrienta
 pip install -r requirements.txt
 
-# 1. Crea el esquema de la base de datos (migraciones versionadas con Alembic)
+# 1. Configura el entorno
+cp .env.example .env
+# abre .env y ajusta DATABASE_URL / JUSTICIA_ORIENTA_SECRET (ver "Base de datos" y "Seguridad" abajo)
+
+# 2. Crea el esquema de la base de datos (migraciones versionadas con Alembic)
 python -m alembic upgrade head
 
-# 2. Crea el usuario administrador inicial
+# 3. Crea el usuario administrador inicial
 python -m app.seed
 
-# 3. Carga el catálogo desde el Excel de levantamiento (real o de ejemplo)
-python -m app.import_excel "JusticiaOrienta_04_Plantilla_Catalogo_Piloto.xlsx"
+# 4. Carga un catálogo para probar -- dos formas:
+#    a) el directorio oficial real de la CSJ Lima, ya incluido en el repo:
+python -m app.cargar_directorio_pj
+#    b) o tu propio Excel, con las columnas que espera app/import_excel.py
+#       (usa "Exportar catálogo" desde /admin una vez que tengas datos, para
+#       obtener un archivo con el formato exacto y reimportarlo donde quieras):
+python -m app.import_excel "tu_archivo.xlsx"
 
-# 4. Levanta el servidor (backend y frontend son el mismo proceso, un solo puerto)
+# 5. Levanta el servidor (backend y frontend son el mismo proceso, un solo puerto)
 python run.py
 ```
 
@@ -112,10 +134,6 @@ otros backends). Si aun así choca en tu equipo, cámbialo sin tocar código:
 PORT=9231 python run.py       # Windows PowerShell: $env:PORT=9231; python run.py
 ```
 
-Si más adelante se separa el frontend en un proyecto propio (por ejemplo al construir
-V3), lo natural será darle igualmente un puerto propio poco común y habilitar CORS en
-la API para ese origen -- hoy no aplica porque ambos viven en el mismo proceso.
-
 ### Roles y flujo editorial
 
 Cinco roles. Cada uno mapea directamente a la gobernanza descrita en la ficha de buena práctica:
@@ -137,22 +155,14 @@ campo `area` de una dependencia existente. Un(a) gestor(a) o validador(a) que ed
 área no puede reescribir ese campo hacia un área distinta -- eso equivaldría a transferir contenido sin
 que nadie del área destino lo autorizara.
 
-### Flujo de trabajo pensado para las áreas
+Flujo típico: cada área carga o corrige su parte desde `/admin` → Dependencias (o vía Excel, ver arriba);
+un(a) validador(a) de esa misma área revisa lo que está "En revisión" y lo aprueba o lo devuelve; el
+micrositio público solo muestra lo `activo` -- nada llega al ciudadano sin ese segundo par de ojos; y todo
+cambio queda en `/admin` → Auditoría.
 
-1. Cada área llena o corrige su parte del Excel de levantamiento (`JusticiaOrienta_04...xlsx`), **o**
-   un(a) gestor(a) de esa área carga la información directamente desde `/admin` → pestaña Dependencias.
-2. Informática corre `python -m app.import_excel` para volcar el Excel a la base de datos cuando corresponda.
-3. Un(a) validador(a) de esa misma área revisa lo que está "En revisión" y lo aprueba, o lo devuelve con
-   un comentario.
-4. El micrositio público (`/`) solo muestra dependencias en estado `activo` — nada llega al ciudadano sin
-   pasar por ese segundo par de ojos.
-5. Todo cambio (crear, editar, aprobar, rechazar, desactivar) queda en `/admin` → pestaña Auditoría:
-   quién, cuándo, qué entidad, qué cambió.
-
-Sedes y edificios ya no son texto libre repetido en cada fila: son entidades propias
-(`/admin/sedes`, `/admin/edificios`) que cualquier dependencia referencia. Cada dependencia puede además
-tener uno o más **servicios** estructurados (requisitos, canal, horario propios) además de su resumen
-general.
+Sedes y edificios son entidades propias (`/admin/sedes`, `/admin/edificios`) que cualquier dependencia
+referencia -- no texto libre repetido en cada fila. Cada dependencia puede además tener uno o más
+**servicios** estructurados (requisitos, canal, horario propios) además de su resumen general.
 
 ### Base de datos: PostgreSQL
 
@@ -176,10 +186,6 @@ python -m app.seed                # crea el usuario administrador inicial
 Copia `.env.example` a `.env` y ajusta los valores (incluida `JUSTICIA_ORIENTA_SECRET`, que firma las
 sesiones — cámbiala antes de cualquier uso real). Ese `.env` nunca se sube al repositorio (está en
 `.gitignore`) — cada máquina que corra el proyecto necesita el suyo con sus propias credenciales.
-
-Dos ajustes de compatibilidad que hicieron falta al migrar y ya están aplicados: dos migraciones tenían
-`printf()` (función de SQLite, no existe en Postgres) y dos columnas (`telefono`, `categoria`) eran más
-angostas de lo que permite el dato real -- SQLite nunca hizo cumplir ese límite, Postgres sí.
 
 `app/config.py` conserva SQLite (`justicia_orienta.db`) como valor por defecto en el código *solo* como
 resguardo de cero-instalación para quien clone el repo sin Postgres a mano (por ejemplo, para evaluarlo
@@ -231,7 +237,7 @@ esperar, sin tener que leer el código para encontrarlo:
   (`ENTORNO=desarrollo`, el valor por defecto si no se define) no aplica, para no exigir configuración
   extra solo para probar en local.
 - **Contraseñas con bcrypt** (nunca en texto plano ni con hash reversible) y **bloqueo de cuenta**: 5
-  intentos fallidos seguidos bloquean esa cuenta 15 minutos (ver la sección de roles más abajo);
+  intentos fallidos seguidos bloquean esa cuenta 15 minutos (ver la sección de roles más arriba);
   guardar la ficha del usuario desde `/admin` → Usuarios levanta el bloqueo antes si hace falta.
 - **Limitador de tasa en memoria** (`app/rate_limit.py`, sin Redis ni servicios de pago) sobre los dos
   endpoints públicos sin autenticación que más se prestan a abuso: "olvidé mi contraseña" (máx. 3 por DNI
@@ -298,29 +304,29 @@ Organizado por responsabilidad, no en un archivo gigante — cada capa tiene su 
 
 ```
 app/
-  config.py         Configuración centralizada (pydantic-settings, lee .env)
-  database.py       Motor SQLAlchemy y sesión
-  security.py       Hash de contraseñas, JWT, reglas de permiso por rol/área
-  nlp.py            Interpretación de lenguaje natural del buscador
-  main.py           Arma la app, monta routers, maneja errores
+  config.py          Configuración centralizada (pydantic-settings, lee .env)
+  database.py        Motor SQLAlchemy y sesión
+  security.py        Hash de contraseñas, JWT, reglas de permiso por rol/área
+  nlp.py              Interpretación de lenguaje natural del buscador
+  main.py            Arma la app, monta routers, maneja errores, cabeceras de seguridad
 
-  models/           Una tabla por archivo (Sede, Edificio, Dependencia, Servicio,
-                     Alias, Usuario, Auditoria, ConsultaLog, SolicitudAtencion,
-                     SolicitudCobertura, NodoUbicacion, ConexionNodo)
-  schemas/          Esquemas Pydantic de entrada/salida, uno por entidad
-  crud/             Acceso a datos y reglas de negocio, uno por entidad
-  routers/          Endpoints HTTP, agrupados por recurso: auth, public,
-                     admin_dependencias, admin_sedes, admin_edificios, admin_mapa,
-                     admin_usuarios, admin_auditoria, admin_metricas,
-                     admin_cobertura, admin_solicitudes_atencion, admin_qr
-                     (no un solo admin.py)
+  models/            Una tabla por archivo (Sede, Edificio, Dependencia, Servicio,
+                      Alias, Usuario, Auditoria, ConsultaLog, SolicitudAtencion,
+                      SolicitudCobertura, NodoUbicacion, ConexionNodo)
+  schemas/           Esquemas Pydantic de entrada/salida, uno por entidad
+  crud/              Acceso a datos y reglas de negocio, uno por entidad
+  routers/           Endpoints HTTP, agrupados por recurso: auth, public,
+                      admin_dependencias, admin_sedes, admin_edificios, admin_mapa,
+                      admin_usuarios, admin_auditoria, admin_metricas,
+                      admin_cobertura, admin_solicitudes_atencion, admin_qr
+                      (no un solo admin.py)
   rutas_internas.py  Cálculo de ruta más corta (Dijkstra) sobre el grafo de
-                     nodos/conexiones del mapa interno -- usado por admin_mapa.py
-                     y por el endpoint público /ruta
+                      nodos/conexiones del mapa interno -- usado por admin_mapa.py
+                      y por el endpoint público /ruta
   rate_limit.py      Limitador de tasa simple en memoria (sin Redis ni
-                     servicios de pago) para "olvidé mi contraseña" y
-                     "que me llamen o me escriban"
-  static/           El sitio público y el panel de administración (HTML/CSS/JS)
+                      servicios de pago) para "olvidé mi contraseña" y
+                      "que me llamen o me escriban"
+  static/            El sitio público y el panel de administración (HTML/CSS/JS)
 ```
 
 La API vive bajo `/api/v1` (versionada desde el día uno: si en el futuro cambia algo de forma
@@ -333,6 +339,22 @@ Cada `push` y cada Pull Request a `master` corre la suite de pruebas automática
 rompa algo se detecta antes de fusionarse, sin depender de que quien revisa se acuerde de correr
 `pytest` a mano. El resultado se ve en la pestaña "Actions" del repositorio en GitHub.
 
+## Qué hay en este repositorio
+
+| Archivo / carpeta | Qué es |
+|---|---|
+| `app/` | La aplicación: backend FastAPI + base de datos + sitio público + panel de administración. |
+| `prototipo-v1/` | Micrositio estático de un solo archivo, sin backend -- demuestra el concepto sin instalar nada. |
+| `migrations/` | Migraciones versionadas de la base de datos (Alembic). |
+| `fuentes/` | Directorio oficial de la CSJ Lima usado como fuente de datos reales (ver "De dónde salen los datos reales"). |
+| `tests/` | Pruebas automatizadas (`pytest`). |
+| `.github/workflows/` | Integración continua (corre `pytest` en cada push/PR). |
+| `run.py` | Punto de arranque único del servidor. |
+| `backup_db.py` | Respaldo manual de la base de datos (SQLite o PostgreSQL). |
+| `requirements.txt` | Dependencias Python. |
+| `alembic.ini` | Configuración de migraciones. |
+| `.env.example` | Plantilla de variables de entorno -- cópiala a `.env` y ajusta los valores. |
+
 ## Hoja de ruta (de dónde venimos, hacia dónde va)
 
 | Fase | Qué es | Estado |
@@ -342,103 +364,6 @@ rompa algo se detecta antes de fusionarse, sin depender de que quien revisa se a
 | **V2** | **Backend real + base de datos + panel de administración con roles** | **Hecho — `app/`, esto es lo que estás viendo** |
 | V3 | Interpretación de lenguaje natural sobre el catálogo validado | Hecho — `app/nlp.py` (reglas explícitas y auditables, no un modelo de IA -- decisión deliberada, ver "Principios que no se negocian" más abajo) |
 | V4 | Navegación interior (mapa interno + cálculo de ruta más corta) | Hecho — `app/rutas_internas.py`, pestaña "Mapa interno" en `/admin`. Otras integraciones (ej. con sistemas externos de la institución): no iniciado |
-
-## El panel de administración (`/admin`)
-
-- **Cambiar mi contraseña**: cualquier usuario, sin importar el rol, puede cambiarla desde el botón junto a
-  "Salir" -- pide la contraseña actual antes de aceptar la nueva.
-- **Gestión completa de usuarios** (solo admin): editar nombre, rol, área, activar/desactivar y restablecer
-  la contraseña de cualquier persona, sin tocar la base de datos a mano. Un(a) admin no puede desactivar su
-  propia cuenta por accidente.
-- **Sedes con estado real**: el formulario de sedes tiene un selector Activo/Inactivo -- antes se forzaba
-  siempre a "activo" al guardar, así que editar una sede inactiva la reactivaba sin querer.
-- **Servicios reactivables**: "Quitar" un servicio de una dependencia lo desactiva, no lo borra -- la lista
-  de servicios ahora también muestra los inactivos (atenuados, con badge "Inactivo") con un botón
-  "Reactivar", en vez de perderlos para siempre salvo tocar la base de datos a mano.
-- **Paginación y búsqueda por nombre** en la tabla de dependencias, para catálogos grandes (10 por página,
-  con "Mostrando X–Y de Z").
-- **Código QR por sede y por dependencia** (botón "QR" en cada fila de la tabla de Sedes y de Dependencias):
-  genera al vuelo, con la librería `qrcode` (100% local, sin servicio de terceros), un PNG que apunta al
-  sitio público con el contexto ya resuelto (`?sede=<id>` o `?dependencia=<id>`) para imprimir y pegar en
-  un cartel físico.
-- **"Cómo llegar dentro del edificio"** (opcional, por dependencia): un campo de texto libre corto para
-  una indicación simple ("desde el ingreso principal, sube al piso 5 por el ascensor"), pensado como
-  respaldo rápido cuando esa sede todavía no tiene el mapa interno cargado (ver el punto siguiente).
-- **Mapa interno / wayfinding** (pestaña "Mapa interno", solo administrador): CRUD de **nodos** (puntos
-  reconocibles dentro de una sede -- ingreso, ascensor, una dependencia puntual) y **conexiones** entre
-  ellos (tramo caminable, con distancia y si es accesible en silla de ruedas o no). Con eso cargado, el
-  sitio público calcula la ruta más corta paso a paso (algoritmo de Dijkstra, `app/rutas_internas.py`)
-  desde donde el ciudadano dice que está hasta la dependencia que busca, con una variante que evita
-  tramos no accesibles. El mapa se carga sede por sede -- mientras una sede no lo tenga, el ciudadano
-  solo ve la indicación de texto libre de arriba (si existe) en vez de la ruta paso a paso.
-- **Panel de indicadores ampliado**: además de consultas totales/resueltas/satisfacción, muestra
-  % de búsquedas hechas en modo accesible (alto contraste, texto ampliado o tema oscuro), % por voz,
-  % sobre accesibilidad, consultas más frecuentes y consultas por sede/área/tipo -- los tres desgloses
-  que pide la sección 30 del proyecto original.
-- **Búsquedas sin resultado, más frecuentes**: además de "consultas más frecuentes" (que mezcla
-  encontradas y no encontradas), un bloque aparte solo con lo que la gente busca y todavía NO está en
-  el catálogo -- la señal más directa de qué falta cargar, pensada para quien decide qué priorizar.
-- **Pendientes de aprobar, por área**: cuántas dependencias siguen en "revisión" y cuántos días de
-  antigüedad promedio llevan sin que nadie las apruebe, agrupado por área -- ayuda a ver qué área no
-  está validando a tiempo. Solo agrega cantidades y promedios; nunca nombra la dependencia puntual. Gestor/
-  validador además ven de inmediato, resaltado en rojo si hay algo, cuántos pendientes tiene **su propia
-  área** -- sin tener que leer la lista agregada de las demás.
-- **Completitud de datos, por área**: de lo YA publicado (no de lo pendiente), qué porcentaje tiene
-  horario, teléfono y algún dato de accesibilidad confirmado -- ayuda a distinguir "publicado" de
-  "publicado y realmente útil para quien busca". Tampoco nombra la dependencia puntual, mismo criterio
-  que "Pendientes por área".
-- **Reporte descargable en Excel** (`GET /api/v1/admin/metricas/reporte.xlsx`, botón "Descargar reporte"
-  visible para admin/auditor/consulta): la misma foto de indicadores del panel, en un `.xlsx` con una
-  hoja de resumen y una hoja por cada desglose -- para llevar a una reunión sin depender de que quien lo
-  necesita tenga acceso al sistema en ese momento. Generado con `openpyxl`, sin ningún servicio externo.
-- **Exportar el catálogo completo a Excel** (`GET /api/v1/admin/dependencias/exportar.xlsx`, botón
-  "Exportar catálogo" en la pestaña Dependencias): TODO lo cargado, no solo lo publicado -- para respaldo,
-  edición offline, o portarlo a otra instalación. Mismo alcance por área que el resto de la gestión del
-  catálogo, y en las mismas 19 primeras columnas y orden que espera `python -m app.import_excel`, así que
-  el archivo exportado se puede corregir y volver a importar tal cual.
-- **Detector de posibles duplicados** (`GET /api/v1/admin/dependencias/duplicados`, pestaña Auditoría,
-  admin/auditor/consulta): agrupa dependencias con el mismo nombre repetido dentro de la misma sede, sin
-  importar el área -- exactamente el patrón ya documentado más abajo ("Mesa de Partes" para oficinas
-  distintas). Exige nombre normalizado *idéntico*, nunca "parecido": los juzgados de este catálogo se
-  distinguen justo por un número ("10.º Juzgado Civil" vs "11.º Juzgado Civil"), así que tolerar errores
-  de tipeo aquí generaría más ruido que ayuda.
-- Confirmaciones visuales (un aviso breve arriba a la derecha) después de cada guardado exitoso.
-
-## El sitio público (`/`)
-
-- **Búsqueda por texto o por voz**: el botón de micrófono usa reconocimiento de habla nativo del
-  navegador (Web Speech API) — sin servicios de terceros. Si el navegador no lo soporta, o se niega el
-  permiso, el buscador de texto sigue funcionando igual.
-- **Estado vacío con sugerencias por categoría**: antes de escribir nada, la persona ve tres caminos
-  claros ("encontrar un juzgado", "trámites administrativos", "no sé qué necesito") en vez de una
-  pantalla en blanco.
-- **Saludo contextual por QR de sede o de dependencia**: un enlace con `?sede=<id>` o `?dependencia=<id>`
-  (los que llevaría el QR físico instalado en una sede o en la puerta de una oficina) muestra un aviso de
-  contexto y, en el caso de `?dependencia=`, la ficha de esa oficina directamente, sin tener que buscarla.
-- **Preguntas de accesibilidad respondidas directo**: si alguien escribe o dice algo como "¿hay rampa?" o
-  "ascensor" y el sitio ya sabe en qué sede está (por el QR), responde de inmediato con la accesibilidad
-  real de esa sede -- sin inventar nada: si no hay dato confirmado, lo dice así y deriva a atención humana.
-- **Retroalimentación de una pregunta**: después de cada búsqueda, "¿Esto te resultó útil? Sí /
-  Parcialmente / No" — anónimo, ligado solo al identificador de esa consulta puntual, visible en
-  `/admin` → estadísticas (`porcentaje_satisfaccion`).
-- **"¿Cómo llego desde aquí?" (ruta interna paso a paso)**: sobre un resultado, la persona indica dónde
-  está parada (un punto reconocible: ingreso, ascensor, etc.) y el sitio calcula la ruta más corta hasta
-  esa oficina, con instrucciones de texto por tramo -- con opción de pedir la variante accesible (sin
-  escaleras). Solo aparece en sedes donde el área de Informática ya cargó el mapa interno (ver "Mapa
-  interno" en el panel de administración); si aún no está cargado, se muestra la indicación de texto
-  libre de la dependencia en su lugar, cuando existe.
-- **Solicitar que me llamen o me escriban**: si la persona no encuentra lo que busca, puede dejar su
-  nombre y un dato de contacto (teléfono o correo) con un motivo breve, y recibe un código de
-  seguimiento para consultar el estado de su pedido después -- sin necesidad de cuenta ni de volver a
-  explicar todo por teléfono.
-- Todo lo demás del diseño original se mantiene: alto contraste, texto ampliable, tema oscuro, lectura
-  en voz alta de cada resultado, y el mensaje de respaldo cuando el sistema no tiene certeza.
-- **Directorio descargable en PDF** (`GET /api/v1/directorio.pdf`, enlace "Descargar directorio (PDF)"
-  en el pie de página): el mismo catálogo publicado, listo para imprimir y pegar en un mostrador o
-  llevarse sin conexión -- para cuando la pantalla no está disponible o no hay internet en ese momento.
-  Si la persona llegó por el QR de una sede, el enlace descarga solo esa sede (`?sede_id=<id>`) en vez
-  del directorio completo. Generado 100% local con `fpdf2`, sin ningún servicio externo, y con las
-  mismas reglas que la búsqueda: solo lo ya aprobado (`estado=activo`), nunca contenido en revisión.
 
 ## Principios que no se negocian
 
