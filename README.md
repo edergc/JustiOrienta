@@ -347,6 +347,9 @@ rompa algo se detecta antes de fusionarse, sin depender de que quien revisa se a
 | `prototipo-v1/` | Micrositio estático de un solo archivo, sin backend -- demuestra el concepto sin instalar nada. |
 | `migrations/` | Migraciones versionadas de la base de datos (Alembic). |
 | `fuentes/` | Directorio oficial de la CSJ Lima usado como fuente de datos reales (ver "De dónde salen los datos reales"). |
+| `DirectorioCSJLI.xlsx` | Datos reales que carga `app/cargar_directorio_excel.py` -- lo usa `render.yaml` en cada despliegue de producción, no lo borres ni lo muevas. |
+| `ConformacionCSJLima.xlsx` | Datos reales que carga `app/cargar_titulares.py` -- también usado por `render.yaml` en cada despliegue. |
+| `render.yaml` | Configuración de despliegue en Render (build/start command, variables de entorno). |
 | `tests/` | Pruebas automatizadas (`pytest`). |
 | `.github/workflows/` | Integración continua (corre `pytest` en cada push/PR). |
 | `run.py` | Punto de arranque único del servidor. |
