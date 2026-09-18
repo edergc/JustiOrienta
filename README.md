@@ -1,399 +1,1629 @@
-# Justicia Orienta
+# ⚖️ Justicia Orienta
 
-Orientador ciudadano accesible para la Corte Superior de Justicia de Lima: un sitio público donde
-cualquier persona escribe o dicta en lenguaje natural qué trámite necesita ("dónde pago una multa",
-"necesito el juzgado de familia") y el sistema responde con la dependencia exacta — sede, piso, horario,
-requisitos y accesibilidad — sin inventar nada; si no tiene certeza, deriva a atención humana. Cada área
-de la Corte mantiene su propia información desde un panel administrativo con control de roles, y todo
-cambio pasa por un flujo de revisión antes de publicarse.
+> **Orientador ciudadano accesible para la Corte Superior de Justicia de Lima**
+>
+> Aplicación web para orientar a la ciudadanía sobre **dónde, cómo y con quién realizar una gestión**, utilizando información institucional validada, búsqueda por texto/voz, accesibilidad, códigos QR, rutas internas y un panel de administración por áreas.
 
-Nació como una buena práctica postulada al Concurso "Gestores de Atención al Ciudadano" (ODANC Lima,
-2026); este repositorio contiene la aplicación real (backend + panel + sitio público), no los documentos
-del concurso.
+<p align="center">
+  <img src="https://img.shields.io/badge/Estado-V2%20Operativa-success?style=for-the-badge" alt="Estado">
+  <img src="https://img.shields.io/badge/Python-3.10%2B-blue?style=for-the-badge&logo=python" alt="Python">
+  <img src="https://img.shields.io/badge/FastAPI-API-009688?style=for-the-badge&logo=fastapi" alt="FastAPI">
+  <img src="https://img.shields.io/badge/PostgreSQL-Producción-4169E1?style=for-the-badge&logo=postgresql" alt="PostgreSQL">
+  <img src="https://img.shields.io/badge/Tests-pytest-yellow?style=for-the-badge&logo=pytest" alt="Tests">
+  <img src="https://img.shields.io/badge/Open%20Source-Sin%20costo%20de%20licencia-2ea44f?style=for-the-badge" alt="Open Source">
+</p>
 
-Toda la tecnología es de código abierto y sin costo de licencia: Python, FastAPI, SQLAlchemy, PostgreSQL,
-HTML/CSS/JS nativos (sin frameworks de frontend).
+<p align="center">
+  <strong>🔎 Buscar · 🎙️ Hablar · ♿ Acceder · 📍 Orientarse · 📞 Solicitar ayuda · 📊 Mejorar</strong>
+</p>
 
-## Qué ofrece
+---
 
-**Al ciudadano** (sitio público, `/`):
+## 📌 Repositorio
 
-- Búsqueda por texto o por voz (reconocimiento de habla nativo del navegador, sin servicios de terceros),
-  con interpretación de lenguaje natural (tolera errores de tipeo, frases de cortesía, sinónimos).
-- Accesibilidad de verdad: alto contraste, texto ampliable, tema oscuro, lectura en voz alta de cada
-  resultado — no como una fase futura, sino desde la primera versión.
-- Ruta interna paso a paso dentro del edificio ("¿cómo llego desde aquí?"), con variante que evita
-  escaleras, en las sedes donde ya se cargó el mapa interno.
-- Solicitar que le llamen o le escriban cuando no encuentra lo que busca, con código de seguimiento.
-- Directorio completo descargable en PDF, para imprimir o usar sin conexión.
-- Acceso directo por código QR de sede o de dependencia (para carteles físicos).
+**GitHub:**  
+https://github.com/edergc/JustiOrienta
 
-**A cada área de la Corte** (panel administrativo, `/admin`):
-
-- Gestión de su propio catálogo (dependencias, servicios, horarios, requisitos, accesibilidad), con
-  flujo de revisión: nadie se autopublica, un(a) validador(a) aprueba antes de que algo llegue al
-  ciudadano.
-- Mapa interno (nodos y conexiones) para habilitar el cálculo de ruta.
-- Indicadores: % de acierto de búsquedas, consultas sin resultado, pendientes de aprobar por área,
-  completitud de datos, uso por sede/accesibilidad/voz — con reporte descargable en Excel.
-- Auditoría completa (quién hizo qué, cuándo, desde qué IP), filtrable y exportable.
-- Exportación del catálogo completo a Excel, código QR por sede/dependencia, gestión de usuarios y roles.
-
-## Cómo replicar el sistema (levantar la aplicación)
-
-Requiere **Python 3.10+** (ya viene con `pip`).
+Para obtener el código:
 
 ```bash
-git clone <url-de-este-repositorio>
+git clone https://github.com/edergc/JustiOrienta.git
 cd JustiOrienta
+```
+
+> Este README está pensado para que **otro profesional de Informática pueda clonar, configurar PostgreSQL, ejecutar migraciones, cargar datos, probar el sistema y dejarlo funcionando**, sin tener que conocer previamente el proyecto.
+
+---
+
+# 📖 Índice
+
+- [1. ¿Qué es Justicia Orienta?](#1--qué-es-justicia-orienta)
+- [2. Funcionalidades](#2--funcionalidades)
+- [3. Arquitectura](#3--arquitectura)
+- [4. Requisitos](#4--requisitos)
+- [5. Instalación rápida para pruebas](#5--instalación-rápida-para-pruebas)
+- [6. Instalación recomendada con PostgreSQL](#6--instalación-recomendada-con-postgresql)
+- [7. Configuración de `.env`](#7--configuración-de-env)
+- [8. Crear y preparar la base de datos](#8--crear-y-preparar-la-base-de-datos)
+- [9. Ejecutar migraciones](#9--ejecutar-migraciones)
+- [10. Crear administrador inicial](#10--crear-administrador-inicial)
+- [11. Cargar el catálogo institucional](#11--cargar-el-catálogo-institucional)
+- [12. Ejecutar la aplicación](#12--ejecutar-la-aplicación)
+- [13. Acceso desde otra PC de la LAN](#13--acceso-desde-otra-pc-de-la-lan)
+- [14. Crear un servicio en Windows Server](#14--crear-un-servicio-en-windows-server)
+- [15. Pruebas y validación](#15--pruebas-y-validación)
+- [16. Prueba funcional completa](#16--prueba-funcional-completa)
+- [17. Roles y flujo editorial](#17--roles-y-flujo-editorial)
+- [18. Base de datos y migraciones futuras](#18--base-de-datos-y-migraciones-futuras)
+- [19. Respaldos y restauración](#19--respaldos-y-restauración)
+- [20. Logs y diagnóstico](#20--logs-y-diagnóstico)
+- [21. Despliegue en Render](#21--despliegue-en-render)
+- [22. Seguridad](#22--seguridad)
+- [23. Estructura del proyecto](#23--estructura-del-proyecto)
+- [24. Datos institucionales](#24--datos-institucionales)
+- [25. CI/CD](#25--cicd)
+- [26. Solución de problemas](#26--solución-de-problemas)
+- [27. Roadmap](#27--roadmap)
+- [28. Principios](#28--principios)
+
+---
+
+# 1. 🌟 ¿Qué es Justicia Orienta?
+
+**Justicia Orienta** es un orientador ciudadano accesible para la **Corte Superior de Justicia de Lima**.
+
+Permite que una persona pueda realizar preguntas como:
+
+```text
+"¿Dónde está el Juzgado de Familia?"
+
+"Necesito presentar una demanda de alimentos"
+
+"¿Dónde pago una multa?"
+
+"¿Hay ascensor?"
+
+"¿Cómo llego al 11.º Juzgado Civil?"
+
+"No encuentro la oficina que necesito"
+```
+
+El sistema busca la información dentro de un **catálogo institucional validado**.
+
+Si existe información suficiente, muestra la dependencia, sede, ubicación, servicios y demás información disponible.
+
+Si no existe certeza:
+
+> **El sistema no inventa una respuesta.**
+
+En ese caso orienta al ciudadano hacia un canal de atención humana.
+
+---
+
+# 2. ✨ Funcionalidades
+
+## 👤 Para la ciudadanía
+
+| Funcionalidad | Descripción |
+|---|---|
+| 🔎 Búsqueda | Texto y lenguaje natural. |
+| 🎙️ Voz | Reconocimiento de habla del navegador. |
+| ♿ Accesibilidad | Alto contraste, texto ampliable, tema oscuro y lectura en voz alta. |
+| 📍 Ubicación | Sede, edificio, piso y dependencia. |
+| 🧭 Wayfinding | Ruta interna paso a paso. |
+| ♿ Ruta accesible | Evita tramos no accesibles cuando el mapa está configurado. |
+| 📱 QR | Acceso directo desde carteles físicos. |
+| 📞 Atención | Solicitar que la institución llame o escriba. |
+| 📄 PDF | Directorio descargable e imprimible. |
+| 👍 Satisfacción | Evaluación de utilidad de la consulta. |
+
+## 🏢 Para las áreas de la Corte
+
+| Funcionalidad | Descripción |
+|---|---|
+| 👥 Usuarios | Gestión de usuarios y roles. |
+| 🗂️ Dependencias | Crear y actualizar información del área. |
+| 🏢 Sedes | Administración de sedes. |
+| 🏬 Edificios | Administración de edificios. |
+| 🧾 Servicios | Requisitos, canales y horarios. |
+| ✅ Validación | Flujo revisión → aprobación. |
+| 🧭 Mapa interno | Nodos y conexiones. |
+| 📊 Indicadores | Métricas de uso y calidad del catálogo. |
+| 🧾 Auditoría | Registro de acciones. |
+| 📥 Excel | Importación/exportación. |
+| 📱 QR | Generación local de códigos QR. |
+
+---
+
+# 3. 🏗️ Arquitectura
+
+La aplicación actual funciona como un **monolito web sencillo de desplegar**:
+
+```text
+                        CIUDADANÍA
+                            │
+              ┌─────────────┴─────────────┐
+              │                           │
+           🌐 Web                      📱 QR
+              │                           │
+              └─────────────┬─────────────┘
+                            │
+                            ▼
+                 ┌────────────────────┐
+                 │  Justicia Orienta  │
+                 │ FastAPI + HTML/CSS │
+                 │       + JS         │
+                 └─────────┬──────────┘
+                           │
+             ┌─────────────┼─────────────┐
+             │             │             │
+             ▼             ▼             ▼
+          🔎 NLP       🧭 Rutas       📞 Atención
+             │             │             │
+             └─────────────┼─────────────┘
+                           │
+                           ▼
+                 ┌────────────────────┐
+                 │    PostgreSQL      │
+                 │                    │
+                 │ Sedes              │
+                 │ Dependencias       │
+                 │ Servicios          │
+                 │ Usuarios           │
+                 │ Auditoría          │
+                 │ Métricas           │
+                 │ Wayfinding         │
+                 └────────────────────┘
+                           ▲
+                           │
+                 ┌─────────┴─────────┐
+                 │     /admin        │
+                 │                   │
+                 │ Gestión            │
+                 │ Validación         │
+                 │ Usuarios           │
+                 │ Auditoría          │
+                 │ Indicadores        │
+                 │ Mapa interno       │
+                 └───────────────────┘
+```
+
+### Importante
+
+No hay que levantar por separado un frontend React/Vite y un backend.
+
+La versión actual sirve:
+
+```text
+Sitio público
+Panel administrativo
+API
+```
+
+desde el mismo proceso FastAPI y el mismo puerto. citeturn1view0
+
+---
+
+# 4. 🧰 Requisitos
+
+## Software
+
+### Obligatorio
+
+- Git
+- Python **3.10 o superior**
+- pip
+- PostgreSQL **para instalación recomendada/producción**
+- Cliente PostgreSQL (`psql`, `pg_dump`, `pg_restore`) para administración y respaldos
+
+### No es necesario
+
+Para la versión actual **no es necesario instalar**:
+
+- Node.js
+- npm
+- React
+- Vite
+- Docker
+- Redis
+- Nginx para una prueba local
+- servicios de IA externos
+
+Las dependencias Python reales se encuentran en `requirements.txt`. citeturn2view2
+
+---
+
+# 5. 🚀 Instalación rápida para pruebas
+
+Esta opción permite probar el sistema sin instalar PostgreSQL.
+
+La plantilla `.env.example` utiliza SQLite como configuración de cero instalación. citeturn2view1
+
+## 5.1 Clonar
+
+```bash
+git clone https://github.com/edergc/JustiOrienta.git
+cd JustiOrienta
+```
+
+## 5.2 Crear entorno virtual
+
+### Windows PowerShell
+
+```powershell
+py -3 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+```
+
+Si PowerShell bloquea la activación:
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\.venv\Scripts\Activate.ps1
+```
+
+### Linux
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+## 5.3 Actualizar pip
+
+```bash
+python -m pip install --upgrade pip
+```
+
+## 5.4 Instalar dependencias
+
+```bash
 pip install -r requirements.txt
+```
 
-# 1. Configura el entorno
+## 5.5 Crear `.env`
+
+### Windows
+
+```powershell
+Copy-Item .env.example .env
+```
+
+### Linux
+
+```bash
 cp .env.example .env
-# abre .env y ajusta DATABASE_URL / JUSTICIA_ORIENTA_SECRET (ver "Base de datos" y "Seguridad" abajo)
+```
 
-# 2. Crea el esquema de la base de datos (migraciones versionadas con Alembic)
+Para una prueba rápida puede mantenerse:
+
+```env
+ENTORNO=desarrollo
+DATABASE_URL=sqlite:///./justicia_orienta.db
+```
+
+## 5.6 Crear tablas
+
+```bash
 python -m alembic upgrade head
+```
 
-# 3. Crea el usuario administrador inicial
+## 5.7 Crear administrador
+
+```bash
 python -m app.seed
+```
 
-# 4. Carga un catálogo para probar -- dos formas:
-#    a) el directorio oficial real de la CSJ Lima, ya incluido en el repo:
+## 5.8 Cargar catálogo
+
+```bash
 python -m app.cargar_directorio_pj
-#    b) o tu propio Excel, con las columnas que espera app/import_excel.py
-#       (usa "Exportar catálogo" desde /admin una vez que tengas datos, para
-#       obtener un archivo con el formato exacto y reimportarlo donde quieras):
-python -m app.import_excel "tu_archivo.xlsx"
+```
 
-# 5. Levanta el servidor (backend y frontend son el mismo proceso, un solo puerto)
+## 5.9 Ejecutar
+
+```bash
 python run.py
 ```
 
-Luego abre:
+Abrir:
 
-- **http://127.0.0.1:8743/** — el micrositio público (lo que ve el ciudadano).
-- **http://127.0.0.1:8743/admin** — el panel de administración (lo que usa cada área para mantener su información).
-  - Usuario inicial: DNI `12345678` / contraseña impresa por `app.seed` -- el panel **exige cambiarla**
-    apenas inicias sesión, no es solo una sugerencia: `app.seed` y cualquier cuenta creada o restablecida
-    desde `/admin` → Usuarios queda marcada para elegir una contraseña propia antes de poder usar el resto
-    del sistema (el backend rechaza cualquier otro endpoint con 403 mientras eso no pase). El
-    acceso es por DNI (8 dígitos), no por correo -- es el dato que toda persona en Perú tiene con
-    certeza, a diferencia de una cuenta de correo institucional que no todas las áreas tienen asignada.
-    Justamente porque el DNI es un dato público (no un secreto), el login se bloquea 15 minutos después de
-    5 intentos fallidos seguidos con esa cuenta -- la contraseña es la única barrera real contra fuerza
-    bruta y necesitaba esta protección. Guardar la ficha del usuario desde `/admin` → Usuarios → Editar
-    levanta el bloqueo de inmediato, sin esperar los 15 minutos.
-- **http://127.0.0.1:8743/api/docs** — documentación interactiva de la API (generada automáticamente por
-  FastAPI). No está enlazada desde el sitio público -- es para quien desarrolla, no para el ciudadano.
+```text
+http://127.0.0.1:8743/
+```
 
-### Ejecutar las pruebas automatizadas
+Administración:
+
+```text
+http://127.0.0.1:8743/admin
+```
+
+API:
+
+```text
+http://127.0.0.1:8743/api/docs
+```
+
+Estos son los comandos de bootstrap que utiliza actualmente el proyecto. citeturn1view0
+
+---
+
+# 6. 🐘 Instalación recomendada con PostgreSQL
+
+> **Esta es la instalación recomendada para un servidor institucional o entorno de producción.**
+
+La aplicación está preparada para PostgreSQL mediante `DATABASE_URL`. El repositorio indica PostgreSQL como base de datos del entorno real. citeturn1view0
+
+La arquitectura recomendada es:
+
+```text
+┌───────────────────────┐
+│ PC / Servidor Windows│
+│                       │
+│ Justicia Orienta     │
+│ Python + FastAPI     │
+│ Puerto 8743           │
+└───────────┬───────────┘
+            │
+            │ TCP 5432
+            ▼
+┌───────────────────────┐
+│ PostgreSQL            │
+│                       │
+│ justicia_orienta      │
+└───────────────────────┘
+```
+
+PostgreSQL puede estar:
+
+1. En el mismo servidor de la aplicación.
+2. En otro servidor de base de datos.
+3. En una instancia administrada compatible con PostgreSQL.
+
+---
+
+# 7. ⚙️ Configuración de `.env`
+
+Copiar:
+
+```text
+.env.example
+```
+
+a:
+
+```text
+.env
+```
+
+La plantilla actual define estas variables principales: `ENTORNO`, `DATABASE_URL`, `JUSTICIA_ORIENTA_SECRET`, `URL_PUBLICA` y las variables SMTP. citeturn2view1
+
+## Ejemplo de desarrollo con PostgreSQL
+
+```env
+ENTORNO=desarrollo
+
+DATABASE_URL=postgresql+psycopg2://justicia_app:CLAVE@localhost:5432/justicia_orienta
+
+JUSTICIA_ORIENTA_SECRET=CAMBIAR_POR_UN_SECRETO_LARGO_Y_ALEATORIO
+
+URL_PUBLICA=http://localhost:8743
+
+SMTP_HOST=
+SMTP_PORT=587
+SMTP_USUARIO=
+SMTP_PASSWORD=
+SMTP_REMITENTE=Justicia Orienta <no-responder@justiciaorienta.local>
+```
+
+## Producción
+
+```env
+ENTORNO=produccion
+
+DATABASE_URL=postgresql+psycopg2://justicia_app:CLAVE@SERVIDOR_POSTGRES:5432/justicia_orienta
+
+JUSTICIA_ORIENTA_SECRET=SECRETO_UNICO_Y_SEGURO
+
+URL_PUBLICA=https://dominio.institucional.gob.pe
+```
+
+> 🔐 **Nunca publiques el `.env` ni una contraseña de PostgreSQL en GitHub.**
+
+El proyecto está preparado para negarse a iniciar en producción si continúa el secreto de ejemplo. citeturn1view1
+
+---
+
+# 8. 🗄️ Crear y preparar la base de datos
+
+## 8.1 Opción A — PostgreSQL instalado en Windows
+
+Abrir **SQL Shell (psql)** o una terminal con `psql`.
+
+Conectarse como administrador:
+
+```bash
+psql -U postgres
+```
+
+Crear usuario:
+
+```sql
+CREATE USER justicia_app WITH PASSWORD 'CAMBIAR_ESTA_CLAVE';
+```
+
+Crear base de datos:
+
+```sql
+CREATE DATABASE justicia_orienta
+    OWNER justicia_app;
+```
+
+Salir:
+
+```sql
+\q
+```
+
+## 8.2 Probar conexión
+
+```bash
+psql -h localhost -U justicia_app -d justicia_orienta
+```
+
+Si solicita contraseña y permite entrar:
+
+```text
+justicia_orienta=>
+```
+
+la conexión funciona.
+
+Salir:
+
+```sql
+\q
+```
+
+---
+
+## 8.3 Si PostgreSQL está en otro servidor
+
+Por ejemplo:
+
+```text
+Servidor aplicación: 172.20.1.51
+Servidor PostgreSQL: 172.20.1.52
+Puerto PostgreSQL:   5432
+Base:                justicia_orienta
+Usuario:             justicia_app
+```
+
+El `.env` sería:
+
+```env
+DATABASE_URL=postgresql+psycopg2://justicia_app:CLAVE@172.20.1.52:5432/justicia_orienta
+```
+
+Además, el administrador de PostgreSQL debe permitir conexiones desde el servidor de aplicación mediante:
+
+```text
+pg_hba.conf
+```
+
+y PostgreSQL debe estar escuchando en la interfaz correspondiente mediante:
+
+```text
+postgresql.conf
+```
+
+Finalmente debe existir conectividad TCP al puerto:
+
+```text
+5432
+```
+
+---
+
+# 9. 🔄 Ejecutar migraciones
+
+Una vez configurado correctamente `DATABASE_URL`:
+
+```bash
+python -m alembic upgrade head
+```
+
+Esto crea/actualiza la estructura de tablas de la aplicación.
+
+### Verificar
+
+```bash
+alembic current
+```
+
+También puede comprobarse directamente desde PostgreSQL:
+
+```sql
+\dt
+```
+
+Debe aparecer el conjunto de tablas generado por las migraciones.
+
+### Regla importante
+
+**No crear manualmente las tablas de la aplicación.**
+
+La estructura debe ser administrada mediante:
+
+```text
+Alembic
+   ↓
+migrations/
+   ↓
+python -m alembic upgrade head
+```
+
+---
+
+# 10. 👑 Crear administrador inicial
+
+Ejecutar:
+
+```bash
+python -m app.seed
+```
+
+El script crea el usuario administrador inicial.
+
+Luego entrar en:
+
+```text
+http://127.0.0.1:8743/admin
+```
+
+El sistema obliga a cambiar la contraseña inicial antes de continuar.
+
+El acceso administrativo utiliza DNI de 8 dígitos y la aplicación bloquea una cuenta después de 5 intentos fallidos consecutivos durante 15 minutos. citeturn1view0
+
+---
+
+# 11. 📚 Cargar el catálogo institucional
+
+Existen varias formas de cargar información.
+
+## Opción A — Directorio oficial
+
+```bash
+python -m app.cargar_directorio_pj
+```
+
+El cargador extrae información del directorio institucional y evita duplicar registros cuando vuelve a ejecutarse. citeturn1view1
+
+## Opción B — Excel
+
+```bash
+python -m app.import_excel "archivo.xlsx"
+```
+
+## Opción C — Datos del repositorio
+
+El repositorio también contiene archivos Excel utilizados por los procesos de carga de producción:
+
+```text
+DirectorioCSJLI.xlsx
+ConformacionCSJLima.xlsx
+```
+
+y `render.yaml` define comandos específicos para cargarlos durante el despliegue en Render. citeturn1view1
+
+> ⚠️ La carga de datos y la publicación son conceptos diferentes. La información puede quedar en `revision` hasta que sea validada por el área correspondiente.
+
+---
+
+# 12. ▶️ Ejecutar la aplicación
+
+## Desarrollo
+
+```bash
+python run.py
+```
+
+Por defecto:
+
+```text
+http://127.0.0.1:8743/
+```
+
+### Sitio público
+
+```text
+http://127.0.0.1:8743/
+```
+
+### Administración
+
+```text
+http://127.0.0.1:8743/admin
+```
+
+### Swagger / API
+
+```text
+http://127.0.0.1:8743/api/docs
+```
+
+---
+
+# 13. 🌐 Acceso desde otra PC de la LAN
+
+Si se desea que otros equipos de la red institucional puedan probar la aplicación:
+
+## 13.1 Escuchar en todas las interfaces
+
+En lugar de:
+
+```text
+127.0.0.1
+```
+
+la aplicación debe escuchar:
+
+```text
+0.0.0.0
+```
+
+Por ejemplo:
+
+```bash
+uvicorn app.main:app --host 0.0.0.0 --port 8743
+```
+
+o utilizar el mecanismo de arranque previsto por el proyecto.
+
+## 13.2 Identificar IP del servidor
+
+Windows:
+
+```powershell
+ipconfig
+```
+
+Ejemplo:
+
+```text
+IPv4: 172.20.1.51
+```
+
+## 13.3 Probar desde otro equipo
+
+En el navegador:
+
+```text
+http://172.20.1.51:8743/
+```
+
+Administración:
+
+```text
+http://172.20.1.51:8743/admin
+```
+
+API:
+
+```text
+http://172.20.1.51:8743/api/docs
+```
+
+## 13.4 Firewall de Windows
+
+Si Windows Firewall bloquea el puerto, crear una regla de entrada:
+
+```powershell
+New-NetFirewallRule `
+  -DisplayName "Justicia Orienta - TCP 8743" `
+  -Direction Inbound `
+  -Protocol TCP `
+  -LocalPort 8743 `
+  -Action Allow
+```
+
+> 🔐 En una red institucional, se recomienda restringir la regla a las subredes necesarias en lugar de abrir el puerto indiscriminadamente.
+
+---
+
+# 14. 🖥️ Crear un servicio en Windows Server
+
+Para un servidor institucional, **no es recomendable depender de una consola abierta**.
+
+La aplicación debe ejecutarse como servicio o mediante un mecanismo equivalente de supervisión.
+
+Una alternativa práctica es **NSSM (Non-Sucking Service Manager)** o el mecanismo institucional de servicios.
+
+## Parámetros
+
+Programa:
+
+```text
+C:\JusticiaOrienta\.venv\Scripts\python.exe
+```
+
+Argumentos:
+
+```text
+-m uvicorn app.main:app --host 0.0.0.0 --port 8743
+```
+
+Directorio:
+
+```text
+C:\JusticiaOrienta
+```
+
+Variables de entorno:
+
+```text
+DATABASE_URL=...
+ENTORNO=produccion
+JUSTICIA_ORIENTA_SECRET=...
+```
+
+### Antes de convertirlo en servicio
+
+Primero comprobar manualmente:
+
+```powershell
+cd C:\JusticiaOrienta
+.\.venv\Scripts\Activate.ps1
+
+python -m alembic upgrade head
+python -m app.seed
+python run.py
+```
+
+Solo cuando funcione correctamente se recomienda convertirlo en servicio.
+
+---
+
+# 15. 🧪 Pruebas y validación
+
+## 15.1 Ejecutar toda la suite
 
 ```bash
 python -m pytest
 ```
 
-Son 158 pruebas (mismas que corren en GitHub Actions, ver más abajo), contra una base de datos SQLite en
-memoria, aislada de tu base de desarrollo. Cubren, entre otras cosas:
+La suite cubre buscador, permisos, autenticación, wayfinding, solicitudes, sedes, servicios, indicadores, exportaciones y accesibilidad. El repositorio declara actualmente **158 pruebas**. citeturn1view0
 
-- El buscador (lenguaje natural, tolerancia a errores de tipeo, regresiones ya encontradas) y el detector
-  de duplicados.
-- El flujo de publicación completo por rol y por área (quién puede crear, editar, aprobar y auditar), y
-  que nadie pueda autopublicarse ni reasignar contenido a un área ajena.
-- Autenticación: contraseña obligatoria en el primer ingreso, bloqueo tras 5 intentos fallidos,
-  restablecer contraseña por correo, paginación y gestión de usuarios.
-- El mapa interno / wayfinding (cálculo de ruta más corta, variante accesible sin escaleras).
-- Solicitudes de atención ("que me llamen o me escriban") y solicitudes de cobertura.
-- Sedes, edificios y servicios (incluida la reactivación de servicios desactivados).
-- Indicadores editoriales, satisfacción de búsqueda, exportación del catálogo a Excel y el directorio en PDF.
-- Una auditoría de accesibilidad estática sobre el HTML servido (`app/auditoria_accesibilidad.py`): idioma
-  declarado, imágenes con texto alternativo, cada control de formulario con una etiqueta programática,
-  botones/enlaces con nombre accesible, y diálogos modales con nombre accesible. Es una versión ligera de
-  lo que haría axe-core, sin depender de Node ni de un navegador headless -- corre en cada `pytest` y
-  también sola:
+## 15.2 Ejecutar pruebas con información detallada
+
+```bash
+python -m pytest -v
+```
+
+## 15.3 Ejecutar una prueba específica
+
+```bash
+python -m pytest tests/ -k "buscar"
+```
+
+## 15.4 Auditoría de accesibilidad
 
 ```bash
 python -m app.auditoria_accesibilidad
 ```
 
-No reemplaza una revisión real con lector de pantalla ni verifica contraste de color (eso necesita
-render real), pero deja evidencia objetiva y repetible en cada cambio de plantilla.
+Esta auditoría verifica aspectos estáticos del HTML; no reemplaza una evaluación real con lector de pantalla ni una revisión visual de contraste. citeturn1view0
 
-### Sobre el puerto
+---
 
-`app/main.py` sirve el sitio público, el panel de administración y la API desde el
-**mismo proceso** (así evita tener que correr y sincronizar dos servidores distintos
-en el piloto). Por eso hay un solo puerto, no uno de "backend" y otro de "frontend".
+# 16. 🧪 Prueba funcional completa
 
-Por defecto es **8743**, elegido a propósito para no chocar con puertos comunes de
-otras herramientas que suelen correr en la misma máquina de desarrollo: ni
-3000/3001/5173/5174/5180 (típicos de Vite/React), ni 8000/8001/4100/8085 (típicos de
-otros backends). Si aun así choca en tu equipo, cámbialo sin tocar código:
+Después del despliegue, realizar esta secuencia.
 
-```bash
-PORT=9231 python run.py       # Windows PowerShell: $env:PORT=9231; python run.py
+## A. Prueba técnica
+
+```text
+[ ] PostgreSQL responde
+[ ] DATABASE_URL funciona
+[ ] Alembic terminó correctamente
+[ ] Aplicación inicia
+[ ] Puerto 8743 responde
+[ ] /api/docs responde
+[ ] Logs no muestran errores críticos
 ```
 
-### Roles y flujo editorial
+## B. Prueba ciudadana
 
-Cinco roles. Cada uno mapea directamente a la gobernanza descrita en la ficha de buena práctica:
+```text
+[ ] Página principal abre
+[ ] Buscador funciona
+[ ] Búsqueda por voz funciona en navegador compatible
+[ ] Resultado muestra información
+[ ] Lectura en voz alta funciona
+[ ] Alto contraste funciona
+[ ] Texto ampliable funciona
+[ ] Tema oscuro funciona
+[ ] QR abre la página
+[ ] PDF puede descargarse
+```
 
-| Rol | Puede |
+## C. Prueba administrativa
+
+```text
+[ ] /admin abre
+[ ] Login funciona
+[ ] Cambio obligatorio de contraseña funciona
+[ ] Usuario gestor puede editar su área
+[ ] Gestor no puede publicar directamente
+[ ] Validador puede aprobar
+[ ] Información aprobada aparece en público
+[ ] Auditoría registra las acciones
+```
+
+## D. Prueba de base de datos
+
+```text
+[ ] Crear dependencia
+[ ] Editar dependencia
+[ ] Aprobar dependencia
+[ ] Crear servicio
+[ ] Desactivar servicio
+[ ] Reactivar servicio
+[ ] Exportar Excel
+[ ] Importar Excel
+[ ] Generar QR
+[ ] Generar reporte
+```
+
+---
+
+# 17. 👥 Roles y flujo editorial
+
+| Rol | Funciones |
 |---|---|
-| **admin** | Todo: sedes, edificios, usuarios, dependencias y servicios de cualquier área, aprobar cualquier cosa. |
-| **gestor** | Crear/editar dependencias y servicios **solo de su propia área**. Nunca publica directamente: todo lo que guarda queda (o vuelve a) en estado `revision`. |
-| **validador** | Lo mismo que gestor, más la capacidad de **aprobar** (`revision` → `activo`) o **devolver a revisión** contenido de su propia área. |
-| **auditor** | Solo lectura de `/admin/auditoria` (el detalle de quién cambió qué) y de los indicadores. No puede crear ni editar nada. |
-| **consulta** | Pensado para quien toma decisiones y supervisa, no para el día a día operativo: al entrar ve directo el panel de indicadores, el botón para descargar el reporte en Excel, y la pestaña "Auditoría" (quién cambió qué, y el detector de posibles duplicados) en solo lectura -- sin las pestañas de gestión del catálogo (crear/editar dependencias, sedes, usuarios), eso sigue siendo de cada área desde su propio rol. |
+| 👑 **admin** | Administración completa. |
+| ✏️ **gestor** | Crear/editar contenido de su área. |
+| ✅ **validador** | Revisar, aprobar o devolver contenido de su área. |
+| 🔍 **auditor** | Consultar auditoría e indicadores. |
+| 📊 **consulta** | Consulta de indicadores y auditoría. |
 
-Ningún rol distinto de admin puede publicarse a sí mismo con solo guardar el formulario: aunque el
-payload incluya `estado: "activo"`, el servidor lo regresa a `revision` si quien edita no tiene permiso
-de aprobar esa área. Publicar es siempre una acción explícita (`POST /dependencias/{id}/aprobar`).
+Flujo:
 
-Por el mismo motivo, tampoco se puede "editarse a sí mismo" hacia otra área: solo admin puede cambiar el
-campo `area` de una dependencia existente. Un(a) gestor(a) o validador(a) que edita algo de su propia
-área no puede reescribir ese campo hacia un área distinta -- eso equivaldría a transferir contenido sin
-que nadie del área destino lo autorizara.
-
-Flujo típico: cada área carga o corrige su parte desde `/admin` → Dependencias (o vía Excel, ver arriba);
-un(a) validador(a) de esa misma área revisa lo que está "En revisión" y lo aprueba o lo devuelve; el
-micrositio público solo muestra lo `activo` -- nada llega al ciudadano sin ese segundo par de ojos; y todo
-cambio queda en `/admin` → Auditoría.
-
-Sedes y edificios son entidades propias (`/admin/sedes`, `/admin/edificios`) que cualquier dependencia
-referencia -- no texto libre repetido en cada fila. Cada dependencia puede además tener uno o más
-**servicios** estructurados (requisitos, canal, horario propios) además de su resumen general.
-
-### Base de datos: PostgreSQL
-
-Este proyecto corre sobre **PostgreSQL** — no SQLite. La app soporta ambos motores sin tocar código (vía
-`DATABASE_URL`), pero el entorno real de este repositorio ya está configurado y probado sobre Postgres, con
-el esquema completo, el directorio oficial real cargado (26 sedes, 584 dependencias vía
-`python -m app.cargar_directorio_pj` -- la cifra crece a medida que cada área carga/aprueba más contenido,
-así que tómala como referencia, no como un total fijo) y el flujo completo (crear → revisar → aprobar →
-aparece en el sitio público, el PDF, el Excel exportado y la auditoría) verificado contra esa base:
-
+```text
+              Área registra información
+                       │
+                       ▼
+                 🟡 REVISIÓN
+                       │
+              ┌────────┴────────┐
+              │                 │
+              ▼                 ▼
+         ❌ DEVOLVER         ✅ APROBAR
+              │                 │
+              │                 ▼
+              └────────────► 🟢 ACTIVO
+                                │
+                                ▼
+                         🌎 CIUDADANÍA
 ```
-DATABASE_URL=postgresql+psycopg2://usuario:clave@host:5432/justicia_orienta
+
+La regla es:
+
+> **Guardar información no significa publicarla.**
+
+El contenido debe pasar por validación antes de aparecer al ciudadano. citeturn1view0
+
+---
+
+# 18. 🗄️ Base de datos y migraciones futuras
+
+Cuando se modifica un modelo en:
+
+```text
+app/models/
 ```
+
+no se debe modificar directamente la estructura de producción.
+
+Crear una migración:
 
 ```bash
-pip install -r requirements.txt   # incluye psycopg2-binary
-python -m alembic upgrade head
-python -m app.seed                # crea el usuario administrador inicial
+python -m alembic revision --autogenerate -m "descripcion del cambio"
 ```
 
-Copia `.env.example` a `.env` y ajusta los valores (incluida `JUSTICIA_ORIENTA_SECRET`, que firma las
-sesiones — cámbiala antes de cualquier uso real). Ese `.env` nunca se sube al repositorio (está en
-`.gitignore`) — cada máquina que corra el proyecto necesita el suyo con sus propias credenciales.
-
-`app/config.py` conserva SQLite (`justicia_orienta.db`) como valor por defecto en el código *solo* como
-resguardo de cero-instalación para quien clone el repo sin Postgres a mano (por ejemplo, para evaluarlo
-rápido) -- nunca se usa mientras exista un `.env` con `DATABASE_URL` apuntando a Postgres, que es el caso de
-este entorno.
-
-Si cambias los modelos en `app/models/`, genera la migración correspondiente:
+Revisar el archivo generado y luego ejecutar:
 
 ```bash
-python -m alembic revision --autogenerate -m "descripción del cambio"
 python -m alembic upgrade head
 ```
 
-### Respaldos y registro de errores
+Flujo recomendado:
+
+```text
+Modificar modelo
+       │
+       ▼
+Generar migración
+       │
+       ▼
+Revisar migración
+       │
+       ▼
+Probar localmente
+       │
+       ▼
+pytest
+       │
+       ▼
+Git commit
+       │
+       ▼
+Producción
+       │
+       ▼
+alembic upgrade head
+```
+
+---
+
+# 19. 💾 Respaldos y restauración
+
+## Crear respaldo
 
 ```bash
 python backup_db.py
 ```
 
-Detecta solo el motor configurado en `DATABASE_URL` y hace lo correcto para cada uno, mismo comando en
-los dos casos: copia el archivo `.db` a `backups/` en SQLite, o corre `pg_dump -Fc` (formato comprimido,
-restaurable con `pg_restore`) en PostgreSQL. Es una acción manual y explícita (no corre sola ni
-programada): antes de cargar datos nuevos, o como rutina periódica de quien administra el sistema. Cada
-respaldo queda con marca de fecha y hora, y los de más de 30 días se purgan automáticamente para que
-`backups/` no crezca sin límite -- ajusta `DIAS_RETENCION` en `backup_db.py` si tu política institucional
-pide otra retención. Requiere que `pg_dump` esté instalado y en el `PATH` (viene con cualquier instalación
-de PostgreSQL); si además necesitas una copia automatizada y programada (no solo manual), eso se agrega
-con el Programador de tareas de Windows o `cron`, apuntando a este mismo comando.
+Para PostgreSQL utiliza `pg_dump` en formato comprimido.
 
-**Restaurar un respaldo** (`backup_db.py` solo *crea* el respaldo -- restaurarlo es un paso aparte,
-deliberadamente manual, para que nadie sobrescriba una base real por accidente):
+El proyecto mantiene respaldos con fecha/hora y aplica una retención configurable. citeturn1view0
+
+## Restaurar PostgreSQL
+
+Primero crear la base si no existe:
 
 ```bash
-# PostgreSQL -- restaura un .dump generado por backup_db.py
-createdb justicia_orienta                     # solo si la base de datos todavía no existe
-pg_restore -h localhost -U usuario -d justicia_orienta backups/justicia_orienta_20260918_113000.dump
-python -m alembic upgrade head                # por si el código tiene migraciones más nuevas que el respaldo
-
-# SQLite -- es un archivo, "restaurar" es copiarlo de vuelta
-cp backups/justicia_orienta_20260918_113000.db justicia_orienta.db
+createdb -U postgres justicia_orienta
 ```
 
-El `.dump` de Postgres ya trae esquema y datos juntos (a diferencia de levantar el sistema desde cero,
-acá **no** hace falta `python -m app.seed` ni cargar el catálogo -- eso ya viene dentro del respaldo). El
-`alembic upgrade head` del final es solo para ponerse al día si el código avanzó después de ese respaldo;
-si estás restaurando el respaldo más reciente sobre el mismo código, ese paso no cambia nada. `pg_restore`
-viene con el mismo paquete que `pg_dump` (el cliente de PostgreSQL) -- si no lo tienes, instálalo primero.
+Luego:
 
-Los errores del servidor quedan en `logs/justicia_orienta.log` (rotación automática: 1 MB por archivo,
-5 respaldos), además de la consola -- así se puede revisar qué pasó después de un reinicio, sin depender
-de una terminal que ya se cerró.
+```bash
+pg_restore \
+  -h localhost \
+  -U justicia_app \
+  -d justicia_orienta \
+  backups/justicia_orienta_YYYYMMDD_HHMMSS.dump
+```
 
-**Sobre HTTPS**: el piloto corre en HTTP simple porque `127.0.0.1`/red interna no lo necesita para
-pruebas. Antes de exponer esto en un dominio público, es obligatorio ponerlo detrás de HTTPS (por
-ejemplo con un proxy inverso como Caddy o Nginx + Let's Encrypt, o el balanceador que use la institución)
--- eso es una decisión de infraestructura de Informática, no algo que este repositorio pueda resolver
-por sí solo corriendo en `127.0.0.1`.
+En Windows PowerShell puede utilizarse:
 
-## Seguridad
+```powershell
+pg_restore `
+  -h localhost `
+  -U justicia_app `
+  -d justicia_orienta `
+  .\backups\justicia_orienta_YYYYMMDD_HHMMSS.dump
+```
 
-Pensado para que el equipo de TI que lo pruebe (incluida una prueba de intrusión) sepa exactamente qué
-esperar, sin tener que leer el código para encontrarlo:
+Después:
 
-- **Secreto de sesión obligatorio en producción**: si `ENTORNO=produccion` y `JUSTICIA_ORIENTA_SECRET`
-  sigue con el valor de relleno de `.env.example`, el servidor **se niega a arrancar**
-  (`RuntimeError` en `app/main.py`) en vez de correr con una clave que cualquiera que lea el repositorio
-  público podría usar para forjar un token válido, incluido uno de administrador. En desarrollo
-  (`ENTORNO=desarrollo`, el valor por defecto si no se define) no aplica, para no exigir configuración
-  extra solo para probar en local.
-- **Contraseñas con bcrypt** (nunca en texto plano ni con hash reversible) y **bloqueo de cuenta**: 5
-  intentos fallidos seguidos bloquean esa cuenta 15 minutos (ver la sección de roles más arriba);
-  guardar la ficha del usuario desde `/admin` → Usuarios levanta el bloqueo antes si hace falta.
-- **Limitador de tasa en memoria** (`app/rate_limit.py`, sin Redis ni servicios de pago) sobre los dos
-  endpoints públicos sin autenticación que más se prestan a abuso: "olvidé mi contraseña" (máx. 3 por DNI
-  y 10 por IP cada 15 min) y "que me llamen o me escriban" (máx. 5 solicitudes y 20 consultas de estado
-  por IP cada 15 min).
-- **Cabeceras de seguridad HTTP** en cada respuesta (middleware en `app/main.py`): `Content-Security-Policy`
-  estricto (sin `unsafe-inline` para scripts, todo bajo `'self'`), `X-Content-Type-Options: nosniff`,
-  `X-Frame-Options: DENY` (evita que el sitio se cargue dentro de un `<iframe>` de otro dominio,
-  clickjacking), `Referrer-Policy`, `Permissions-Policy` (solo micrófono habilitado -- lo usa la
-  búsqueda por voz -- cámara/geolocalización/pago bloqueados) y `Strict-Transport-Security` (HSTS -- el
-  navegador solo la respeta sobre HTTPS real, así que no rompe nada corriendo en HTTP local).
-- **Toda entrada de texto libre se escapa antes de mostrarse** en el panel administrativo y en el sitio
-  público (`escaparHtml()` / `escaparHtmlPublico()` en `app/static/js/`), y toda celda exportada a Excel
-  se neutraliza contra inyección de fórmulas (`app/excel_utils.py`: cualquier valor que empiece con
-  `=`, `+`, `-` o `@` se antepone con `'` antes de escribirse).
-- **Auditoría con contexto forense**: cada evento de sesión (`LOGIN_OK`, `LOGIN_FALLIDO`,
-  `CUENTA_BLOQUEADA`, `CAMBIO_PASSWORD`, restablecimiento por token) y cada exportación (catálogo,
-  reporte de indicadores, la propia auditoría) queda registrado con la IP de origen, no solo el cambio.
-  `/admin` → Auditoría permite filtrar por DNI, entidad, acción y rango de fechas, y exportar el
-  resultado filtrado a Excel (`GET /api/v1/admin/auditoria/exportar.xlsx`) -- para entregarlo directo a
-  quien haga la prueba, sin que necesite acceso al sistema. Ningún rol, ni siquiera administrador, puede
-  editar o borrar un registro de auditoría ya escrito.
-- **Base de datos por defecto en el código es SQLite** (`app/config.py`) solo como resguardo de
-  cero-instalación para quien clona el repo sin Postgres a mano -- nunca se usa mientras exista un `.env`
-  con `DATABASE_URL` apuntando a Postgres, que es el caso de este entorno real.
-- **Fuera del alcance de este repositorio** (decisión de infraestructura, no de código): en producción,
-  el rol de base de datos que usa la app debería tener permiso de `INSERT`/`SELECT` sobre la tabla
-  `auditoria` pero no `UPDATE`/`DELETE`, para que ni un bug ni una cuenta admin comprometida puedan
-  alterar el rastro ya escrito.
+```bash
+python -m alembic upgrade head
+```
 
-## De dónde salen los datos reales
+> ⚠️ Restaurar una base de producción debe realizarse como operación controlada. Verificar primero que el destino sea realmente la base que se desea sobrescribir.
 
-El catálogo ya **no** tiene datos de ejemplo: se cargó el
-[Directorio Telefónico oficial de la CSJ Lima](https://www.pj.gob.pe), publicado por el propio Poder
-Judicial (`fuentes/Directorio_CSJLI_oficial_2025-05-08.pdf`, actualizado al 26 de junio de 2026) —
-**26 sedes y 584 dependencias** al momento de escribir esto, con dirección, piso y anexo reales (la
-cifra sigue creciendo mientras cada área revisa y aprueba su parte).
+---
+
+# 20. 📋 Logs y diagnóstico
+
+Los errores de aplicación se registran en:
+
+```text
+logs/justicia_orienta.log
+```
+
+El sistema mantiene rotación automática de logs. citeturn1view1
+
+## Si la aplicación no inicia
+
+Ejecutar directamente:
+
+```bash
+python run.py
+```
+
+y observar el error.
+
+## Si falla PostgreSQL
+
+Probar:
+
+```bash
+psql -h HOST -U justicia_app -d justicia_orienta
+```
+
+## Si falla Alembic
+
+Ejecutar:
+
+```bash
+alembic current
+alembic heads
+python -m alembic upgrade head
+```
+
+## Si el puerto está ocupado en Windows
+
+```powershell
+netstat -ano | findstr :8743
+```
+
+Luego identificar el proceso:
+
+```powershell
+tasklist /FI "PID eq NUMERO_PID"
+```
+
+---
+
+# 21. ☁️ Despliegue en Render
+
+El repositorio ya incluye:
+
+```text
+render.yaml
+```
+
+y actualmente define un servicio Python que:
+
+1. Instala dependencias.
+2. Ejecuta migraciones.
+3. Crea/actualiza el administrador.
+4. Carga datos.
+5. Inicia Uvicorn.
+
+El `render.yaml` del repositorio define actualmente `python 3.12.7`, `ENTORNO=produccion` y solicita configurar `DATABASE_URL`, `URL_PUBLICA` y SMTP como variables externas. citeturn2view0
+
+## 21.1 Crear una base PostgreSQL
+
+Se necesita una base PostgreSQL accesible desde Render.
+
+Puede ser:
+
+- PostgreSQL administrado.
+- Neon u otro proveedor PostgreSQL compatible.
+- Una base institucional accesible desde Internet, si la política de seguridad lo permite.
+
+La cadena debe tener el formato:
+
+```text
+postgresql+psycopg2://usuario:clave@host/basededatos?sslmode=require
+```
+
+El propio `render.yaml` contempla esta modalidad. citeturn2view0
+
+## 21.2 Crear Web Service
+
+En Render:
+
+```text
+New
+  ↓
+Web Service
+  ↓
+Conectar GitHub
+  ↓
+edergc/JustiOrienta
+```
+
+## 21.3 Configuración
+
+El repositorio ya contiene:
+
+```text
+render.yaml
+```
+
+por lo que puede utilizarse la configuración definida allí.
+
+## 21.4 Variables obligatorias
+
+Configurar en Render:
+
+```text
+DATABASE_URL
+JUSTICIA_ORIENTA_SECRET
+URL_PUBLICA
+```
+
+Para recuperación de contraseña por correo:
+
+```text
+SMTP_HOST
+SMTP_PORT
+SMTP_USUARIO
+SMTP_PASSWORD
+SMTP_REMITENTE
+```
+
+El archivo `render.yaml` marca estas variables como valores que deben introducirse fuera del repositorio. citeturn2view0
+
+## 21.5 Después del despliegue
+
+Probar:
+
+```text
+https://TU-DOMINIO/
+https://TU-DOMINIO/admin
+https://TU-DOMINIO/api/docs
+```
+
+Y ejecutar la misma matriz de pruebas funcionales descrita en este README.
+
+---
+
+# 22. 🔐 Seguridad
+
+La aplicación incluye controles como:
+
+- Contraseñas con bcrypt.
+- Bloqueo después de intentos fallidos.
+- Rate limiting.
+- Cabeceras HTTP de seguridad.
+- Escape de contenido HTML.
+- Protección contra inyección de fórmulas en Excel.
+- Auditoría de acciones.
+- Registro de IP.
+- Secreto obligatorio en producción.
+- Separación de permisos por rol y área.
+
+Estos controles están implementados en el código actual del repositorio. citeturn1view1
+
+## HTTPS
+
+Para producción pública:
+
+```text
+Internet
+   │
+   ▼
+HTTPS / TLS
+   │
+   ▼
+Proxy / Balanceador
+   │
+   ▼
+Justicia Orienta
+   │
+   ▼
+PostgreSQL
+```
+
+El piloto local utiliza HTTP, pero una publicación institucional debe utilizar HTTPS. citeturn1view1
+
+---
+
+# 23. 📁 Estructura del proyecto
+
+```text
+JustiOrienta/
+│
+├── .github/
+│   └── workflows/
+│
+├── app/
+│   ├── config.py
+│   ├── database.py
+│   ├── security.py
+│   ├── nlp.py
+│   ├── main.py
+│   ├── rate_limit.py
+│   ├── rutas_internas.py
+│   │
+│   ├── models/
+│   ├── schemas/
+│   ├── crud/
+│   ├── routers/
+│   └── static/
+│
+├── migrations/
+├── fuentes/
+├── tests/
+├── prototipo-v1/
+│
+├── backups/
+├── logs/
+│
+├── .env.example
+├── .gitignore
+├── alembic.ini
+├── backup_db.py
+├── requirements.txt
+├── run.py
+├── render.yaml
+│
+├── DirectorioCSJLI.xlsx
+├── ConformacionCSJLima.xlsx
+└── README.md
+```
+
+---
+
+# 24. 📚 Datos institucionales
+
+El proyecto utiliza información institucional como fuente del catálogo.
+
+El repositorio incluye el directorio oficial utilizado por el proceso de carga. La aplicación documenta que el catálogo fue cargado a partir del directorio oficial de la CSJ Lima y que la información adicional debe ser revisada por las áreas responsables. citeturn1view1
+
+## Regla de calidad
+
+El sistema distingue:
+
+```text
+Fuente
+  │
+  ▼
+Carga
+  │
+  ▼
+Revisión
+  │
+  ▼
+Aprobación
+  │
+  ▼
+Publicación
+```
+
+No debe asumirse que una carga masiva equivale a una validación institucional.
+
+---
+
+# 25. 🔄 CI/CD
+
+El repositorio dispone de GitHub Actions:
+
+```text
+.github/workflows/
+```
+
+Cada `push` y Pull Request hacia `master` ejecuta las pruebas automatizadas. citeturn1view1
+
+Flujo:
+
+```text
+Developer
+    │
+    ▼
+git push
+    │
+    ▼
+GitHub
+    │
+    ▼
+GitHub Actions
+    │
+    ▼
+pytest
+    │
+ ┌──┴──┐
+ ▼     ▼
+✅    ❌
+OK    Error
+```
+
+---
+
+# 26. 🛠️ Solución de problemas
+
+## ❌ `ModuleNotFoundError`
+
+Verificar que el entorno virtual esté activo:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+Luego:
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+## ❌ `connection refused` a PostgreSQL
+
+Comprobar:
+
+```text
+Servidor PostgreSQL
+Puerto 5432
+Usuario
+Contraseña
+Base de datos
+Firewall
+pg_hba.conf
+postgresql.conf
+```
+
+Y probar:
+
+```bash
+psql -h HOST -U justicia_app -d justicia_orienta
+```
+
+---
+
+## ❌ `password authentication failed`
+
+La contraseña de PostgreSQL no coincide con la utilizada en:
+
+```env
+DATABASE_URL=...
+```
+
+Restablecer la contraseña del usuario PostgreSQL y actualizar `.env`.
+
+---
+
+## ❌ `database "justicia_orienta" does not exist`
+
+Crear:
+
+```sql
+CREATE DATABASE justicia_orienta
+    OWNER justicia_app;
+```
+
+---
+
+## ❌ `alembic upgrade head` falla
+
+Primero verificar:
+
+```bash
+alembic current
+alembic heads
+```
+
+y comprobar que `DATABASE_URL` apunta a la base correcta.
+
+---
+
+## ❌ El sistema funciona en `localhost` pero no desde otra PC
+
+Comprobar:
+
+```text
+1. Uvicorn escucha en 0.0.0.0
+2. Puerto 8743
+3. Firewall Windows
+4. Conectividad de red
+5. IP correcta del servidor
+```
+
+Probar desde el cliente:
+
+```powershell
+Test-NetConnection 172.20.1.51 -Port 8743
+```
+
+---
+
+## ❌ El sitio abre pero no hay información
+
+Ejecutar:
 
 ```bash
 python -m app.cargar_directorio_pj
 ```
 
-Extrae las tablas del PDF con `pdfplumber` (no transcripción a mano, para no meter errores de tipeo en
-cientos de filas) y las inserta sin duplicar si se vuelve a correr. Reglas que sigue, alineadas con
-"nunca inventar información":
+o cargar un Excel:
 
-- Solo carga lo que el documento realmente dice: sede, dirección, central, dependencia, piso, anexo.
-  Horario, requisitos, accesibilidad y alias quedan en blanco — son trabajo de revisión de cada área,
-  no algo que un script deba adivinar.
-- Al cargar el directorio por primera vez, solo la **sede piloto** (Javier Alzamora Valdez) se publica
-  como `activo`; el resto queda en `revision`, lista para que cada una la revise antes de publicarla —
-  cargar en masa no es lo mismo que validar. (En este entorno ya se revisaron y aprobaron todas.)
-- Si el mismo PDF (u otra versión más nueva del Poder Judicial) se vuelve a procesar, no duplica lo que
-  ya existe.
-
-**Limitación real, ya encontrada:** el documento fuente repite nombres genéricos como "Mesa de Partes"
-para oficinas distintas dentro de la misma sede (Bienestar Social, Control de Asistencia, Escalafón y
-Registro) — quedaban 3 tarjetas idénticas en el buscador. Se corrigieron a mano restaurando el contexto
-que sí figura en el PDF (ver `/admin` → Auditoría), y el cargador ya sabe no volver a duplicarlas.
-
-## Arquitectura del backend
-
-Organizado por responsabilidad, no en un archivo gigante — cada capa tiene su propio paquete:
-
-```
-app/
-  config.py          Configuración centralizada (pydantic-settings, lee .env)
-  database.py        Motor SQLAlchemy y sesión
-  security.py        Hash de contraseñas, JWT, reglas de permiso por rol/área
-  nlp.py              Interpretación de lenguaje natural del buscador
-  main.py            Arma la app, monta routers, maneja errores, cabeceras de seguridad
-
-  models/            Una tabla por archivo (Sede, Edificio, Dependencia, Servicio,
-                      Alias, Usuario, Auditoria, ConsultaLog, SolicitudAtencion,
-                      SolicitudCobertura, NodoUbicacion, ConexionNodo)
-  schemas/           Esquemas Pydantic de entrada/salida, uno por entidad
-  crud/              Acceso a datos y reglas de negocio, uno por entidad
-  routers/           Endpoints HTTP, agrupados por recurso: auth, public,
-                      admin_dependencias, admin_sedes, admin_edificios, admin_mapa,
-                      admin_usuarios, admin_auditoria, admin_metricas,
-                      admin_cobertura, admin_solicitudes_atencion, admin_qr
-                      (no un solo admin.py)
-  rutas_internas.py  Cálculo de ruta más corta (Dijkstra) sobre el grafo de
-                      nodos/conexiones del mapa interno -- usado por admin_mapa.py
-                      y por el endpoint público /ruta
-  rate_limit.py      Limitador de tasa simple en memoria (sin Redis ni
-                      servicios de pago) para "olvidé mi contraseña" y
-                      "que me llamen o me escriban"
-  static/            El sitio público y el panel de administración (HTML/CSS/JS)
+```bash
+python -m app.import_excel "archivo.xlsx"
 ```
 
-La API vive bajo `/api/v1` (versionada desde el día uno: si en el futuro cambia algo de forma
-incompatible, puede convivir `/api/v2` sin romper lo existente).
+Después revisar:
 
-### Integración continua
+```text
+/admin
+```
 
-Cada `push` y cada Pull Request a `master` corre la suite de pruebas automáticamente en GitHub Actions
-(`.github/workflows/tests.yml`, contra SQLite en memoria, igual que en local) -- así cualquier cambio que
-rompa algo se detecta antes de fusionarse, sin depender de que quien revisa se acuerde de correr
-`pytest` a mano. El resultado se ve en la pestaña "Actions" del repositorio en GitHub.
+y comprobar el estado de los registros.
 
-## Qué hay en este repositorio
+---
 
-| Archivo / carpeta | Qué es |
-|---|---|
-| `app/` | La aplicación: backend FastAPI + base de datos + sitio público + panel de administración. |
-| `prototipo-v1/` | Micrositio estático de un solo archivo, sin backend -- demuestra el concepto sin instalar nada. |
-| `migrations/` | Migraciones versionadas de la base de datos (Alembic). |
-| `fuentes/` | Directorio oficial de la CSJ Lima usado como fuente de datos reales (ver "De dónde salen los datos reales"). |
-| `DirectorioCSJLI.xlsx` | Datos reales que carga `app/cargar_directorio_excel.py` -- lo usa `render.yaml` en cada despliegue de producción, no lo borres ni lo muevas. |
-| `ConformacionCSJLima.xlsx` | Datos reales que carga `app/cargar_titulares.py` -- también usado por `render.yaml` en cada despliegue. |
-| `render.yaml` | Configuración de despliegue en Render (build/start command, variables de entorno). |
-| `tests/` | Pruebas automatizadas (`pytest`). |
-| `.github/workflows/` | Integración continua (corre `pytest` en cada push/PR). |
-| `run.py` | Punto de arranque único del servidor. |
-| `backup_db.py` | Respaldo manual de la base de datos (SQLite o PostgreSQL). |
-| `requirements.txt` | Dependencias Python. |
-| `alembic.ini` | Configuración de migraciones. |
-| `.env.example` | Plantilla de variables de entorno -- cópiala a `.env` y ajusta los valores. |
+## ❌ Los datos existen pero no aparecen públicamente
 
-## Hoja de ruta (de dónde venimos, hacia dónde va)
+Revisar el estado editorial.
 
-| Fase | Qué es | Estado |
+La aplicación publica únicamente contenido aprobado/activo; el flujo de revisión y aprobación está implementado deliberadamente. citeturn1view0
+
+---
+
+# 27. 🛣️ Roadmap
+
+| Versión | Evolución | Estado |
 |---|---|---|
-| V0 | Protocolo humano + catálogo en papel/Excel | Diseñado (ficha de buena práctica) |
-| V1 | Micrositio estático, sin backend | Hecho — `prototipo-v1/` |
-| **V2** | **Backend real + base de datos + panel de administración con roles** | **Hecho — `app/`, esto es lo que estás viendo** |
-| V3 | Interpretación de lenguaje natural sobre el catálogo validado | Hecho — `app/nlp.py` (reglas explícitas y auditables, no un modelo de IA -- decisión deliberada, ver "Principios que no se negocian" más abajo) |
-| V4 | Navegación interior (mapa interno + cálculo de ruta más corta) | Hecho — `app/rutas_internas.py`, pestaña "Mapa interno" en `/admin`. Otras integraciones (ej. con sistemas externos de la institución): no iniciado |
+| **V0** | Protocolo humano + catálogo | 🟢 Diseñado |
+| **V1** | Micrositio estático | 🟢 Completado |
+| **V2** | Backend + PostgreSQL + panel + roles | 🟢 Completado |
+| **V3** | Lenguaje natural | 🟢 Completado |
+| **V4** | Mapa interno + rutas | 🟢 Completado |
+| **V5** | Integraciones institucionales | 🔵 Futuro |
+| **V6** | Evolución de orientación conversacional | 🔵 Futuro |
 
-## Principios que no se negocian
+La interpretación actual del lenguaje natural utiliza reglas explícitas y auditables, no un modelo generativo de IA. citeturn1view1
 
-- **Nunca inventar información institucional.** Si el buscador no tiene certeza, deriva a atención humana
-  en vez de adivinar (ver el mensaje de respaldo en `/api/v1/buscar`).
-- **Cada área es dueña de su información.** Gestores y validadores solo tocan las dependencias de su
-  propia área; Informática administra la plataforma, no decide el contenido de otras áreas.
-- **Nadie se autopublica.** Todo cambio de contenido pasa a revisión; publicar es una acción explícita de
-  quien tiene el rol de validador o administrador.
-- **Accesibilidad no es una fase futura.** Alto contraste, texto ampliable y lectura en voz alta están en
-  el V1 y el V2, no reservados para una versión posterior.
+---
+
+# 28. 🏛️ Principios
+
+## 🚫 1. Nunca inventar información institucional
+
+Si el sistema no tiene certeza:
+
+```text
+NO ADIVINA
+    ↓
+INFORMA LA LIMITACIÓN
+    ↓
+DERIVA A ATENCIÓN HUMANA
+```
+
+## 🏢 2. Cada área es responsable de su información
+
+Informática administra la plataforma.
+
+Las áreas son responsables de mantener y validar su contenido.
+
+## 👀 3. Nadie se autopublica
+
+```text
+Guardar ≠ Publicar
+```
+
+## ♿ 4. Accesibilidad desde el inicio
+
+No es una característica para una versión futura.
+
+## 🧾 5. Todo debe poder auditarse
+
+La plataforma registra las operaciones relevantes.
+
+## 📚 6. La información debe tener una fuente
+
+```text
+Fuente
+  ↓
+Dato
+  ↓
+Revisión
+  ↓
+Validación
+  ↓
+Publicación
+```
+
+---
+
+# 🏁 Checklist de instalación para otro informático
+
+Un administrador que reciba el repositorio debería poder seguir esta lista:
+
+```text
+☐ 1. Instalar Git
+☐ 2. Instalar Python 3.10+
+☐ 3. Instalar PostgreSQL
+☐ 4. Crear usuario justicia_app
+☐ 5. Crear BD justicia_orienta
+☐ 6. Clonar https://github.com/edergc/JustiOrienta.git
+☐ 7. Crear .venv
+☐ 8. Activar .venv
+☐ 9. pip install -r requirements.txt
+☐ 10. Crear .env
+☐ 11. Configurar DATABASE_URL
+☐ 12. Configurar JUSTICIA_ORIENTA_SECRET
+☐ 13. Ejecutar alembic upgrade head
+☐ 14. Ejecutar app.seed
+☐ 15. Cargar catálogo
+☐ 16. Ejecutar pytest
+☐ 17. Ejecutar auditoría de accesibilidad
+☐ 18. Ejecutar python run.py
+☐ 19. Probar / 
+☐ 20. Probar /admin
+☐ 21. Probar /api/docs
+☐ 22. Probar desde otra PC de la LAN
+☐ 23. Configurar firewall si corresponde
+☐ 24. Configurar servicio Windows si será servidor
+☐ 25. Configurar backups
+☐ 26. Validar flujo gestor → validador → ciudadano
+☐ 27. Documentar IP, puerto y credenciales institucionales
+☐ 28. Si es público: HTTPS + dominio + infraestructura institucional
+```
+
+---
+
+# ⭐ Resumen para TI
+
+La instalación recomendada queda así:
+
+```text
+                  ┌──────────────────────────┐
+                  │       CLIENTES LAN       │
+                  │ PCs / tablets / móviles  │
+                  └────────────┬─────────────┘
+                               │
+                         TCP 8743 / HTTPS
+                               │
+                               ▼
+                  ┌──────────────────────────┐
+                  │     SERVIDOR WEB         │
+                  │                          │
+                  │ Justicia Orienta         │
+                  │ Python + FastAPI         │
+                  │                          │
+                  │ 0.0.0.0:8743             │
+                  └────────────┬─────────────┘
+                               │
+                         TCP 5432
+                               │
+                               ▼
+                  ┌──────────────────────────┐
+                  │       PostgreSQL         │
+                  │                          │
+                  │ justicia_orienta         │
+                  └──────────────────────────┘
+```
+
+Con esto, un nuevo integrante de Informática puede pasar de:
+
+```text
+Repositorio GitHub
+        ↓
+Clonar
+        ↓
+Python + entorno virtual
+        ↓
+PostgreSQL
+        ↓
+.env
+        ↓
+Alembic
+        ↓
+Seed
+        ↓
+Carga de catálogo
+        ↓
+Pruebas
+        ↓
+Servidor
+        ↓
+LAN
+        ↓
+Servicio
+        ↓
+Backups
+        ↓
+Producción
+```
+
+sin necesidad de conocer previamente la arquitectura interna del proyecto.
+
+---
+
+<p align="center">
+
+# ⚖️ Justicia Orienta
+
+<strong>Orientación ciudadana · Accesibilidad · Información validada · Innovación · Mejora continua</strong>
+
+<br><br>
+
+<em>“Que encontrar la justicia sea también fácil de encontrar.”</em>
+
+</p>
