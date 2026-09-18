@@ -215,6 +215,25 @@ pide otra retención. Requiere que `pg_dump` esté instalado y en el `PATH` (vie
 de PostgreSQL); si además necesitas una copia automatizada y programada (no solo manual), eso se agrega
 con el Programador de tareas de Windows o `cron`, apuntando a este mismo comando.
 
+**Restaurar un respaldo** (`backup_db.py` solo *crea* el respaldo -- restaurarlo es un paso aparte,
+deliberadamente manual, para que nadie sobrescriba una base real por accidente):
+
+```bash
+# PostgreSQL -- restaura un .dump generado por backup_db.py
+createdb justicia_orienta                     # solo si la base de datos todavía no existe
+pg_restore -h localhost -U usuario -d justicia_orienta backups/justicia_orienta_20260918_113000.dump
+python -m alembic upgrade head                # por si el código tiene migraciones más nuevas que el respaldo
+
+# SQLite -- es un archivo, "restaurar" es copiarlo de vuelta
+cp backups/justicia_orienta_20260918_113000.db justicia_orienta.db
+```
+
+El `.dump` de Postgres ya trae esquema y datos juntos (a diferencia de levantar el sistema desde cero,
+acá **no** hace falta `python -m app.seed` ni cargar el catálogo -- eso ya viene dentro del respaldo). El
+`alembic upgrade head` del final es solo para ponerse al día si el código avanzó después de ese respaldo;
+si estás restaurando el respaldo más reciente sobre el mismo código, ese paso no cambia nada. `pg_restore`
+viene con el mismo paquete que `pg_dump` (el cliente de PostgreSQL) -- si no lo tienes, instálalo primero.
+
 Los errores del servidor quedan en `logs/justicia_orienta.log` (rotación automática: 1 MB por archivo,
 5 respaldos), además de la consola -- así se puede revisar qué pasó después de un reinicio, sin depender
 de una terminal que ya se cerró.
