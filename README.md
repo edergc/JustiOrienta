@@ -71,13 +71,24 @@ Luego abre:
 python -m pytest
 ```
 
-Corren contra una base de datos SQLite en memoria, aislada de tu base de desarrollo. Cubren el
-buscador (lenguaje natural, tolerancia a errores de tipeo, regresiones ya encontradas), el flujo de
-publicación completo (quién puede crear, editar, aprobar y auditar), y una auditoría de accesibilidad
-estática sobre el HTML servido (`app/auditoria_accesibilidad.py`): idioma declarado, imágenes con texto
-alternativo, cada control de formulario con una etiqueta programática, botones/enlaces con nombre
-accesible, y diálogos modales con nombre accesible. Es una versión ligera de lo que haría axe-core, sin
-depender de Node ni de un navegador headless -- corre en cada `pytest` y también sola:
+Son 158 pruebas (mismas que corren en GitHub Actions, ver más abajo), contra una base de datos SQLite en
+memoria, aislada de tu base de desarrollo. Cubren, entre otras cosas:
+
+- El buscador (lenguaje natural, tolerancia a errores de tipeo, regresiones ya encontradas) y el detector
+  de duplicados.
+- El flujo de publicación completo por rol y por área (quién puede crear, editar, aprobar y auditar), y
+  que nadie pueda autopublicarse ni reasignar contenido a un área ajena.
+- Autenticación: contraseña obligatoria en el primer ingreso, bloqueo tras 5 intentos fallidos,
+  restablecer contraseña por correo, paginación y gestión de usuarios.
+- El mapa interno / wayfinding (cálculo de ruta más corta, variante accesible sin escaleras).
+- Solicitudes de atención ("que me llamen o me escriban") y solicitudes de cobertura.
+- Sedes, edificios y servicios (incluida la reactivación de servicios desactivados).
+- Indicadores editoriales, satisfacción de búsqueda, exportación del catálogo a Excel y el directorio en PDF.
+- Una auditoría de accesibilidad estática sobre el HTML servido (`app/auditoria_accesibilidad.py`): idioma
+  declarado, imágenes con texto alternativo, cada control de formulario con una etiqueta programática,
+  botones/enlaces con nombre accesible, y diálogos modales con nombre accesible. Es una versión ligera de
+  lo que haría axe-core, sin depender de Node ni de un navegador headless -- corre en cada `pytest` y
+  también sola:
 
 ```bash
 python -m app.auditoria_accesibilidad
@@ -147,9 +158,10 @@ general.
 
 Este proyecto corre sobre **PostgreSQL** — no SQLite. La app soporta ambos motores sin tocar código (vía
 `DATABASE_URL`), pero el entorno real de este repositorio ya está configurado y probado sobre Postgres, con
-el esquema completo, el directorio oficial real cargado (25 sedes, 539 dependencias vía
-`python -m app.cargar_directorio_pj`) y el flujo completo (crear → revisar → aprobar → aparece en el sitio
-público, el PDF, el Excel exportado y la auditoría) verificado contra esa base:
+el esquema completo, el directorio oficial real cargado (26 sedes, 584 dependencias vía
+`python -m app.cargar_directorio_pj` -- la cifra crece a medida que cada área carga/aprueba más contenido,
+así que tómala como referencia, no como un total fijo) y el flujo completo (crear → revisar → aprobar →
+aparece en el sitio público, el PDF, el Excel exportado y la auditoría) verificado contra esa base:
 
 ```
 DATABASE_URL=postgresql+psycopg2://usuario:clave@host:5432/justicia_orienta
@@ -187,11 +199,15 @@ python -m alembic upgrade head
 python backup_db.py
 ```
 
-Copia `justicia_orienta.db` a `backups/` con marca de fecha y hora. Es una acción manual y explícita
-(no corre sola ni programada): antes de cargar datos nuevos, o como rutina periódica de quien administra
-el sistema. En producción con PostgreSQL, este script se reemplaza por `pg_dump` según la política de
-respaldos del área de TI -- no hay una versión propia para Postgres porque esa decisión (frecuencia,
-retención, dónde se guarda) le corresponde a Informática, no a este repositorio.
+Detecta solo el motor configurado en `DATABASE_URL` y hace lo correcto para cada uno, mismo comando en
+los dos casos: copia el archivo `.db` a `backups/` en SQLite, o corre `pg_dump -Fc` (formato comprimido,
+restaurable con `pg_restore`) en PostgreSQL. Es una acción manual y explícita (no corre sola ni
+programada): antes de cargar datos nuevos, o como rutina periódica de quien administra el sistema. Cada
+respaldo queda con marca de fecha y hora, y los de más de 30 días se purgan automáticamente para que
+`backups/` no crezca sin límite -- ajusta `DIAS_RETENCION` en `backup_db.py` si tu política institucional
+pide otra retención. Requiere que `pg_dump` esté instalado y en el `PATH` (viene con cualquier instalación
+de PostgreSQL); si además necesitas una copia automatizada y programada (no solo manual), eso se agrega
+con el Programador de tareas de Windows o `cron`, apuntando a este mismo comando.
 
 Los errores del servidor quedan en `logs/justicia_orienta.log` (rotación automática: 1 MB por archivo,
 5 respaldos), además de la consola -- así se puede revisar qué pasó después de un reinicio, sin depender
@@ -203,12 +219,56 @@ ejemplo con un proxy inverso como Caddy o Nginx + Let's Encrypt, o el balanceado
 -- eso es una decisión de infraestructura de Informática, no algo que este repositorio pueda resolver
 por sí solo corriendo en `127.0.0.1`.
 
+## Seguridad
+
+Pensado para que el equipo de TI que lo pruebe (incluida una prueba de intrusión) sepa exactamente qué
+esperar, sin tener que leer el código para encontrarlo:
+
+- **Secreto de sesión obligatorio en producción**: si `ENTORNO=produccion` y `JUSTICIA_ORIENTA_SECRET`
+  sigue con el valor de relleno de `.env.example`, el servidor **se niega a arrancar**
+  (`RuntimeError` en `app/main.py`) en vez de correr con una clave que cualquiera que lea el repositorio
+  público podría usar para forjar un token válido, incluido uno de administrador. En desarrollo
+  (`ENTORNO=desarrollo`, el valor por defecto si no se define) no aplica, para no exigir configuración
+  extra solo para probar en local.
+- **Contraseñas con bcrypt** (nunca en texto plano ni con hash reversible) y **bloqueo de cuenta**: 5
+  intentos fallidos seguidos bloquean esa cuenta 15 minutos (ver la sección de roles más abajo);
+  guardar la ficha del usuario desde `/admin` → Usuarios levanta el bloqueo antes si hace falta.
+- **Limitador de tasa en memoria** (`app/rate_limit.py`, sin Redis ni servicios de pago) sobre los dos
+  endpoints públicos sin autenticación que más se prestan a abuso: "olvidé mi contraseña" (máx. 3 por DNI
+  y 10 por IP cada 15 min) y "que me llamen o me escriban" (máx. 5 solicitudes y 20 consultas de estado
+  por IP cada 15 min).
+- **Cabeceras de seguridad HTTP** en cada respuesta (middleware en `app/main.py`): `Content-Security-Policy`
+  estricto (sin `unsafe-inline` para scripts, todo bajo `'self'`), `X-Content-Type-Options: nosniff`,
+  `X-Frame-Options: DENY` (evita que el sitio se cargue dentro de un `<iframe>` de otro dominio,
+  clickjacking), `Referrer-Policy`, `Permissions-Policy` (solo micrófono habilitado -- lo usa la
+  búsqueda por voz -- cámara/geolocalización/pago bloqueados) y `Strict-Transport-Security` (HSTS -- el
+  navegador solo la respeta sobre HTTPS real, así que no rompe nada corriendo en HTTP local).
+- **Toda entrada de texto libre se escapa antes de mostrarse** en el panel administrativo y en el sitio
+  público (`escaparHtml()` / `escaparHtmlPublico()` en `app/static/js/`), y toda celda exportada a Excel
+  se neutraliza contra inyección de fórmulas (`app/excel_utils.py`: cualquier valor que empiece con
+  `=`, `+`, `-` o `@` se antepone con `'` antes de escribirse).
+- **Auditoría con contexto forense**: cada evento de sesión (`LOGIN_OK`, `LOGIN_FALLIDO`,
+  `CUENTA_BLOQUEADA`, `CAMBIO_PASSWORD`, restablecimiento por token) y cada exportación (catálogo,
+  reporte de indicadores, la propia auditoría) queda registrado con la IP de origen, no solo el cambio.
+  `/admin` → Auditoría permite filtrar por DNI, entidad, acción y rango de fechas, y exportar el
+  resultado filtrado a Excel (`GET /api/v1/admin/auditoria/exportar.xlsx`) -- para entregarlo directo a
+  quien haga la prueba, sin que necesite acceso al sistema. Ningún rol, ni siquiera administrador, puede
+  editar o borrar un registro de auditoría ya escrito.
+- **Base de datos por defecto en el código es SQLite** (`app/config.py`) solo como resguardo de
+  cero-instalación para quien clona el repo sin Postgres a mano -- nunca se usa mientras exista un `.env`
+  con `DATABASE_URL` apuntando a Postgres, que es el caso de este entorno real.
+- **Fuera del alcance de este repositorio** (decisión de infraestructura, no de código): en producción,
+  el rol de base de datos que usa la app debería tener permiso de `INSERT`/`SELECT` sobre la tabla
+  `auditoria` pero no `UPDATE`/`DELETE`, para que ni un bug ni una cuenta admin comprometida puedan
+  alterar el rastro ya escrito.
+
 ## De dónde salen los datos reales
 
 El catálogo ya **no** tiene datos de ejemplo: se cargó el
 [Directorio Telefónico oficial de la CSJ Lima](https://www.pj.gob.pe), publicado por el propio Poder
 Judicial (`fuentes/Directorio_CSJLI_oficial_2025-05-08.pdf`, actualizado al 26 de junio de 2026) —
-**25 sedes y 542 dependencias**, con dirección, piso y anexo reales.
+**26 sedes y 584 dependencias** al momento de escribir esto, con dirección, piso y anexo reales (la
+cifra sigue creciendo mientras cada área revisa y aprueba su parte).
 
 ```bash
 python -m app.cargar_directorio_pj
@@ -221,9 +281,9 @@ cientos de filas) y las inserta sin duplicar si se vuelve a correr. Reglas que s
 - Solo carga lo que el documento realmente dice: sede, dirección, central, dependencia, piso, anexo.
   Horario, requisitos, accesibilidad y alias quedan en blanco — son trabajo de revisión de cada área,
   no algo que un script deba adivinar.
-- Solo la **sede piloto** (Javier Alzamora Valdez) se publica como `activo`. Las otras 24 sedes quedan
-  cargadas en `revision`, listas para que cada una las revise antes de publicarlas — cargar en masa no
-  es lo mismo que validar.
+- Al cargar el directorio por primera vez, solo la **sede piloto** (Javier Alzamora Valdez) se publica
+  como `activo`; el resto queda en `revision`, lista para que cada una la revise antes de publicarla —
+  cargar en masa no es lo mismo que validar. (En este entorno ya se revisaron y aprobaron todas.)
 - Si el mismo PDF (u otra versión más nueva del Poder Judicial) se vuelve a procesar, no duplica lo que
   ya existe.
 
@@ -245,15 +305,33 @@ app/
   main.py           Arma la app, monta routers, maneja errores
 
   models/           Una tabla por archivo (Sede, Edificio, Dependencia, Servicio,
-                     Alias, Usuario, Auditoria, ConsultaLog)
+                     Alias, Usuario, Auditoria, ConsultaLog, SolicitudAtencion,
+                     SolicitudCobertura, NodoUbicacion, ConexionNodo)
   schemas/          Esquemas Pydantic de entrada/salida, uno por entidad
   crud/             Acceso a datos y reglas de negocio, uno por entidad
-  routers/          Endpoints HTTP, agrupados por recurso (no un solo admin.py)
+  routers/          Endpoints HTTP, agrupados por recurso: auth, public,
+                     admin_dependencias, admin_sedes, admin_edificios, admin_mapa,
+                     admin_usuarios, admin_auditoria, admin_metricas,
+                     admin_cobertura, admin_solicitudes_atencion, admin_qr
+                     (no un solo admin.py)
+  rutas_internas.py  Cálculo de ruta más corta (Dijkstra) sobre el grafo de
+                     nodos/conexiones del mapa interno -- usado por admin_mapa.py
+                     y por el endpoint público /ruta
+  rate_limit.py      Limitador de tasa simple en memoria (sin Redis ni
+                     servicios de pago) para "olvidé mi contraseña" y
+                     "que me llamen o me escriban"
   static/           El sitio público y el panel de administración (HTML/CSS/JS)
 ```
 
 La API vive bajo `/api/v1` (versionada desde el día uno: si en el futuro cambia algo de forma
 incompatible, puede convivir `/api/v2` sin romper lo existente).
+
+### Integración continua
+
+Cada `push` y cada Pull Request a `master` corre la suite de pruebas automáticamente en GitHub Actions
+(`.github/workflows/tests.yml`, contra SQLite en memoria, igual que en local) -- así cualquier cambio que
+rompa algo se detecta antes de fusionarse, sin depender de que quien revisa se acuerde de correr
+`pytest` a mano. El resultado se ve en la pestaña "Actions" del repositorio en GitHub.
 
 ## Hoja de ruta (de dónde venimos, hacia dónde va)
 
@@ -262,8 +340,8 @@ incompatible, puede convivir `/api/v2` sin romper lo existente).
 | V0 | Protocolo humano + catálogo en papel/Excel | Diseñado (ficha de buena práctica) |
 | V1 | Micrositio estático, sin backend | Hecho — `prototipo-v1/` |
 | **V2** | **Backend real + base de datos + panel de administración con roles** | **Hecho — `app/`, esto es lo que estás viendo** |
-| V3 | Asistente de interpretación de lenguaje natural sobre el catálogo validado | No iniciado |
-| V4 | Navegación interior avanzada, integraciones adicionales | No iniciado |
+| V3 | Interpretación de lenguaje natural sobre el catálogo validado | Hecho — `app/nlp.py` (reglas explícitas y auditables, no un modelo de IA -- decisión deliberada, ver "Principios que no se negocian" más abajo) |
+| V4 | Navegación interior (mapa interno + cálculo de ruta más corta) | Hecho — `app/rutas_internas.py`, pestaña "Mapa interno" en `/admin`. Otras integraciones (ej. con sistemas externos de la institución): no iniciado |
 
 ## El panel de administración (`/admin`)
 
@@ -283,9 +361,16 @@ incompatible, puede convivir `/api/v2` sin romper lo existente).
   genera al vuelo, con la librería `qrcode` (100% local, sin servicio de terceros), un PNG que apunta al
   sitio público con el contexto ya resuelto (`?sede=<id>` o `?dependencia=<id>`) para imprimir y pegar en
   un cartel físico.
-- **"Cómo llegar dentro del edificio"** (opcional, por dependencia): un campo de texto libre para
-  indicaciones simples ("desde el ingreso principal, sube al piso 5 por el ascensor"). Es deliberadamente
-  solo texto -- no un mapa interior ni geolocalización indoor, algo que este sistema no promete.
+- **"Cómo llegar dentro del edificio"** (opcional, por dependencia): un campo de texto libre corto para
+  una indicación simple ("desde el ingreso principal, sube al piso 5 por el ascensor"), pensado como
+  respaldo rápido cuando esa sede todavía no tiene el mapa interno cargado (ver el punto siguiente).
+- **Mapa interno / wayfinding** (pestaña "Mapa interno", solo administrador): CRUD de **nodos** (puntos
+  reconocibles dentro de una sede -- ingreso, ascensor, una dependencia puntual) y **conexiones** entre
+  ellos (tramo caminable, con distancia y si es accesible en silla de ruedas o no). Con eso cargado, el
+  sitio público calcula la ruta más corta paso a paso (algoritmo de Dijkstra, `app/rutas_internas.py`)
+  desde donde el ciudadano dice que está hasta la dependencia que busca, con una variante que evita
+  tramos no accesibles. El mapa se carga sede por sede -- mientras una sede no lo tenga, el ciudadano
+  solo ve la indicación de texto libre de arriba (si existe) en vez de la ruta paso a paso.
 - **Panel de indicadores ampliado**: además de consultas totales/resueltas/satisfacción, muestra
   % de búsquedas hechas en modo accesible (alto contraste, texto ampliado o tema oscuro), % por voz,
   % sobre accesibilidad, consultas más frecuentes y consultas por sede/área/tipo -- los tres desgloses
@@ -336,6 +421,16 @@ incompatible, puede convivir `/api/v2` sin romper lo existente).
 - **Retroalimentación de una pregunta**: después de cada búsqueda, "¿Esto te resultó útil? Sí /
   Parcialmente / No" — anónimo, ligado solo al identificador de esa consulta puntual, visible en
   `/admin` → estadísticas (`porcentaje_satisfaccion`).
+- **"¿Cómo llego desde aquí?" (ruta interna paso a paso)**: sobre un resultado, la persona indica dónde
+  está parada (un punto reconocible: ingreso, ascensor, etc.) y el sitio calcula la ruta más corta hasta
+  esa oficina, con instrucciones de texto por tramo -- con opción de pedir la variante accesible (sin
+  escaleras). Solo aparece en sedes donde el área de Informática ya cargó el mapa interno (ver "Mapa
+  interno" en el panel de administración); si aún no está cargado, se muestra la indicación de texto
+  libre de la dependencia en su lugar, cuando existe.
+- **Solicitar que me llamen o me escriban**: si la persona no encuentra lo que busca, puede dejar su
+  nombre y un dato de contacto (teléfono o correo) con un motivo breve, y recibe un código de
+  seguimiento para consultar el estado de su pedido después -- sin necesidad de cuenta ni de volver a
+  explicar todo por teléfono.
 - Todo lo demás del diseño original se mantiene: alto contraste, texto ampliable, tema oscuro, lectura
   en voz alta de cada resultado, y el mensaje de respaldo cuando el sistema no tiene certeza.
 - **Directorio descargable en PDF** (`GET /api/v1/directorio.pdf`, enlace "Descargar directorio (PDF)"
