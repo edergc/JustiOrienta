@@ -1,8 +1,0 @@
-INFO:     Will watch for changes in these directories: ['E:\\PROGRAMACION\\JustiOrienta']
-INFO:     Uvicorn running on http://0.0.0.0:8743 (Press CTRL+C to quit)
-INFO:     Started reloader process [13576] using WatchFiles
-C:\Users\Administrador\AppData\Local\Programs\Python\Python312\Lib\site-packages\fpdf\__init__.py:40: UserWarning: You have both PyFPDF & fpdf2 installed. Both packages cannot be installed at the same time as they share the same module namespace. To only keep fpdf2, run: pip uninstall --yes pypdf && pip install --upgrade fpdf2
-  warnings.warn(
-INFO:     Started server process [7808]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.

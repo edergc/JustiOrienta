@@ -18,3 +18,7 @@ cloudflared.exe
 app/static/presentacion-ceremonia.html
 # Supera el limite de 100MB de GitHub -- no cabe en el repo tal cual.
 JAV_DiSEÑO.pdf
+
+# Material que no es parte del proyecto versionado (prompts, logs, borradores,
+# documentos internos, capturas sin relacion) -- se queda solo en esta maquina.
+NO_SUBIR_A_GITHUB/
